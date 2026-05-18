@@ -17,7 +17,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { notifications } from "@/lib/data";
 import { cn } from "@/lib/utils";
 
-const nav = [
+const nav: { to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean }[] = [
   { to: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true },
   { to: "/dashboard/members", label: "Members", icon: Users },
   { to: "/dashboard/journey", label: "Journey", icon: Compass },
@@ -26,7 +26,7 @@ const nav = [
   { to: "/dashboard/leadership", label: "Leadership", icon: Crown },
   { to: "/dashboard/branches", label: "Branches", icon: Building2 },
   { to: "/dashboard/settings", label: "Settings", icon: Settings },
-] as const;
+];
 
 export function DashboardShell({ children }: { children?: ReactNode }) {
   const path = useRouterState({ select: (r) => r.location.pathname });
