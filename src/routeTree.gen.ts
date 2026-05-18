@@ -17,6 +17,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
 import { Route as DashboardMembersRouteImport } from './routes/dashboard.members'
 import { Route as DashboardJourneyRouteImport } from './routes/dashboard.journey'
+import { Route as DashboardCellsRouteImport } from './routes/dashboard.cells'
 import { Route as DashboardAttendanceRouteImport } from './routes/dashboard.attendance'
 import { Route as DashboardMembersIdRouteImport } from './routes/dashboard.members.$id'
 
@@ -60,6 +61,11 @@ const DashboardJourneyRoute = DashboardJourneyRouteImport.update({
   path: '/journey',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardCellsRoute = DashboardCellsRouteImport.update({
+  id: '/cells',
+  path: '/cells',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardAttendanceRoute = DashboardAttendanceRouteImport.update({
   id: '/attendance',
   path: '/attendance',
@@ -78,6 +84,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/dashboard/attendance': typeof DashboardAttendanceRoute
+  '/dashboard/cells': typeof DashboardCellsRoute
   '/dashboard/journey': typeof DashboardJourneyRoute
   '/dashboard/members': typeof DashboardMembersRouteWithChildren
   '/dashboard/': typeof DashboardIndexRoute
@@ -89,6 +96,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/dashboard/attendance': typeof DashboardAttendanceRoute
+  '/dashboard/cells': typeof DashboardCellsRoute
   '/dashboard/journey': typeof DashboardJourneyRoute
   '/dashboard/members': typeof DashboardMembersRouteWithChildren
   '/dashboard': typeof DashboardIndexRoute
@@ -102,6 +110,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/dashboard/attendance': typeof DashboardAttendanceRoute
+  '/dashboard/cells': typeof DashboardCellsRoute
   '/dashboard/journey': typeof DashboardJourneyRoute
   '/dashboard/members': typeof DashboardMembersRouteWithChildren
   '/dashboard/': typeof DashboardIndexRoute
@@ -116,6 +125,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/dashboard/attendance'
+    | '/dashboard/cells'
     | '/dashboard/journey'
     | '/dashboard/members'
     | '/dashboard/'
@@ -127,6 +137,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/dashboard/attendance'
+    | '/dashboard/cells'
     | '/dashboard/journey'
     | '/dashboard/members'
     | '/dashboard'
@@ -139,6 +150,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/dashboard/attendance'
+    | '/dashboard/cells'
     | '/dashboard/journey'
     | '/dashboard/members'
     | '/dashboard/'
@@ -211,6 +223,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardJourneyRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/cells': {
+      id: '/dashboard/cells'
+      path: '/cells'
+      fullPath: '/dashboard/cells'
+      preLoaderRoute: typeof DashboardCellsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/attendance': {
       id: '/dashboard/attendance'
       path: '/attendance'
@@ -241,6 +260,7 @@ const DashboardMembersRouteWithChildren =
 
 interface DashboardRouteChildren {
   DashboardAttendanceRoute: typeof DashboardAttendanceRoute
+  DashboardCellsRoute: typeof DashboardCellsRoute
   DashboardJourneyRoute: typeof DashboardJourneyRoute
   DashboardMembersRoute: typeof DashboardMembersRouteWithChildren
   DashboardIndexRoute: typeof DashboardIndexRoute
@@ -248,6 +268,7 @@ interface DashboardRouteChildren {
 
 const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardAttendanceRoute: DashboardAttendanceRoute,
+  DashboardCellsRoute: DashboardCellsRoute,
   DashboardJourneyRoute: DashboardJourneyRoute,
   DashboardMembersRoute: DashboardMembersRouteWithChildren,
   DashboardIndexRoute: DashboardIndexRoute,
