@@ -16,6 +16,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
 import { Route as DashboardMembersRouteImport } from './routes/dashboard.members'
+import { Route as DashboardLeadershipRouteImport } from './routes/dashboard.leadership'
 import { Route as DashboardJourneyRouteImport } from './routes/dashboard.journey'
 import { Route as DashboardCellsRouteImport } from './routes/dashboard.cells'
 import { Route as DashboardAttendanceRouteImport } from './routes/dashboard.attendance'
@@ -56,6 +57,11 @@ const DashboardMembersRoute = DashboardMembersRouteImport.update({
   path: '/members',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardLeadershipRoute = DashboardLeadershipRouteImport.update({
+  id: '/leadership',
+  path: '/leadership',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardJourneyRoute = DashboardJourneyRouteImport.update({
   id: '/journey',
   path: '/journey',
@@ -86,6 +92,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/attendance': typeof DashboardAttendanceRoute
   '/dashboard/cells': typeof DashboardCellsRoute
   '/dashboard/journey': typeof DashboardJourneyRoute
+  '/dashboard/leadership': typeof DashboardLeadershipRoute
   '/dashboard/members': typeof DashboardMembersRouteWithChildren
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/members/$id': typeof DashboardMembersIdRoute
@@ -98,6 +105,7 @@ export interface FileRoutesByTo {
   '/dashboard/attendance': typeof DashboardAttendanceRoute
   '/dashboard/cells': typeof DashboardCellsRoute
   '/dashboard/journey': typeof DashboardJourneyRoute
+  '/dashboard/leadership': typeof DashboardLeadershipRoute
   '/dashboard/members': typeof DashboardMembersRouteWithChildren
   '/dashboard': typeof DashboardIndexRoute
   '/dashboard/members/$id': typeof DashboardMembersIdRoute
@@ -112,6 +120,7 @@ export interface FileRoutesById {
   '/dashboard/attendance': typeof DashboardAttendanceRoute
   '/dashboard/cells': typeof DashboardCellsRoute
   '/dashboard/journey': typeof DashboardJourneyRoute
+  '/dashboard/leadership': typeof DashboardLeadershipRoute
   '/dashboard/members': typeof DashboardMembersRouteWithChildren
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/members/$id': typeof DashboardMembersIdRoute
@@ -127,6 +136,7 @@ export interface FileRouteTypes {
     | '/dashboard/attendance'
     | '/dashboard/cells'
     | '/dashboard/journey'
+    | '/dashboard/leadership'
     | '/dashboard/members'
     | '/dashboard/'
     | '/dashboard/members/$id'
@@ -139,6 +149,7 @@ export interface FileRouteTypes {
     | '/dashboard/attendance'
     | '/dashboard/cells'
     | '/dashboard/journey'
+    | '/dashboard/leadership'
     | '/dashboard/members'
     | '/dashboard'
     | '/dashboard/members/$id'
@@ -152,6 +163,7 @@ export interface FileRouteTypes {
     | '/dashboard/attendance'
     | '/dashboard/cells'
     | '/dashboard/journey'
+    | '/dashboard/leadership'
     | '/dashboard/members'
     | '/dashboard/'
     | '/dashboard/members/$id'
@@ -216,6 +228,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardMembersRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/leadership': {
+      id: '/dashboard/leadership'
+      path: '/leadership'
+      fullPath: '/dashboard/leadership'
+      preLoaderRoute: typeof DashboardLeadershipRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/journey': {
       id: '/dashboard/journey'
       path: '/journey'
@@ -262,6 +281,7 @@ interface DashboardRouteChildren {
   DashboardAttendanceRoute: typeof DashboardAttendanceRoute
   DashboardCellsRoute: typeof DashboardCellsRoute
   DashboardJourneyRoute: typeof DashboardJourneyRoute
+  DashboardLeadershipRoute: typeof DashboardLeadershipRoute
   DashboardMembersRoute: typeof DashboardMembersRouteWithChildren
   DashboardIndexRoute: typeof DashboardIndexRoute
 }
@@ -270,6 +290,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardAttendanceRoute: DashboardAttendanceRoute,
   DashboardCellsRoute: DashboardCellsRoute,
   DashboardJourneyRoute: DashboardJourneyRoute,
+  DashboardLeadershipRoute: DashboardLeadershipRoute,
   DashboardMembersRoute: DashboardMembersRouteWithChildren,
   DashboardIndexRoute: DashboardIndexRoute,
 }
