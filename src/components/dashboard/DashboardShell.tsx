@@ -53,7 +53,7 @@ export function DashboardShell({ children }: { children?: ReactNode }) {
           {nav.map((item) => {
             const active = isActive(item.to, item.exact);
             return (
-              <Link key={item.to} to={item.to} onClick={() => setMobileOpen(false)}
+              <Link key={item.to} to={item.to as "/dashboard"} onClick={() => setMobileOpen(false)}
                 className={cn(
                   "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition",
                   active
