@@ -19,6 +19,7 @@ import { Route as DashboardMembersRouteImport } from './routes/dashboard.members
 import { Route as DashboardLeadershipRouteImport } from './routes/dashboard.leadership'
 import { Route as DashboardJourneyRouteImport } from './routes/dashboard.journey'
 import { Route as DashboardCellsRouteImport } from './routes/dashboard.cells'
+import { Route as DashboardBranchesRouteImport } from './routes/dashboard.branches'
 import { Route as DashboardAttendanceRouteImport } from './routes/dashboard.attendance'
 import { Route as DashboardMembersIdRouteImport } from './routes/dashboard.members.$id'
 
@@ -72,6 +73,11 @@ const DashboardCellsRoute = DashboardCellsRouteImport.update({
   path: '/cells',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardBranchesRoute = DashboardBranchesRouteImport.update({
+  id: '/branches',
+  path: '/branches',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardAttendanceRoute = DashboardAttendanceRouteImport.update({
   id: '/attendance',
   path: '/attendance',
@@ -90,6 +96,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/dashboard/attendance': typeof DashboardAttendanceRoute
+  '/dashboard/branches': typeof DashboardBranchesRoute
   '/dashboard/cells': typeof DashboardCellsRoute
   '/dashboard/journey': typeof DashboardJourneyRoute
   '/dashboard/leadership': typeof DashboardLeadershipRoute
@@ -103,6 +110,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/dashboard/attendance': typeof DashboardAttendanceRoute
+  '/dashboard/branches': typeof DashboardBranchesRoute
   '/dashboard/cells': typeof DashboardCellsRoute
   '/dashboard/journey': typeof DashboardJourneyRoute
   '/dashboard/leadership': typeof DashboardLeadershipRoute
@@ -118,6 +126,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/dashboard/attendance': typeof DashboardAttendanceRoute
+  '/dashboard/branches': typeof DashboardBranchesRoute
   '/dashboard/cells': typeof DashboardCellsRoute
   '/dashboard/journey': typeof DashboardJourneyRoute
   '/dashboard/leadership': typeof DashboardLeadershipRoute
@@ -134,6 +143,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/dashboard/attendance'
+    | '/dashboard/branches'
     | '/dashboard/cells'
     | '/dashboard/journey'
     | '/dashboard/leadership'
@@ -147,6 +157,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/dashboard/attendance'
+    | '/dashboard/branches'
     | '/dashboard/cells'
     | '/dashboard/journey'
     | '/dashboard/leadership'
@@ -161,6 +172,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/dashboard/attendance'
+    | '/dashboard/branches'
     | '/dashboard/cells'
     | '/dashboard/journey'
     | '/dashboard/leadership'
@@ -249,6 +261,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardCellsRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/branches': {
+      id: '/dashboard/branches'
+      path: '/branches'
+      fullPath: '/dashboard/branches'
+      preLoaderRoute: typeof DashboardBranchesRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/attendance': {
       id: '/dashboard/attendance'
       path: '/attendance'
@@ -279,6 +298,7 @@ const DashboardMembersRouteWithChildren =
 
 interface DashboardRouteChildren {
   DashboardAttendanceRoute: typeof DashboardAttendanceRoute
+  DashboardBranchesRoute: typeof DashboardBranchesRoute
   DashboardCellsRoute: typeof DashboardCellsRoute
   DashboardJourneyRoute: typeof DashboardJourneyRoute
   DashboardLeadershipRoute: typeof DashboardLeadershipRoute
@@ -288,6 +308,7 @@ interface DashboardRouteChildren {
 
 const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardAttendanceRoute: DashboardAttendanceRoute,
+  DashboardBranchesRoute: DashboardBranchesRoute,
   DashboardCellsRoute: DashboardCellsRoute,
   DashboardJourneyRoute: DashboardJourneyRoute,
   DashboardLeadershipRoute: DashboardLeadershipRoute,
