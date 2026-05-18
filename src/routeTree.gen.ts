@@ -9,38 +9,228 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as RegisterRouteImport } from './routes/register'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
+import { Route as DashboardSettingsRouteImport } from './routes/dashboard.settings'
+import { Route as DashboardMembersRouteImport } from './routes/dashboard.members'
+import { Route as DashboardLeadershipRouteImport } from './routes/dashboard.leadership'
+import { Route as DashboardJourneyRouteImport } from './routes/dashboard.journey'
+import { Route as DashboardCellsRouteImport } from './routes/dashboard.cells'
+import { Route as DashboardBranchesRouteImport } from './routes/dashboard.branches'
+import { Route as DashboardAttendanceRouteImport } from './routes/dashboard.attendance'
+import { Route as DashboardMembersIdRouteImport } from './routes/dashboard.members.$id'
 
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardIndexRoute = DashboardIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardSettingsRoute = DashboardSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardMembersRoute = DashboardMembersRouteImport.update({
+  id: '/members',
+  path: '/members',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardLeadershipRoute = DashboardLeadershipRouteImport.update({
+  id: '/leadership',
+  path: '/leadership',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardJourneyRoute = DashboardJourneyRouteImport.update({
+  id: '/journey',
+  path: '/journey',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardCellsRoute = DashboardCellsRouteImport.update({
+  id: '/cells',
+  path: '/cells',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardBranchesRoute = DashboardBranchesRouteImport.update({
+  id: '/branches',
+  path: '/branches',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardAttendanceRoute = DashboardAttendanceRouteImport.update({
+  id: '/attendance',
+  path: '/attendance',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardMembersIdRoute = DashboardMembersIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => DashboardMembersRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/dashboard': typeof DashboardRouteWithChildren
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
+  '/dashboard/attendance': typeof DashboardAttendanceRoute
+  '/dashboard/branches': typeof DashboardBranchesRoute
+  '/dashboard/cells': typeof DashboardCellsRoute
+  '/dashboard/journey': typeof DashboardJourneyRoute
+  '/dashboard/leadership': typeof DashboardLeadershipRoute
+  '/dashboard/members': typeof DashboardMembersRouteWithChildren
+  '/dashboard/settings': typeof DashboardSettingsRoute
+  '/dashboard/': typeof DashboardIndexRoute
+  '/dashboard/members/$id': typeof DashboardMembersIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
+  '/dashboard/attendance': typeof DashboardAttendanceRoute
+  '/dashboard/branches': typeof DashboardBranchesRoute
+  '/dashboard/cells': typeof DashboardCellsRoute
+  '/dashboard/journey': typeof DashboardJourneyRoute
+  '/dashboard/leadership': typeof DashboardLeadershipRoute
+  '/dashboard/members': typeof DashboardMembersRouteWithChildren
+  '/dashboard/settings': typeof DashboardSettingsRoute
+  '/dashboard': typeof DashboardIndexRoute
+  '/dashboard/members/$id': typeof DashboardMembersIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/dashboard': typeof DashboardRouteWithChildren
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
+  '/dashboard/attendance': typeof DashboardAttendanceRoute
+  '/dashboard/branches': typeof DashboardBranchesRoute
+  '/dashboard/cells': typeof DashboardCellsRoute
+  '/dashboard/journey': typeof DashboardJourneyRoute
+  '/dashboard/leadership': typeof DashboardLeadershipRoute
+  '/dashboard/members': typeof DashboardMembersRouteWithChildren
+  '/dashboard/settings': typeof DashboardSettingsRoute
+  '/dashboard/': typeof DashboardIndexRoute
+  '/dashboard/members/$id': typeof DashboardMembersIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/dashboard'
+    | '/forgot-password'
+    | '/login'
+    | '/register'
+    | '/dashboard/attendance'
+    | '/dashboard/branches'
+    | '/dashboard/cells'
+    | '/dashboard/journey'
+    | '/dashboard/leadership'
+    | '/dashboard/members'
+    | '/dashboard/settings'
+    | '/dashboard/'
+    | '/dashboard/members/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/forgot-password'
+    | '/login'
+    | '/register'
+    | '/dashboard/attendance'
+    | '/dashboard/branches'
+    | '/dashboard/cells'
+    | '/dashboard/journey'
+    | '/dashboard/leadership'
+    | '/dashboard/members'
+    | '/dashboard/settings'
+    | '/dashboard'
+    | '/dashboard/members/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/dashboard'
+    | '/forgot-password'
+    | '/login'
+    | '/register'
+    | '/dashboard/attendance'
+    | '/dashboard/branches'
+    | '/dashboard/cells'
+    | '/dashboard/journey'
+    | '/dashboard/leadership'
+    | '/dashboard/members'
+    | '/dashboard/settings'
+    | '/dashboard/'
+    | '/dashboard/members/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  DashboardRoute: typeof DashboardRouteWithChildren
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
+  LoginRoute: typeof LoginRoute
+  RegisterRoute: typeof RegisterRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +238,116 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/': {
+      id: '/dashboard/'
+      path: '/'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof DashboardIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/settings': {
+      id: '/dashboard/settings'
+      path: '/settings'
+      fullPath: '/dashboard/settings'
+      preLoaderRoute: typeof DashboardSettingsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/members': {
+      id: '/dashboard/members'
+      path: '/members'
+      fullPath: '/dashboard/members'
+      preLoaderRoute: typeof DashboardMembersRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/leadership': {
+      id: '/dashboard/leadership'
+      path: '/leadership'
+      fullPath: '/dashboard/leadership'
+      preLoaderRoute: typeof DashboardLeadershipRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/journey': {
+      id: '/dashboard/journey'
+      path: '/journey'
+      fullPath: '/dashboard/journey'
+      preLoaderRoute: typeof DashboardJourneyRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/cells': {
+      id: '/dashboard/cells'
+      path: '/cells'
+      fullPath: '/dashboard/cells'
+      preLoaderRoute: typeof DashboardCellsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/branches': {
+      id: '/dashboard/branches'
+      path: '/branches'
+      fullPath: '/dashboard/branches'
+      preLoaderRoute: typeof DashboardBranchesRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/attendance': {
+      id: '/dashboard/attendance'
+      path: '/attendance'
+      fullPath: '/dashboard/attendance'
+      preLoaderRoute: typeof DashboardAttendanceRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/members/$id': {
+      id: '/dashboard/members/$id'
+      path: '/$id'
+      fullPath: '/dashboard/members/$id'
+      preLoaderRoute: typeof DashboardMembersIdRouteImport
+      parentRoute: typeof DashboardMembersRoute
+    }
   }
 }
 
+interface DashboardMembersRouteChildren {
+  DashboardMembersIdRoute: typeof DashboardMembersIdRoute
+}
+
+const DashboardMembersRouteChildren: DashboardMembersRouteChildren = {
+  DashboardMembersIdRoute: DashboardMembersIdRoute,
+}
+
+const DashboardMembersRouteWithChildren =
+  DashboardMembersRoute._addFileChildren(DashboardMembersRouteChildren)
+
+interface DashboardRouteChildren {
+  DashboardAttendanceRoute: typeof DashboardAttendanceRoute
+  DashboardBranchesRoute: typeof DashboardBranchesRoute
+  DashboardCellsRoute: typeof DashboardCellsRoute
+  DashboardJourneyRoute: typeof DashboardJourneyRoute
+  DashboardLeadershipRoute: typeof DashboardLeadershipRoute
+  DashboardMembersRoute: typeof DashboardMembersRouteWithChildren
+  DashboardSettingsRoute: typeof DashboardSettingsRoute
+  DashboardIndexRoute: typeof DashboardIndexRoute
+}
+
+const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardAttendanceRoute: DashboardAttendanceRoute,
+  DashboardBranchesRoute: DashboardBranchesRoute,
+  DashboardCellsRoute: DashboardCellsRoute,
+  DashboardJourneyRoute: DashboardJourneyRoute,
+  DashboardLeadershipRoute: DashboardLeadershipRoute,
+  DashboardMembersRoute: DashboardMembersRouteWithChildren,
+  DashboardSettingsRoute: DashboardSettingsRoute,
+  DashboardIndexRoute: DashboardIndexRoute,
+}
+
+const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
+  DashboardRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  DashboardRoute: DashboardRouteWithChildren,
+  ForgotPasswordRoute: ForgotPasswordRoute,
+  LoginRoute: LoginRoute,
+  RegisterRoute: RegisterRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
