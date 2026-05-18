@@ -15,6 +15,7 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
+import { Route as DashboardSettingsRouteImport } from './routes/dashboard.settings'
 import { Route as DashboardMembersRouteImport } from './routes/dashboard.members'
 import { Route as DashboardLeadershipRouteImport } from './routes/dashboard.leadership'
 import { Route as DashboardJourneyRouteImport } from './routes/dashboard.journey'
@@ -51,6 +52,11 @@ const IndexRoute = IndexRouteImport.update({
 const DashboardIndexRoute = DashboardIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardSettingsRoute = DashboardSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardMembersRoute = DashboardMembersRouteImport.update({
@@ -101,6 +107,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/journey': typeof DashboardJourneyRoute
   '/dashboard/leadership': typeof DashboardLeadershipRoute
   '/dashboard/members': typeof DashboardMembersRouteWithChildren
+  '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/members/$id': typeof DashboardMembersIdRoute
 }
@@ -115,6 +122,7 @@ export interface FileRoutesByTo {
   '/dashboard/journey': typeof DashboardJourneyRoute
   '/dashboard/leadership': typeof DashboardLeadershipRoute
   '/dashboard/members': typeof DashboardMembersRouteWithChildren
+  '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard': typeof DashboardIndexRoute
   '/dashboard/members/$id': typeof DashboardMembersIdRoute
 }
@@ -131,6 +139,7 @@ export interface FileRoutesById {
   '/dashboard/journey': typeof DashboardJourneyRoute
   '/dashboard/leadership': typeof DashboardLeadershipRoute
   '/dashboard/members': typeof DashboardMembersRouteWithChildren
+  '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/members/$id': typeof DashboardMembersIdRoute
 }
@@ -148,6 +157,7 @@ export interface FileRouteTypes {
     | '/dashboard/journey'
     | '/dashboard/leadership'
     | '/dashboard/members'
+    | '/dashboard/settings'
     | '/dashboard/'
     | '/dashboard/members/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -162,6 +172,7 @@ export interface FileRouteTypes {
     | '/dashboard/journey'
     | '/dashboard/leadership'
     | '/dashboard/members'
+    | '/dashboard/settings'
     | '/dashboard'
     | '/dashboard/members/$id'
   id:
@@ -177,6 +188,7 @@ export interface FileRouteTypes {
     | '/dashboard/journey'
     | '/dashboard/leadership'
     | '/dashboard/members'
+    | '/dashboard/settings'
     | '/dashboard/'
     | '/dashboard/members/$id'
   fileRoutesById: FileRoutesById
@@ -231,6 +243,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/dashboard/'
       preLoaderRoute: typeof DashboardIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/settings': {
+      id: '/dashboard/settings'
+      path: '/settings'
+      fullPath: '/dashboard/settings'
+      preLoaderRoute: typeof DashboardSettingsRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/dashboard/members': {
@@ -303,6 +322,7 @@ interface DashboardRouteChildren {
   DashboardJourneyRoute: typeof DashboardJourneyRoute
   DashboardLeadershipRoute: typeof DashboardLeadershipRoute
   DashboardMembersRoute: typeof DashboardMembersRouteWithChildren
+  DashboardSettingsRoute: typeof DashboardSettingsRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
 }
 
@@ -313,6 +333,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardJourneyRoute: DashboardJourneyRoute,
   DashboardLeadershipRoute: DashboardLeadershipRoute,
   DashboardMembersRoute: DashboardMembersRouteWithChildren,
+  DashboardSettingsRoute: DashboardSettingsRoute,
   DashboardIndexRoute: DashboardIndexRoute,
 }
 
