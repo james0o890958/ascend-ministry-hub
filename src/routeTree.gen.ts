@@ -19,12 +19,10 @@ import { Route as DashboardSettingsRouteImport } from './routes/dashboard.settin
 import { Route as DashboardProfileRouteImport } from './routes/dashboard.profile'
 import { Route as DashboardMembersRouteImport } from './routes/dashboard.members'
 import { Route as DashboardLeadershipRouteImport } from './routes/dashboard.leadership'
-import { Route as DashboardJourneyRouteImport } from './routes/dashboard.journey'
 import { Route as DashboardInviteesRouteImport } from './routes/dashboard.invitees'
 import { Route as DashboardEventsRouteImport } from './routes/dashboard.events'
 import { Route as DashboardChurchRouteImport } from './routes/dashboard.church'
 import { Route as DashboardCellsRouteImport } from './routes/dashboard.cells'
-import { Route as DashboardBranchesRouteImport } from './routes/dashboard.branches'
 import { Route as DashboardAttendanceRouteImport } from './routes/dashboard.attendance'
 import { Route as DashboardMembersIdRouteImport } from './routes/dashboard.members.$id'
 
@@ -78,11 +76,6 @@ const DashboardLeadershipRoute = DashboardLeadershipRouteImport.update({
   path: '/leadership',
   getParentRoute: () => DashboardRoute,
 } as any)
-const DashboardJourneyRoute = DashboardJourneyRouteImport.update({
-  id: '/journey',
-  path: '/journey',
-  getParentRoute: () => DashboardRoute,
-} as any)
 const DashboardInviteesRoute = DashboardInviteesRouteImport.update({
   id: '/invitees',
   path: '/invitees',
@@ -103,11 +96,6 @@ const DashboardCellsRoute = DashboardCellsRouteImport.update({
   path: '/cells',
   getParentRoute: () => DashboardRoute,
 } as any)
-const DashboardBranchesRoute = DashboardBranchesRouteImport.update({
-  id: '/branches',
-  path: '/branches',
-  getParentRoute: () => DashboardRoute,
-} as any)
 const DashboardAttendanceRoute = DashboardAttendanceRouteImport.update({
   id: '/attendance',
   path: '/attendance',
@@ -126,12 +114,10 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/dashboard/attendance': typeof DashboardAttendanceRoute
-  '/dashboard/branches': typeof DashboardBranchesRoute
   '/dashboard/cells': typeof DashboardCellsRoute
   '/dashboard/church': typeof DashboardChurchRoute
   '/dashboard/events': typeof DashboardEventsRoute
   '/dashboard/invitees': typeof DashboardInviteesRoute
-  '/dashboard/journey': typeof DashboardJourneyRoute
   '/dashboard/leadership': typeof DashboardLeadershipRoute
   '/dashboard/members': typeof DashboardMembersRouteWithChildren
   '/dashboard/profile': typeof DashboardProfileRoute
@@ -145,12 +131,10 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/dashboard/attendance': typeof DashboardAttendanceRoute
-  '/dashboard/branches': typeof DashboardBranchesRoute
   '/dashboard/cells': typeof DashboardCellsRoute
   '/dashboard/church': typeof DashboardChurchRoute
   '/dashboard/events': typeof DashboardEventsRoute
   '/dashboard/invitees': typeof DashboardInviteesRoute
-  '/dashboard/journey': typeof DashboardJourneyRoute
   '/dashboard/leadership': typeof DashboardLeadershipRoute
   '/dashboard/members': typeof DashboardMembersRouteWithChildren
   '/dashboard/profile': typeof DashboardProfileRoute
@@ -166,12 +150,10 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/dashboard/attendance': typeof DashboardAttendanceRoute
-  '/dashboard/branches': typeof DashboardBranchesRoute
   '/dashboard/cells': typeof DashboardCellsRoute
   '/dashboard/church': typeof DashboardChurchRoute
   '/dashboard/events': typeof DashboardEventsRoute
   '/dashboard/invitees': typeof DashboardInviteesRoute
-  '/dashboard/journey': typeof DashboardJourneyRoute
   '/dashboard/leadership': typeof DashboardLeadershipRoute
   '/dashboard/members': typeof DashboardMembersRouteWithChildren
   '/dashboard/profile': typeof DashboardProfileRoute
@@ -188,12 +170,10 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/dashboard/attendance'
-    | '/dashboard/branches'
     | '/dashboard/cells'
     | '/dashboard/church'
     | '/dashboard/events'
     | '/dashboard/invitees'
-    | '/dashboard/journey'
     | '/dashboard/leadership'
     | '/dashboard/members'
     | '/dashboard/profile'
@@ -207,12 +187,10 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/dashboard/attendance'
-    | '/dashboard/branches'
     | '/dashboard/cells'
     | '/dashboard/church'
     | '/dashboard/events'
     | '/dashboard/invitees'
-    | '/dashboard/journey'
     | '/dashboard/leadership'
     | '/dashboard/members'
     | '/dashboard/profile'
@@ -227,12 +205,10 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/dashboard/attendance'
-    | '/dashboard/branches'
     | '/dashboard/cells'
     | '/dashboard/church'
     | '/dashboard/events'
     | '/dashboard/invitees'
-    | '/dashboard/journey'
     | '/dashboard/leadership'
     | '/dashboard/members'
     | '/dashboard/profile'
@@ -321,13 +297,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardLeadershipRouteImport
       parentRoute: typeof DashboardRoute
     }
-    '/dashboard/journey': {
-      id: '/dashboard/journey'
-      path: '/journey'
-      fullPath: '/dashboard/journey'
-      preLoaderRoute: typeof DashboardJourneyRouteImport
-      parentRoute: typeof DashboardRoute
-    }
     '/dashboard/invitees': {
       id: '/dashboard/invitees'
       path: '/invitees'
@@ -354,13 +323,6 @@ declare module '@tanstack/react-router' {
       path: '/cells'
       fullPath: '/dashboard/cells'
       preLoaderRoute: typeof DashboardCellsRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/branches': {
-      id: '/dashboard/branches'
-      path: '/branches'
-      fullPath: '/dashboard/branches'
-      preLoaderRoute: typeof DashboardBranchesRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/dashboard/attendance': {
@@ -393,12 +355,10 @@ const DashboardMembersRouteWithChildren =
 
 interface DashboardRouteChildren {
   DashboardAttendanceRoute: typeof DashboardAttendanceRoute
-  DashboardBranchesRoute: typeof DashboardBranchesRoute
   DashboardCellsRoute: typeof DashboardCellsRoute
   DashboardChurchRoute: typeof DashboardChurchRoute
   DashboardEventsRoute: typeof DashboardEventsRoute
   DashboardInviteesRoute: typeof DashboardInviteesRoute
-  DashboardJourneyRoute: typeof DashboardJourneyRoute
   DashboardLeadershipRoute: typeof DashboardLeadershipRoute
   DashboardMembersRoute: typeof DashboardMembersRouteWithChildren
   DashboardProfileRoute: typeof DashboardProfileRoute
@@ -408,12 +368,10 @@ interface DashboardRouteChildren {
 
 const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardAttendanceRoute: DashboardAttendanceRoute,
-  DashboardBranchesRoute: DashboardBranchesRoute,
   DashboardCellsRoute: DashboardCellsRoute,
   DashboardChurchRoute: DashboardChurchRoute,
   DashboardEventsRoute: DashboardEventsRoute,
   DashboardInviteesRoute: DashboardInviteesRoute,
-  DashboardJourneyRoute: DashboardJourneyRoute,
   DashboardLeadershipRoute: DashboardLeadershipRoute,
   DashboardMembersRoute: DashboardMembersRouteWithChildren,
   DashboardProfileRoute: DashboardProfileRoute,
@@ -435,3 +393,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

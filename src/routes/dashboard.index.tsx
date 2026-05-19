@@ -24,7 +24,7 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/dashboard/")({ component: Overview });
 
 function Overview() {
-  const { role, userId } = useRole();
+  const { role } = useRole();
   const [date, setDate] = useState<Date>(new Date());
   const dateISO = format(date, "yyyy-MM-dd");
   const [selectedMember, setSelectedMember] = useState<string>("");
