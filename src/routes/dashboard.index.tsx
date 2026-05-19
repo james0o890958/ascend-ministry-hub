@@ -1,186 +1,184 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import {
-  Users, UserPlus, Droplets, GraduationCap, HeartHandshake, Crown, Sparkles, Activity, Plus,
-} from "lucide-react";
-import {
-  Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart, Pie,
-  PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis,
-} from "recharts";
-import { PageHeader, SectionCard, StatCard } from "@/components/dashboard/ui";
+import { useMemo, useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { CalendarIcon, CheckCircle2, Zap } from "lucide-react";
+import { format } from "date-fns";
+import { PageHeader, SectionCard } from "@/components/dashboard/ui";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
-  attendanceWeekly, growthMonthly, recentActivity, stageDistribution, stats, members,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
+  DropdownMenuSeparator, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
+import {
+  attendanceForDate, branches, cellGroups, events, members, stats,
 } from "@/lib/data";
+import { useRole } from "@/lib/role";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/dashboard/")({ component: Overview });
 
-const PIE_COLORS = ["oklch(0.32 0.16 264)", "oklch(0.46 0.18 264)", "oklch(0.74 0.13 85)", "oklch(0.62 0.14 155)", "oklch(0.55 0.15 230)"];
-
 function Overview() {
+  const { role, userId } = useRole();
+  const [date, setDate] = useState<Date>(new Date());
+  const dateISO = format(date, "yyyy-MM-dd");
+  const [selectedMember, setSelectedMember] = useState<string>("");
+
+  const attendedIds = useMemo(() => new Set(attendanceForDate(dateISO)), [dateISO]);
+
+  const rows = useMemo(() => {
+    switch (role) {
+      case "Admin":
+        return [
+          { metric: "Total members", value: stats.totalMembers.toLocaleString(), scope: "Global", trend: "+8.2%" },
+          { metric: "First timers", value: stats.firstTimers, scope: "This Sunday", trend: "+12.4%" },
+          { metric: "Baptized", value: stats.baptized.toLocaleString(), scope: "Global", trend: "+4.6%" },
+          { metric: "Foundation school", value: stats.foundationStudents.toLocaleString(), scope: "Active", trend: "+6.1%" },
+          { metric: "Cell members", value: stats.cellMembers.toLocaleString(), scope: "Global", trend: "+5.2%" },
+          { metric: "Leaders", value: stats.leaders, scope: "Global", trend: "+2.8%" },
+          { metric: "Pastors", value: stats.pastors, scope: "Global", trend: "+1.2%" },
+          { metric: "Branches", value: stats.branches, scope: "Active", trend: "+3.0%" },
+        ];
+      case "Pastor":
+        return [
+          { metric: "Church members", value: branches[0].members.toLocaleString(), scope: branches[0].name, trend: "+7.1%" },
+          { metric: "First timers", value: 42, scope: "This Sunday", trend: "+9.8%" },
+          { metric: "Baptized", value: 1240, scope: "YTD", trend: "+5.0%" },
+          { metric: "Cells", value: cellGroups.length, scope: "Active", trend: "+2.0%" },
+          { metric: "Workers", value: 186, scope: branches[0].name, trend: "+3.4%" },
+          { metric: "Leaders", value: 86, scope: branches[0].name, trend: "+1.9%" },
+        ];
+      case "Cell Leader":
+        return [
+          { metric: "Cell members", value: 22, scope: "Cell A-1", trend: "+2 this week" },
+          { metric: "Avg attendance", value: "82%", scope: "Last 4 weeks", trend: "+3.4%" },
+          { metric: "New invitees", value: 4, scope: "This week", trend: "+1" },
+          { metric: "Foundation enrolled", value: 6, scope: "Cell A-1", trend: "+2" },
+        ];
+      case "Member":
+      default:
+        return [
+          { metric: "My attendance", value: "88%", scope: "Last 8 weeks", trend: "+4%" },
+          { metric: "My cell", value: "Cell A-1", scope: "Leader: E. Adebayo", trend: "" },
+          { metric: "Current stage", value: "Cell Member", scope: "Discipleship", trend: "Next: Workforce" },
+          { metric: "My invitees", value: 3, scope: "Tracked", trend: "+1" },
+        ];
+    }
+  }, [role]);
+
+  function markAttendance() {
+    if (!selectedMember) return toast.error("Select a member first");
+    const m = members.find((x) => x.id === selectedMember);
+    toast.success(`Marked ${m?.name} present for ${format(date, "PPP")}`);
+    setSelectedMember("");
+  }
+
+  const greeting = {
+    Admin: "Ministry-wide overview",
+    Pastor: "Your church at a glance",
+    "Cell Leader": "Your cell at a glance",
+    Member: "Your spiritual snapshot",
+  }[role];
+
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Sunday Overview"
-        subtitle="A complete picture of your ministry — across every branch, this week."
+        title="Overview"
+        subtitle={greeting}
         action={
           <>
-            <Button variant="outline">Export report</Button>
-            <Button asChild className="bg-gradient-royal text-primary-foreground shadow-soft hover:opacity-90">
-              <Link to="/dashboard/members"><Plus className="mr-1 h-4 w-4" />Add member</Link>
-            </Button>
+            {/* Date filter */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  <CalendarIcon className="h-4 w-4" />
+                  {format(date, "MMM d, yyyy")}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-auto p-0">
+                <Calendar mode="single" selected={date} onSelect={(d) => d && setDate(d)} initialFocus className={cn("p-3 pointer-events-auto")} />
+              </PopoverContent>
+            </Popover>
+
+            {/* Quick action */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button className="bg-gradient-royal text-primary-foreground gap-2">
+                  <Zap className="h-4 w-4" /> Quick action
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-72 p-3">
+                <DropdownMenuLabel>Mark attendance — {format(date, "PPP")}</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <div className="space-y-2 p-1">
+                  <Select value={selectedMember} onValueChange={setSelectedMember}>
+                    <SelectTrigger><SelectValue placeholder="Select member" /></SelectTrigger>
+                    <SelectContent className="max-h-72">
+                      {members.map((m) => (
+                        <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button onClick={markAttendance} className="w-full bg-gradient-royal text-primary-foreground">
+                    <CheckCircle2 className="mr-1 h-4 w-4" /> Mark present
+                  </Button>
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </>
         }
       />
 
-      {/* Stat grid */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Total members" value={stats.totalMembers.toLocaleString()} icon={Users} change={8.2} accent="primary" hint="vs last month" />
-        <StatCard label="First timers" value={stats.firstTimers} icon={UserPlus} change={12.4} accent="gold" hint="this Sunday" />
-        <StatCard label="Baptized members" value={stats.baptized.toLocaleString()} icon={Droplets} change={4.6} accent="blue" />
-        <StatCard label="Foundation school" value={stats.foundationStudents.toLocaleString()} icon={GraduationCap} change={6.1} accent="success" />
-        <StatCard label="Cell members" value={stats.cellMembers.toLocaleString()} icon={HeartHandshake} change={5.2} accent="primary" />
-        <StatCard label="Leaders" value={stats.leaders} icon={Sparkles} change={2.8} accent="gold" />
-        <StatCard label="Pastors" value={stats.pastors} icon={Crown} change={1.2} accent="blue" />
-        <StatCard label="Branches" value={stats.branches} icon={Activity} change={3.0} accent="success" />
-      </div>
+      <SectionCard title={`Key metrics · ${role} view`}>
+        <div className="overflow-hidden rounded-xl border border-border">
+          <table className="w-full text-sm">
+            <thead className="bg-secondary/60 text-xs uppercase tracking-wider text-muted-foreground">
+              <tr>
+                <th className="px-4 py-3 text-left font-semibold">Metric</th>
+                <th className="px-4 py-3 text-left font-semibold">Value</th>
+                <th className="px-4 py-3 text-left font-semibold">Scope</th>
+                <th className="px-4 py-3 text-left font-semibold">Trend</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border bg-card">
+              {rows.map((r) => (
+                <tr key={r.metric} className="hover:bg-secondary/40">
+                  <td className="px-4 py-3 font-semibold">{r.metric}</td>
+                  <td className="px-4 py-3 font-display text-lg">{r.value}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{r.scope}</td>
+                  <td className="px-4 py-3">
+                    {r.trend && (
+                      <Badge className="bg-success/15 text-success border-success/30">{r.trend}</Badge>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </SectionCard>
 
-      {/* Charts row */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        <SectionCard
-          title="Attendance trend"
-          className="lg:col-span-2"
-          action={
-            <Tabs defaultValue="weeks">
-              <TabsList className="bg-secondary">
-                <TabsTrigger value="weeks">8 weeks</TabsTrigger>
-                <TabsTrigger value="months">YTD</TabsTrigger>
-              </TabsList>
-            </Tabs>
-          }
-        >
-          <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={attendanceWeekly} margin={{ left: -10, right: 10, top: 10 }}>
-                <defs>
-                  <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="oklch(0.32 0.16 264)" stopOpacity={0.4} />
-                    <stop offset="100%" stopColor="oklch(0.32 0.16 264)" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="g2" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="oklch(0.74 0.13 85)" stopOpacity={0.5} />
-                    <stop offset="100%" stopColor="oklch(0.74 0.13 85)" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.92 0.012 255)" />
-                <XAxis dataKey="week" stroke="oklch(0.5 0.03 260)" fontSize={12} />
-                <YAxis stroke="oklch(0.5 0.03 260)" fontSize={12} />
-                <Tooltip contentStyle={{ background: "white", border: "1px solid oklch(0.92 0.012 255)", borderRadius: 12, boxShadow: "var(--shadow-elegant)" }} />
-                <Legend />
-                <Area type="monotone" dataKey="sunday" name="Sunday Service" stroke="oklch(0.32 0.16 264)" fill="url(#g1)" strokeWidth={2.5} />
-                <Area type="monotone" dataKey="midweek" name="Midweek" stroke="oklch(0.74 0.13 85)" fill="url(#g2)" strokeWidth={2.5} />
-                <Line type="monotone" dataKey="cell" name="Cell" stroke="oklch(0.62 0.14 155)" strokeWidth={2.5} dot={false} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </SectionCard>
-
-        <SectionCard title="Discipleship stages">
-          <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={stageDistribution.slice(0, 5)} dataKey="count" nameKey="stage" innerRadius={55} outerRadius={95} paddingAngle={2}>
-                  {stageDistribution.slice(0, 5).map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-          <ul className="mt-4 space-y-2 text-sm">
-            {stageDistribution.slice(0, 5).map((s, i) => (
-              <li key={s.stage} className="flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <span className="h-2.5 w-2.5 rounded-full" style={{ background: PIE_COLORS[i] }} />
-                  {s.stage}
-                </span>
-                <span className="font-semibold">{s.count.toLocaleString()}</span>
-              </li>
-            ))}
-          </ul>
-        </SectionCard>
-      </div>
-
-      {/* Growth + Activity */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        <SectionCard title="Growth & baptisms" className="lg:col-span-2">
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={growthMonthly}>
-                <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.92 0.012 255)" />
-                <XAxis dataKey="month" stroke="oklch(0.5 0.03 260)" fontSize={12} />
-                <YAxis stroke="oklch(0.5 0.03 260)" fontSize={12} />
-                <Tooltip contentStyle={{ background: "white", border: "1px solid oklch(0.92 0.012 255)", borderRadius: 12 }} />
-                <Legend />
-                <Bar dataKey="members" name="Members" fill="oklch(0.32 0.16 264)" radius={[8, 8, 0, 0]} />
-                <Bar dataKey="baptisms" name="Baptisms" fill="oklch(0.74 0.13 85)" radius={[8, 8, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </SectionCard>
-
-        <SectionCard title="Recent activity">
-          <ul className="space-y-4">
-            {recentActivity.map((a) => (
-              <li key={a.id} className="flex gap-3">
-                <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-gold ring-4 ring-gold/20" />
-                <div className="flex-1">
-                  <p className="text-sm"><span className="font-semibold">{a.who}</span> <span className="text-muted-foreground">— {labelFor(a.type)}</span></p>
-                  <p className="text-xs text-muted-foreground">{a.branch} • {a.when}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </SectionCard>
-      </div>
-
-      {/* Members preview */}
-      <SectionCard
-        title="New & notable members"
-        action={<Button asChild variant="ghost" size="sm"><Link to="/dashboard/members">View all →</Link></Button>}
-      >
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {members.slice(0, 4).map((m) => (
-            <div key={m.id} className="rounded-xl border border-border bg-secondary/30 p-4 transition hover:bg-secondary/60">
-              <div className="flex items-center gap-3">
-                <Avatar className="h-10 w-10 ring-2 ring-gold/30">
-                  <AvatarImage src={m.avatar} /><AvatarFallback>{m.name[0]}</AvatarFallback>
-                </Avatar>
-                <div className="min-w-0">
-                  <p className="truncate font-semibold">{m.name}</p>
-                  <p className="truncate text-xs text-muted-foreground">{m.branch}</p>
-                </div>
-              </div>
-              <div className="mt-3 flex items-center justify-between">
-                <Badge variant="outline" className="border-gold/40 text-gold">{m.stage}</Badge>
-                <span className="text-xs font-semibold">{m.attendance}%</span>
-              </div>
-            </div>
-          ))}
+      <SectionCard title={`Attendance for ${format(date, "PPP")}`}>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Stat label="Members present" value={attendedIds.size} />
+          <Stat label="Events held" value={events.filter((e) => e.date === dateISO).length} />
+          <Stat label="Attendance rate" value={`${Math.round((attendedIds.size / members.length) * 100)}%`} />
         </div>
       </SectionCard>
     </div>
   );
 }
 
-function labelFor(type: string) {
-  return ({
-    baptism: "was baptized",
-    "first-timer": "joined as a first timer",
-    foundation: "completed Foundation School",
-    leader: "was raised as a leader",
-    "cell-join": "joined a cell",
-    ordination: "was ordained",
-  } as Record<string, string>)[type] ?? type;
+function Stat({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="rounded-xl border border-border p-4">
+      <p className="text-xs uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className="mt-1 font-display text-2xl font-bold">{value}</p>
+    </div>
+  );
 }
