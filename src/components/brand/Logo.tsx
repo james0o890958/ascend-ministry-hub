@@ -11,7 +11,7 @@ export function Logo({ className, variant = "default" }: { className?: string; v
       </span>
       <span className="flex flex-col leading-none">
         <span className={cn("font-display text-lg font-bold tracking-tight", variant === "light" ? "text-white" : "text-foreground")}>
-          Koinonia
+          Soul Tracer
         </span>
         <span className={cn("text-[10px] font-medium uppercase tracking-[0.18em]", variant === "light" ? "text-gold/90" : "text-gold")}>
           Ministry Tracking

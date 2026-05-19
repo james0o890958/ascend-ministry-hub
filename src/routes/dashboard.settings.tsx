@@ -45,7 +45,7 @@ function SettingsPage() {
         <TabsContent value="ministry" className="mt-4">
           <SectionCard title="Ministry details">
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-1.5"><Label>Ministry name</Label><Input defaultValue="Koinonia Global" /></div>
+              <div className="space-y-1.5"><Label>Ministry name</Label><Input defaultValue="Soul Tracer Global" /></div>
               <div className="space-y-1.5"><Label>Headquarters</Label><Input defaultValue="Lagos, Nigeria" /></div>
               <div className="space-y-1.5"><Label>Founded</Label><Input defaultValue="1987" /></div>
               <div className="space-y-1.5"><Label>Vision statement</Label><Input defaultValue="Reaching the nations with the gospel of Christ." /></div>

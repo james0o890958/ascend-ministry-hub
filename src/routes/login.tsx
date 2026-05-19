@@ -12,7 +12,7 @@ function LoginPage() {
     <AuthShell
       title="Welcome back"
       subtitle="Sign in to continue shepherding your ministry."
-      footer={<p className="text-center">New to Koinonia? <Link to="/register" className="font-semibold text-primary hover:underline">Create an account</Link></p>}
+      footer={<p className="text-center">New to Soul Tracer? <Link to="/register" className="font-semibold text-primary hover:underline">Create an account</Link></p>}
     >
       <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
         <div className="space-y-2">

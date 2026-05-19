@@ -14,7 +14,7 @@ export function AuthShell({ title, subtitle, children, footer }: {
         <div className="relative z-10 flex flex-col justify-between p-12">
           <Logo variant="light" />
           <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-            <p className="text-sm uppercase tracking-[0.3em] text-gold">Koinonia Platform</p>
+            <p className="text-sm uppercase tracking-[0.3em] text-gold">Soul Tracer Platform</p>
             <h2 className="mt-4 font-display text-5xl font-bold leading-tight text-balance">
               "Feed my sheep." <span className="block text-gold/90">— John 21:17</span>
             </h2>
@@ -30,7 +30,7 @@ export function AuthShell({ title, subtitle, children, footer }: {
               ))}
             </div>
           </motion.div>
-          <p className="text-xs text-white/50">© {new Date().getFullYear()} Koinonia Ministry</p>
+          <p className="text-xs text-white/50">© {new Date().getFullYear()} Soul Tracer Ministry</p>
         </div>
       </div>
 
