@@ -139,3 +139,84 @@ export const notifications = [
   { id: 3, title: "Cell B-2 attendance dropped", desc: "Below 70% for 2 weeks", time: "3h" },
   { id: 4, title: "Ordination ceremony scheduled", desc: "Dec 14 — 6 candidates", time: "1d" },
 ];
+
+// === Events ===
+export type ChurchEvent = {
+  id: string;
+  name: string;
+  date: string;
+  type: "Service" | "Midweek" | "Cell" | "Crusade" | "Training";
+  branch: string;
+  attendees: number;
+  capacity: number;
+};
+
+export const events: ChurchEvent[] = [
+  { id: "e1", name: "Sunday Service", date: "2026-05-17", type: "Service", branch: "Lagos Central", attendees: 2120, capacity: 2500 },
+  { id: "e2", name: "Midweek Bible Study", date: "2026-05-14", type: "Midweek", branch: "Lagos Central", attendees: 980, capacity: 1500 },
+  { id: "e3", name: "Cell B-2 Meeting", date: "2026-05-16", type: "Cell", branch: "Abuja Hub", attendees: 22, capacity: 30 },
+  { id: "e4", name: "Healing Crusade", date: "2026-05-22", type: "Crusade", branch: "Accra Sanctuary", attendees: 0, capacity: 5000 },
+  { id: "e5", name: "Foundation Class — Module 3", date: "2026-05-19", type: "Training", branch: "Houston Citadel", attendees: 84, capacity: 120 },
+  { id: "e6", name: "Sunday Service", date: "2026-05-10", type: "Service", branch: "Abuja Hub", attendees: 1640, capacity: 1800 },
+  { id: "e7", name: "Cell A-1 Meeting", date: "2026-05-15", type: "Cell", branch: "Lagos Central", attendees: 18, capacity: 25 },
+];
+
+export type LeaderRequest = {
+  id: string;
+  candidate: string;
+  proposedRole: "Cell Leader" | "Worker" | "Department Head" | "Pastor";
+  scope: string;
+  proposedBy: string;
+  date: string;
+  status: "pending" | "approved" | "denied";
+};
+
+export const leaderRequests: LeaderRequest[] = [
+  { id: "lr1", candidate: "Esther Adebayo", proposedRole: "Cell Leader", scope: "Cell A-1 • Lagos Central", proposedBy: "Pst. D. Okafor", date: "2026-05-12", status: "pending" },
+  { id: "lr2", candidate: "Michael Bello", proposedRole: "Worker", scope: "Ushering • Abuja Hub", proposedBy: "Pst. G. Adeyemi", date: "2026-05-11", status: "pending" },
+  { id: "lr3", candidate: "Grace Mensah", proposedRole: "Department Head", scope: "Choir • Accra Sanctuary", proposedBy: "Pst. K. Mensah", date: "2026-05-09", status: "pending" },
+  { id: "lr4", candidate: "Samuel Idowu", proposedRole: "Pastor", scope: "Toronto North", proposedBy: "HQ Council", date: "2026-05-05", status: "pending" },
+];
+
+export type Invitee = {
+  id: string;
+  name: string;
+  event: string;
+  invitedBy: string;
+  status: "Pending" | "Attended" | "Declined";
+  date: string;
+};
+
+export const invitees: Invitee[] = [
+  { id: "i1", name: "Joy Salami", event: "Sunday Service", invitedBy: "m1000", status: "Attended", date: "2026-05-10" },
+  { id: "i2", name: "Caleb Obi", event: "Healing Crusade", invitedBy: "m1000", status: "Pending", date: "2026-05-22" },
+  { id: "i3", name: "Naomi Lawal", event: "Cell A-1 Meeting", invitedBy: "m1000", status: "Pending", date: "2026-05-15" },
+  { id: "i4", name: "Peter Bello", event: "Sunday Service", invitedBy: "m1000", status: "Declined", date: "2026-05-03" },
+];
+
+export type JourneyEvent = {
+  date: string;
+  kind: "Event Attended" | "Role Held" | "Group Joined" | "Stage";
+  label: string;
+  detail: string;
+};
+
+export function memberJourney(memberId: string): JourneyEvent[] {
+  const seed = memberId.charCodeAt(memberId.length - 1);
+  return [
+    { date: "2024-02-04", kind: "Event Attended", label: "First Timers' Sunday", detail: "Lagos Central" },
+    { date: "2024-03-10", kind: "Group Joined", label: "Cell A-1", detail: "Leader: Esther Adebayo" },
+    { date: "2024-05-12", kind: "Stage", label: "Baptized Member", detail: "Pastor: D. Okafor" },
+    { date: "2024-08-20", kind: "Event Attended", label: "Foundation Module 1", detail: "Completed" },
+    { date: "2024-11-02", kind: "Role Held", label: "Ushering Volunteer", detail: "Department: Ushering" },
+    { date: "2025-03-15", kind: "Stage", label: "Foundation Graduate", detail: "Cohort: Spring" },
+    { date: "2025-09-07", kind: "Role Held", label: seed % 2 ? "Cell Assistant" : "Worker", detail: "Promoted" },
+  ];
+}
+
+export function attendanceForDate(date: string) {
+  const seed = date.split("-").reduce((s, p) => s + parseInt(p, 10), 0);
+  return members.filter((_, i) => (i + seed) % 3 !== 0).map((m) => m.id);
+}
+
+export const myLedCells = ["c1", "c4", "c7"];
