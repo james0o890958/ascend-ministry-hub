@@ -11,7 +11,7 @@ export const Route = createFileRoute("/register")({ component: RegisterPage });
 function RegisterPage() {
   return (
     <AuthShell
-      title="Plant your church on Koinonia"
+      title="Plant your church on Soul Tracer"
       subtitle="Create your ministry workspace in minutes."
       footer={<p className="text-center">Already have an account? <Link to="/login" className="font-semibold text-primary hover:underline">Sign in</Link></p>}
     >

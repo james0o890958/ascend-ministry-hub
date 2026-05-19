@@ -64,7 +64,7 @@ function Landing() {
               Shepherd every soul, <span className="bg-gradient-to-r from-gold to-amber-300 bg-clip-text text-transparent">across every branch.</span>
             </h1>
             <p className="mt-6 max-w-xl text-lg text-white/75">
-              Koinonia is the membership and discipleship operating system for global ministries — from the first visit to ordination, beautifully tracked across every church under your covering.
+              Soul Tracer is the membership and discipleship operating system for global ministries — from the first visit to ordination, beautifully tracked across every church under your covering.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Button asChild size="lg" className="bg-gradient-gold text-gold-foreground hover:opacity-90 shadow-gold">
@@ -254,7 +254,7 @@ function Landing() {
           <div className="md:col-span-2">
             <Logo />
             <p className="mt-4 max-w-sm text-sm text-muted-foreground">
-              Koinonia is purpose-built for global ministries that disciple, raise leaders, and plant churches in every nation.
+              Soul Tracer is purpose-built for global ministries that disciple, raise leaders, and plant churches in every nation.
             </p>
           </div>
           <div>
@@ -276,7 +276,7 @@ function Landing() {
         </div>
         <div className="border-t border-border">
           <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-4 py-6 text-xs text-muted-foreground sm:flex-row sm:px-6">
-            <p>© {new Date().getFullYear()} Koinonia Ministry Platform. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} Soul Tracer Ministry Platform. All rights reserved.</p>
             <p className="font-display italic text-gold">"Go ye therefore, and teach all nations." — Matthew 28:19</p>
           </div>
         </div>
