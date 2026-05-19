@@ -32,7 +32,7 @@ function MembersPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Members"
+        title="Membership"
         subtitle={`${members.length.toLocaleString()} souls being shepherded across ${branches.length} branches`}
         action={
           <>
