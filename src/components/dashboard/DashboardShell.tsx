@@ -99,7 +99,7 @@ export function DashboardShell({ children }: { children?: ReactNode }) {
               {/* Role switcher (demo) */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-2">
+                  <Button variant="outline" size="sm" className="gap-2 border-white/20 bg-white/10 text-primary-foreground hover:bg-white/20 hover:text-primary-foreground">
                     <Crown className="h-4 w-4 text-gold" />
                     <span className="hidden sm:inline">{role}</span>
                     <ChevronDown className="h-3 w-3" />
