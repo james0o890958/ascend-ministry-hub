@@ -118,9 +118,9 @@ export function DashboardShell({ children }: { children?: ReactNode }) {
 
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="ghost" size="icon" className="relative">
+                  <Button variant="ghost" size="icon" className="relative text-primary-foreground hover:bg-white/15 hover:text-primary-foreground">
                     <Bell className="h-5 w-5" />
-                    <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-gold ring-2 ring-background" />
+                    <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-gold ring-2 ring-primary" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent align="end" className="w-80 p-0">
