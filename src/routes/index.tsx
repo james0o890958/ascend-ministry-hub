@@ -37,7 +37,7 @@ function Landing() {
           <nav className="hidden items-center gap-8 text-sm font-medium text-white/80 md:flex">
             <a href="#features" className="hover:text-gold transition">Features</a>
             <a href="#journey" className="hover:text-gold transition">Journey</a>
-            <a href="#branches" className="hover:text-gold transition">Branches</a>
+            <a href="#branches" className="hover:text-gold transition">Churches</a>
             <a href="#stats" className="hover:text-gold transition">Impact</a>
           </nav>
           <div className="flex items-center gap-2">
@@ -64,7 +64,7 @@ function Landing() {
               Shepherd every soul, <span className="bg-gradient-to-r from-gold to-amber-300 bg-clip-text text-transparent">across every branch.</span>
             </h1>
             <p className="mt-6 max-w-xl text-lg text-white/75">
-              Koinonia is the membership and discipleship operating system for global ministries — from the first visit to ordination, beautifully tracked across every church under your covering.
+              Soul tracer is the membership and discipleship operating system for global ministries — from the first visit to ordination, beautifully tracked across every church under your covering.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Button asChild size="lg" className="bg-gradient-gold text-gold-foreground hover:opacity-90 shadow-gold">
