@@ -144,16 +144,16 @@ export function DashboardShell({ children }: { children?: ReactNode }) {
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-2 rounded-full border border-border bg-card p-1 pr-3 hover:shadow-soft transition">
-                    <Avatar className="h-8 w-8 ring-2 ring-gold/40">
+                  <button className="flex items-center gap-2 rounded-full border border-white/20 bg-white/10 p-1 pr-3 text-primary-foreground hover:bg-white/20 transition">
+                    <Avatar className="h-8 w-8 ring-2 ring-gold/60">
                       <AvatarImage src="https://i.pravatar.cc/80?img=12" />
                       <AvatarFallback>DO</AvatarFallback>
                     </Avatar>
                     <span className="hidden text-left text-xs sm:block">
                       <span className="block font-semibold">Pst. D. Okafor</span>
-                      <span className="block text-muted-foreground">{role}</span>
+                      <span className="block text-white/70">{role}</span>
                     </span>
-                    <ChevronDown className="hidden h-4 w-4 text-muted-foreground sm:block" />
+                    <ChevronDown className="hidden h-4 w-4 text-white/70 sm:block" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
