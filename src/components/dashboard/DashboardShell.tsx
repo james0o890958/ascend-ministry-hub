@@ -86,14 +86,14 @@ export function DashboardShell({ children }: { children?: ReactNode }) {
       {mobileOpen && <div className="fixed inset-0 z-30 bg-black/40 lg:hidden" onClick={() => setMobileOpen(false)} />}
 
       <div className="lg:pl-72">
-        <header className="sticky top-0 z-20 border-b border-border bg-background/80 backdrop-blur">
+        <header className="sticky top-0 z-20 border-b border-primary/20 bg-gradient-to-r from-primary via-primary to-sidebar-accent text-primary-foreground shadow-soft backdrop-blur">
           <div className="flex h-16 items-center gap-4 px-4 sm:px-6">
-            <button className="rounded-md p-2 hover:bg-secondary lg:hidden" onClick={() => setMobileOpen(true)}>
+            <button className="rounded-md p-2 text-primary-foreground hover:bg-white/10 lg:hidden" onClick={() => setMobileOpen(true)}>
               <Menu className="h-5 w-5" />
             </button>
             <div className="relative max-w-md flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input placeholder="Search…" className="pl-9 bg-secondary/60 border-transparent focus-visible:bg-background" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/60" />
+              <Input placeholder="Search…" className="pl-9 bg-white/10 border-white/15 text-primary-foreground placeholder:text-white/60 focus-visible:bg-white/15 focus-visible:ring-gold/40" />
             </div>
             <div className="ml-auto flex items-center gap-2">
               {/* Role switcher (demo) */}
