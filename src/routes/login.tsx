@@ -22,7 +22,11 @@ function LoginPage() {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label htmlFor="password">Password</Label>
-            <Link to="/forgot-password" className="text-xs text-primary hover:underline">Forgot password?</Link>
+            <div className="flex items-center gap-3 text-xs">
+              <Link to="/find-account" className="text-primary hover:underline">Find my account</Link>
+              <span className="text-muted-foreground">·</span>
+              <Link to="/forgot-password" className="text-primary hover:underline">Forgot password?</Link>
+            </div>
           </div>
           <Input id="password" type="password" placeholder="••••••••" />
         </div>

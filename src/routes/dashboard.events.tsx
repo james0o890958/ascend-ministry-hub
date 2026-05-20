@@ -40,31 +40,46 @@ function EventsPage() {
       />
 
       <SectionCard title="Events">
-        <div className="overflow-hidden rounded-xl border border-border">
-          <table className="w-full text-sm">
-            <thead className="bg-secondary/60 text-xs uppercase tracking-wider text-muted-foreground">
-              <tr>
-                <th className="px-4 py-3 text-left">Event</th>
-                <th className="px-4 py-3 text-left">Date</th>
-                <th className="px-4 py-3 text-left">Type</th>
-                <th className="px-4 py-3 text-left">Branch</th>
-                <th className="px-4 py-3 text-left">Attendees</th>
-                <th className="px-4 py-3 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border bg-card">
-              {filtered.map((e) => (
-                <tr key={e.id} className="hover:bg-secondary/40">
-                  <td className="px-4 py-3 font-semibold">{e.name}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{new Date(e.date).toLocaleDateString()}</td>
-                  <td className="px-4 py-3"><Badge variant="outline">{e.type}</Badge></td>
-                  <td className="px-4 py-3 text-muted-foreground">{e.branch}</td>
-                  <td className="px-4 py-3">{e.attendees.toLocaleString()} / {e.capacity.toLocaleString()}</td>
-                  <td className="px-4 py-3 text-right"><AttendeesDialog eventId={e.id} eventName={e.name} eventDate={e.date} /></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="space-y-3">
+          {filtered.map((e) => {
+            const pct = Math.min(100, Math.round((e.attendees / e.capacity) * 100));
+            const d = new Date(e.date);
+            return (
+              <div
+                key={e.id}
+                className="group flex flex-col gap-4 overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-soft transition hover:shadow-elegant sm:flex-row sm:items-center"
+              >
+                <div className="flex w-20 flex-col items-center justify-center rounded-xl bg-gradient-royal py-3 text-primary-foreground shadow-soft">
+                  <span className="text-[10px] font-semibold uppercase tracking-widest text-gold">
+                    {d.toLocaleString("en", { month: "short" })}
+                  </span>
+                  <span className="font-display text-2xl font-bold leading-none">{d.getDate()}</span>
+                  <span className="mt-0.5 text-[10px] text-white/70">{d.getFullYear()}</span>
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="font-display text-lg font-bold">{e.name}</h3>
+                    <Badge variant="outline">{e.type}</Badge>
+                  </div>
+                  <p className="mt-1 text-sm text-muted-foreground">{e.branch}</p>
+                  <div className="mt-3 max-w-md">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">Attendance</span>
+                      <span className="font-semibold">{e.attendees.toLocaleString()} / {e.capacity.toLocaleString()}</span>
+                    </div>
+                    <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-secondary">
+                      <div className="h-full bg-gradient-gold" style={{ width: `${pct}%` }} />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex shrink-0 items-center sm:ml-auto">
+                  <AttendeesDialog eventId={e.id} eventName={e.name} eventDate={e.date} />
+                </div>
+              </div>
+            );
+          })}
         </div>
       </SectionCard>
     </div>

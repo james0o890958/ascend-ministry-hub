@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { PageHeader, SectionCard, StatCard } from "@/components/dashboard/ui";
-import { Building2, Users, TrendingUp, Crown, Sparkles } from "lucide-react";
+import { Building2, Users, TrendingUp, Crown, Sparkles, HeartHandshake } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -53,33 +53,43 @@ function ChurchPage() {
       </div>
 
       <SectionCard title={scope === "churches" ? "Churches" : "Cells"}>
-        <div className="overflow-hidden rounded-xl border border-border">
-          <table className="w-full text-sm">
-            <thead className="bg-secondary/60 text-xs uppercase tracking-wider text-muted-foreground">
-              <tr>
-                <th className="px-4 py-3 text-left font-semibold">Name</th>
-                <th className="px-4 py-3 text-left font-semibold">Location</th>
-                <th className="px-4 py-3 text-left font-semibold">Leader</th>
-                <th className="px-4 py-3 text-left font-semibold">Members</th>
-                <th className="px-4 py-3 text-left font-semibold">Growth</th>
-                <th className="px-4 py-3 text-left font-semibold">Appoint leader</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border bg-card">
-              {rows.map((r) => (
-                <tr key={r.id} className="hover:bg-secondary/40">
-                  <td className="px-4 py-3 font-semibold">{r.name}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{r.location}</td>
-                  <td className="px-4 py-3">{r.leader}</td>
-                  <td className="px-4 py-3 font-display">{r.members.toLocaleString()}</td>
-                  <td className="px-4 py-3"><Badge className="bg-success/15 text-success border-success/30">+{r.growth}%</Badge></td>
-                  <td className="px-4 py-3">
-                    <AppointInline target={r.name} onAppoint={(id) => appoint(id, r.name)} />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {rows.map((r) => (
+            <div
+              key={r.id}
+              className="group relative overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-soft transition hover:-translate-y-0.5 hover:shadow-elegant"
+            >
+              <div className="absolute inset-x-0 top-0 h-1 bg-gradient-royal" />
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-3">
+                  <span className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-royal text-primary-foreground shadow-soft">
+                    {scope === "churches" ? <Building2 className="h-5 w-5" /> : <HeartHandshake className="h-5 w-5" />}
+                  </span>
+                  <div>
+                    <p className="font-display text-lg font-bold leading-tight">{r.name}</p>
+                    <p className="text-xs text-muted-foreground">{r.location}</p>
+                  </div>
+                </div>
+                <Badge className="bg-success/15 text-success border-success/30">+{r.growth}%</Badge>
+              </div>
+
+              <div className="mt-5 grid grid-cols-2 gap-3 rounded-xl bg-secondary/50 p-3">
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Leader</p>
+                  <p className="mt-0.5 truncate text-sm font-semibold">{r.leader}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Members</p>
+                  <p className="mt-0.5 font-display text-lg font-bold">{r.members.toLocaleString()}</p>
+                </div>
+              </div>
+
+              <div className="mt-4 border-t border-border pt-4">
+                <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Appoint leader</p>
+                <AppointInline target={r.name} onAppoint={(id) => appoint(id, r.name)} />
+              </div>
+            </div>
+          ))}
         </div>
       </SectionCard>
 

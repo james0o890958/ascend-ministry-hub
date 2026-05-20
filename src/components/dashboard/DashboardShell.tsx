@@ -86,20 +86,20 @@ export function DashboardShell({ children }: { children?: ReactNode }) {
       {mobileOpen && <div className="fixed inset-0 z-30 bg-black/40 lg:hidden" onClick={() => setMobileOpen(false)} />}
 
       <div className="lg:pl-72">
-        <header className="sticky top-0 z-20 border-b border-border bg-background/80 backdrop-blur">
+        <header className="sticky top-0 z-20 border-b border-primary/20 bg-gradient-to-r from-primary via-primary to-sidebar-accent text-primary-foreground shadow-soft backdrop-blur">
           <div className="flex h-16 items-center gap-4 px-4 sm:px-6">
-            <button className="rounded-md p-2 hover:bg-secondary lg:hidden" onClick={() => setMobileOpen(true)}>
+            <button className="rounded-md p-2 text-primary-foreground hover:bg-white/10 lg:hidden" onClick={() => setMobileOpen(true)}>
               <Menu className="h-5 w-5" />
             </button>
             <div className="relative max-w-md flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input placeholder="Search…" className="pl-9 bg-secondary/60 border-transparent focus-visible:bg-background" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/60" />
+              <Input placeholder="Search…" className="pl-9 bg-white/10 border-white/15 text-primary-foreground placeholder:text-white/60 focus-visible:bg-white/15 focus-visible:ring-gold/40" />
             </div>
             <div className="ml-auto flex items-center gap-2">
               {/* Role switcher (demo) */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-2">
+                  <Button variant="outline" size="sm" className="gap-2 border-white/20 bg-white/10 text-primary-foreground hover:bg-white/20 hover:text-primary-foreground">
                     <Crown className="h-4 w-4 text-gold" />
                     <span className="hidden sm:inline">{role}</span>
                     <ChevronDown className="h-3 w-3" />
@@ -118,9 +118,9 @@ export function DashboardShell({ children }: { children?: ReactNode }) {
 
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="ghost" size="icon" className="relative">
+                  <Button variant="ghost" size="icon" className="relative text-primary-foreground hover:bg-white/15 hover:text-primary-foreground">
                     <Bell className="h-5 w-5" />
-                    <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-gold ring-2 ring-background" />
+                    <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-gold ring-2 ring-primary" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent align="end" className="w-80 p-0">
@@ -144,16 +144,16 @@ export function DashboardShell({ children }: { children?: ReactNode }) {
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-2 rounded-full border border-border bg-card p-1 pr-3 hover:shadow-soft transition">
-                    <Avatar className="h-8 w-8 ring-2 ring-gold/40">
+                  <button className="flex items-center gap-2 rounded-full border border-white/20 bg-white/10 p-1 pr-3 text-primary-foreground hover:bg-white/20 transition">
+                    <Avatar className="h-8 w-8 ring-2 ring-gold/60">
                       <AvatarImage src="https://i.pravatar.cc/80?img=12" />
                       <AvatarFallback>DO</AvatarFallback>
                     </Avatar>
                     <span className="hidden text-left text-xs sm:block">
                       <span className="block font-semibold">Pst. D. Okafor</span>
-                      <span className="block text-muted-foreground">{role}</span>
+                      <span className="block text-white/70">{role}</span>
                     </span>
-                    <ChevronDown className="hidden h-4 w-4 text-muted-foreground sm:block" />
+                    <ChevronDown className="hidden h-4 w-4 text-white/70 sm:block" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">

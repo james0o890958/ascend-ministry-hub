@@ -64,11 +64,7 @@ function Landing() {
               Shepherd every soul, <span className="bg-gradient-to-r from-gold to-amber-300 bg-clip-text text-transparent">across every branch.</span>
             </h1>
             <p className="mt-6 max-w-xl text-lg text-white/75">
-<<<<<<< HEAD
-              Soul tracer is the membership and discipleship operating system for global ministries — from the first visit to ordination, beautifully tracked across every church under your covering.
-=======
               Soul Tracer is the membership and discipleship operating system for global ministries — from the first visit to ordination, beautifully tracked across every church under your covering.
->>>>>>> 6a6d820717237da83d824b8773b2a4d22bbebdfa
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Button asChild size="lg" className="bg-gradient-gold text-gold-foreground hover:opacity-90 shadow-gold">
