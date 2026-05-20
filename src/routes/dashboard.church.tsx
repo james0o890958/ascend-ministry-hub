@@ -63,7 +63,7 @@ function ChurchPage() {
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-3">
                   <span className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-royal text-primary-foreground shadow-soft">
-                    {scope === "churches" ? <Building2 className="h-5 w-5" /> : <HeartHandshakeIcon />}
+                    {scope === "churches" ? <Building2 className="h-5 w-5" /> : <HeartHandshake className="h-5 w-5" />}
                   </span>
                   <div>
                     <p className="font-display text-lg font-bold leading-tight">{r.name}</p>
