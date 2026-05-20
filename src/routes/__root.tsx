@@ -7,6 +7,7 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
+import { Toaster } from "@/components/ui/sonner";
 
 import appCss from "../styles.css?url";
 
@@ -72,9 +73,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Koinonia — Church Membership & Discipleship Tracking" },
+      { title: "Soul Tracer — Church Membership & Discipleship Tracking" },
       { name: "description", content: "Track members from their first visit through every stage of spiritual growth — across every branch of your ministry." },
-      { property: "og:title", content: "Koinonia — Ministry Tracking Platform" },
+      { property: "og:title", content: "Soul Tracer — Ministry Tracking Platform" },
       { property: "og:description", content: "From first-timer to pastor — track every step of the discipleship journey." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -115,6 +116,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <Outlet />
+      <Toaster richColors position="top-right" />
     </QueryClientProvider>
   );
 }

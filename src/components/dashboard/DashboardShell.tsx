@@ -1,8 +1,9 @@
 import { ReactNode, useState } from "react";
 import { Link, Outlet, useRouterState } from "@tanstack/react-router";
 import {
-  Bell, ChevronDown, LayoutDashboard, Users, Compass, CalendarCheck,
-  HeartHandshake, Crown, Building2, Settings, Search, Menu, X, LogOut,
+  Bell, ChevronDown, LayoutDashboard, Users, CalendarCheck,
+  HeartHandshake, Crown, Settings, Search, Menu, X, LogOut,
+  Church, CalendarDays, UserPlus, UserCircle2, ShieldCheck,
 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { Input } from "@/components/ui/input";
@@ -11,33 +12,40 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
-  DropdownMenuSeparator, DropdownMenuTrigger,
+  DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuRadioGroup, DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { notifications } from "@/lib/data";
+import { useRole, ROLES, Role } from "@/lib/role";
 import { cn } from "@/lib/utils";
 
-const nav: { to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean }[] = [
+type NavItem = { to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean; roles?: Role[] };
+
+const nav: NavItem[] = [
   { to: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true },
-  { to: "/dashboard/members", label: "Members", icon: Users },
-  { to: "/dashboard/journey", label: "Journey", icon: Compass },
+  { to: "/dashboard/members", label: "Membership", icon: Users, roles: ["Admin", "Pastor", "Cell Leader"] },
+  { to: "/dashboard/church", label: "Church Ministry", icon: Church, roles: ["Admin", "Pastor"] },
+  { to: "/dashboard/cells", label: "Cell Ministry", icon: HeartHandshake, roles: ["Admin", "Pastor", "Cell Leader"] },
+  { to: "/dashboard/leadership", label: "Leadership", icon: ShieldCheck, roles: ["Admin", "Pastor"] },
+  { to: "/dashboard/events", label: "Events", icon: CalendarDays },
   { to: "/dashboard/attendance", label: "Attendance", icon: CalendarCheck },
-  { to: "/dashboard/cells", label: "Cell Ministry", icon: HeartHandshake },
-  { to: "/dashboard/leadership", label: "Leadership", icon: Crown },
-  { to: "/dashboard/branches", label: "Branches", icon: Building2 },
+  { to: "/dashboard/invitees", label: "Invitees", icon: UserPlus },
+  { to: "/dashboard/profile", label: "Profile", icon: UserCircle2 },
   { to: "/dashboard/settings", label: "Settings", icon: Settings },
 ];
 
 export function DashboardShell({ children }: { children?: ReactNode }) {
   const path = useRouterState({ select: (r) => r.location.pathname });
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { role, setRole } = useRole();
 
   const isActive = (to: string, exact?: boolean) =>
     exact ? path === to : path === to || path.startsWith(to + "/");
 
+  const visible = nav.filter((n) => !n.roles || n.roles.includes(role));
+
   return (
     <div className="min-h-screen bg-secondary/30">
-      {/* Sidebar */}
       <aside className={cn(
         "fixed inset-y-0 left-0 z-40 w-72 transform border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-transform lg:translate-x-0",
         mobileOpen ? "translate-x-0" : "-translate-x-full"
@@ -48,9 +56,9 @@ export function DashboardShell({ children }: { children?: ReactNode }) {
             <X className="h-5 w-5" />
           </button>
         </div>
-        <nav className="flex flex-col gap-1 p-4">
+        <nav className="flex flex-col gap-1 p-4 overflow-y-auto h-[calc(100vh-4rem)] pb-32">
           <p className="px-3 py-2 text-[10px] font-semibold uppercase tracking-widest text-white/40">Ministry</p>
-          {nav.map((item) => {
+          {visible.map((item) => {
             const active = isActive(item.to, item.exact);
             return (
               <Link key={item.to} to={item.to as "/dashboard"} onClick={() => setMobileOpen(false)}
@@ -73,20 +81,11 @@ export function DashboardShell({ children }: { children?: ReactNode }) {
             );
           })}
         </nav>
-        <div className="absolute inset-x-4 bottom-4 rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 to-white/0 p-4">
-          <div className="flex items-center gap-2 text-gold">
-            <Crown className="h-4 w-4" />
-            <p className="text-xs font-semibold uppercase tracking-wider">Pro tip</p>
-          </div>
-          <p className="mt-2 text-xs text-white/70">Schedule monthly branch reviews to track discipleship velocity.</p>
-        </div>
       </aside>
 
       {mobileOpen && <div className="fixed inset-0 z-30 bg-black/40 lg:hidden" onClick={() => setMobileOpen(false)} />}
 
-      {/* Main */}
       <div className="lg:pl-72">
-        {/* Topbar */}
         <header className="sticky top-0 z-20 border-b border-border bg-background/80 backdrop-blur">
           <div className="flex h-16 items-center gap-4 px-4 sm:px-6">
             <button className="rounded-md p-2 hover:bg-secondary lg:hidden" onClick={() => setMobileOpen(true)}>
@@ -94,9 +93,29 @@ export function DashboardShell({ children }: { children?: ReactNode }) {
             </button>
             <div className="relative max-w-md flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input placeholder="Search members, cells, branches…" className="pl-9 bg-secondary/60 border-transparent focus-visible:bg-background" />
+              <Input placeholder="Search…" className="pl-9 bg-secondary/60 border-transparent focus-visible:bg-background" />
             </div>
             <div className="ml-auto flex items-center gap-2">
+              {/* Role switcher (demo) */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Crown className="h-4 w-4 text-gold" />
+                    <span className="hidden sm:inline">{role}</span>
+                    <ChevronDown className="h-3 w-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-44">
+                  <DropdownMenuLabel>View as</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuRadioGroup value={role} onValueChange={(v) => setRole(v as Role)}>
+                    {ROLES.map((r) => (
+                      <DropdownMenuRadioItem key={r} value={r}>{r}</DropdownMenuRadioItem>
+                    ))}
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="ghost" size="icon" className="relative">
@@ -132,7 +151,7 @@ export function DashboardShell({ children }: { children?: ReactNode }) {
                     </Avatar>
                     <span className="hidden text-left text-xs sm:block">
                       <span className="block font-semibold">Pst. D. Okafor</span>
-                      <span className="block text-muted-foreground">Lead Pastor</span>
+                      <span className="block text-muted-foreground">{role}</span>
                     </span>
                     <ChevronDown className="hidden h-4 w-4 text-muted-foreground sm:block" />
                   </button>
@@ -140,8 +159,8 @@ export function DashboardShell({ children }: { children?: ReactNode }) {
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel>My account</DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild><Link to="/dashboard/profile">Profile</Link></DropdownMenuItem>
                   <DropdownMenuItem asChild><Link to="/dashboard/settings">Settings</Link></DropdownMenuItem>
-                  <DropdownMenuItem>Switch branch</DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <Link to="/login" className="text-destructive"><LogOut className="mr-2 h-4 w-4" />Sign out</Link>
