@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { PageHeader, SectionCard, StatCard } from "@/components/dashboard/ui";
-import { Building2, Users, TrendingUp, Crown, Sparkles } from "lucide-react";
+import { Building2, Users, TrendingUp, Crown, Sparkles, HeartHandshake } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
