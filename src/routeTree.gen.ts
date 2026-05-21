@@ -25,6 +25,7 @@ import { Route as DashboardEventsRouteImport } from './routes/dashboard.events'
 import { Route as DashboardChurchRouteImport } from './routes/dashboard.church'
 import { Route as DashboardCellsRouteImport } from './routes/dashboard.cells'
 import { Route as DashboardMembersIdRouteImport } from './routes/dashboard.members.$id'
+import { Route as DashboardChurchIdRouteImport } from './routes/dashboard.church.$id'
 
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
@@ -106,6 +107,11 @@ const DashboardMembersIdRoute = DashboardMembersIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => DashboardMembersRoute,
 } as any)
+const DashboardChurchIdRoute = DashboardChurchIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => DashboardChurchRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -115,7 +121,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/dashboard/cells': typeof DashboardCellsRoute
-  '/dashboard/church': typeof DashboardChurchRoute
+  '/dashboard/church': typeof DashboardChurchRouteWithChildren
   '/dashboard/events': typeof DashboardEventsRoute
   '/dashboard/invitees': typeof DashboardInviteesRoute
   '/dashboard/leadership': typeof DashboardLeadershipRoute
@@ -123,6 +129,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/dashboard/church/$id': typeof DashboardChurchIdRoute
   '/dashboard/members/$id': typeof DashboardMembersIdRoute
 }
 export interface FileRoutesByTo {
@@ -132,7 +139,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/dashboard/cells': typeof DashboardCellsRoute
-  '/dashboard/church': typeof DashboardChurchRoute
+  '/dashboard/church': typeof DashboardChurchRouteWithChildren
   '/dashboard/events': typeof DashboardEventsRoute
   '/dashboard/invitees': typeof DashboardInviteesRoute
   '/dashboard/leadership': typeof DashboardLeadershipRoute
@@ -140,6 +147,7 @@ export interface FileRoutesByTo {
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard': typeof DashboardIndexRoute
+  '/dashboard/church/$id': typeof DashboardChurchIdRoute
   '/dashboard/members/$id': typeof DashboardMembersIdRoute
 }
 export interface FileRoutesById {
@@ -151,7 +159,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/dashboard/cells': typeof DashboardCellsRoute
-  '/dashboard/church': typeof DashboardChurchRoute
+  '/dashboard/church': typeof DashboardChurchRouteWithChildren
   '/dashboard/events': typeof DashboardEventsRoute
   '/dashboard/invitees': typeof DashboardInviteesRoute
   '/dashboard/leadership': typeof DashboardLeadershipRoute
@@ -159,6 +167,7 @@ export interface FileRoutesById {
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/dashboard/church/$id': typeof DashboardChurchIdRoute
   '/dashboard/members/$id': typeof DashboardMembersIdRoute
 }
 export interface FileRouteTypes {
@@ -179,6 +188,7 @@ export interface FileRouteTypes {
     | '/dashboard/profile'
     | '/dashboard/settings'
     | '/dashboard/'
+    | '/dashboard/church/$id'
     | '/dashboard/members/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -196,6 +206,7 @@ export interface FileRouteTypes {
     | '/dashboard/profile'
     | '/dashboard/settings'
     | '/dashboard'
+    | '/dashboard/church/$id'
     | '/dashboard/members/$id'
   id:
     | '__root__'
@@ -214,6 +225,7 @@ export interface FileRouteTypes {
     | '/dashboard/profile'
     | '/dashboard/settings'
     | '/dashboard/'
+    | '/dashboard/church/$id'
     | '/dashboard/members/$id'
   fileRoutesById: FileRoutesById
 }
@@ -340,8 +352,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardMembersIdRouteImport
       parentRoute: typeof DashboardMembersRoute
     }
+    '/dashboard/church/$id': {
+      id: '/dashboard/church/$id'
+      path: '/$id'
+      fullPath: '/dashboard/church/$id'
+      preLoaderRoute: typeof DashboardChurchIdRouteImport
+      parentRoute: typeof DashboardChurchRoute
+    }
   }
 }
+
+interface DashboardChurchRouteChildren {
+  DashboardChurchIdRoute: typeof DashboardChurchIdRoute
+}
+
+const DashboardChurchRouteChildren: DashboardChurchRouteChildren = {
+  DashboardChurchIdRoute: DashboardChurchIdRoute,
+}
+
+const DashboardChurchRouteWithChildren = DashboardChurchRoute._addFileChildren(
+  DashboardChurchRouteChildren,
+)
 
 interface DashboardMembersRouteChildren {
   DashboardMembersIdRoute: typeof DashboardMembersIdRoute
@@ -356,7 +387,7 @@ const DashboardMembersRouteWithChildren =
 
 interface DashboardRouteChildren {
   DashboardCellsRoute: typeof DashboardCellsRoute
-  DashboardChurchRoute: typeof DashboardChurchRoute
+  DashboardChurchRoute: typeof DashboardChurchRouteWithChildren
   DashboardEventsRoute: typeof DashboardEventsRoute
   DashboardInviteesRoute: typeof DashboardInviteesRoute
   DashboardLeadershipRoute: typeof DashboardLeadershipRoute
@@ -368,7 +399,7 @@ interface DashboardRouteChildren {
 
 const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardCellsRoute: DashboardCellsRoute,
-  DashboardChurchRoute: DashboardChurchRoute,
+  DashboardChurchRoute: DashboardChurchRouteWithChildren,
   DashboardEventsRoute: DashboardEventsRoute,
   DashboardInviteesRoute: DashboardInviteesRoute,
   DashboardLeadershipRoute: DashboardLeadershipRoute,
@@ -393,3 +424,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
