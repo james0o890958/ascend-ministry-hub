@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Filter, Plus, Search, Upload } from "lucide-react";
 import { PageHeader, SectionCard } from "@/components/dashboard/ui";
 import { Button } from "@/components/ui/button";
@@ -13,27 +13,42 @@ import { Label } from "@/components/ui/label";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { branches, members, STAGES } from "@/lib/data";
+import { branches, cellGroups, members, myLedCells, STAGES } from "@/lib/data";
+import { useRole } from "@/lib/role";
 
 export const Route = createFileRoute("/dashboard/members")({ component: MembersPage });
 
 function MembersPage() {
+  const { role } = useRole();
+  const navigate = useNavigate();
   const [q, setQ] = useState("");
-  const [stage, setStage] = useState<string>("all");
-  const [branch, setBranch] = useState<string>("all");
+  const [position, setPosition] = useState<string>("all");
+  const [church, setChurch] = useState<string>("all");
+  const [cell, setCell] = useState<string>("all");
+
+  // Role-based cell scope
+  const visibleCells = useMemo(() => {
+    if (role === "Cell Leader") return cellGroups.filter((c) => myLedCells.includes(c.id));
+    if (role === "Pastor") return cellGroups.filter((c) => c.branch === branches[0].name);
+    return cellGroups;
+  }, [role]);
+  const visibleCellNames = useMemo(() => new Set(visibleCells.map((c) => c.name)), [visibleCells]);
 
   const filtered = useMemo(() => members.filter((m) => {
     const s = q.toLowerCase();
-    return (!s || m.name.toLowerCase().includes(s) || m.email.toLowerCase().includes(s))
-      && (stage === "all" || m.stage === stage)
-      && (branch === "all" || m.branch === branch);
-  }), [q, stage, branch]);
+    const inScope = role === "Admin" ? true : visibleCellNames.has(m.cell);
+    return inScope
+      && (!s || m.name.toLowerCase().includes(s) || m.email.toLowerCase().includes(s))
+      && (position === "all" || m.stage === position)
+      && (church === "all" || m.branch === church)
+      && (cell === "all" || m.cell === cell);
+  }), [q, position, church, cell, role, visibleCellNames]);
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Membership"
-        subtitle={`${members.length.toLocaleString()} souls being shepherded across ${branches.length} branches`}
+        subtitle={`${filtered.length.toLocaleString()} souls being shepherded${role === "Admin" ? ` across ${branches.length} churches` : ""}`}
         action={
           <>
             <Button variant="outline"><Upload className="mr-1 h-4 w-4" />Import</Button>
@@ -48,18 +63,27 @@ function MembersPage() {
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by name or email" className="pl-9" />
           </div>
-          <Select value={stage} onValueChange={setStage}>
-            <SelectTrigger className="w-[200px]"><Filter className="mr-1 h-3.5 w-3.5" /><SelectValue placeholder="Stage" /></SelectTrigger>
+          <Select value={position} onValueChange={setPosition}>
+            <SelectTrigger className="w-[200px]"><Filter className="mr-1 h-3.5 w-3.5" /><SelectValue placeholder="Position" /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All stages</SelectItem>
+              <SelectItem value="all">All positions</SelectItem>
               {STAGES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
             </SelectContent>
           </Select>
-          <Select value={branch} onValueChange={setBranch}>
-            <SelectTrigger className="w-[220px]"><SelectValue placeholder="Branch" /></SelectTrigger>
+          {role !== "Cell Leader" && (
+            <Select value={church} onValueChange={setChurch}>
+              <SelectTrigger className="w-[200px]"><SelectValue placeholder="Church" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All churches</SelectItem>
+                {branches.map((b) => <SelectItem key={b.id} value={b.name}>{b.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          )}
+          <Select value={cell} onValueChange={setCell}>
+            <SelectTrigger className="w-[200px]"><SelectValue placeholder="Cell" /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All branches</SelectItem>
-              {branches.map((b) => <SelectItem key={b.id} value={b.name}>{b.name}</SelectItem>)}
+              <SelectItem value="all">All cells</SelectItem>
+              {visibleCells.map((c) => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
@@ -69,18 +93,23 @@ function MembersPage() {
             <thead className="bg-secondary/60 text-xs uppercase tracking-wider text-muted-foreground">
               <tr>
                 <th className="px-4 py-3 text-left font-semibold">Member</th>
-                <th className="px-4 py-3 text-left font-semibold">Stage</th>
-                <th className="px-4 py-3 text-left font-semibold">Branch</th>
+                <th className="px-4 py-3 text-left font-semibold">Phone</th>
+                <th className="px-4 py-3 text-left font-semibold">Position</th>
+                <th className="px-4 py-3 text-left font-semibold">Church</th>
                 <th className="px-4 py-3 text-left font-semibold">Cell</th>
                 <th className="px-4 py-3 text-left font-semibold">Mentor</th>
+                <th className="px-4 py-3 text-left font-semibold">Joined</th>
                 <th className="px-4 py-3 text-left font-semibold">Attendance</th>
                 <th className="px-4 py-3 text-left font-semibold">Status</th>
-                <th className="px-4 py-3" />
               </tr>
             </thead>
             <tbody className="divide-y divide-border bg-card">
               {filtered.map((m) => (
-                <tr key={m.id} className="transition hover:bg-secondary/40">
+                <tr
+                  key={m.id}
+                  onClick={() => navigate({ to: "/dashboard/members/$id", params: { id: m.id } })}
+                  className="cursor-pointer transition hover:bg-secondary/40"
+                >
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       <Avatar className="h-9 w-9 ring-1 ring-gold/30">
@@ -92,10 +121,12 @@ function MembersPage() {
                       </div>
                     </div>
                   </td>
+                  <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{m.phone}</td>
                   <td className="px-4 py-3"><Badge variant="outline" className="border-gold/40 text-primary">{m.stage}</Badge></td>
                   <td className="px-4 py-3 text-muted-foreground">{m.branch}</td>
                   <td className="px-4 py-3 text-muted-foreground">{m.cell}</td>
                   <td className="px-4 py-3 text-muted-foreground">{m.mentor}</td>
+                  <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{new Date(m.joinedAt).toLocaleDateString()}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <div className="h-1.5 w-20 overflow-hidden rounded-full bg-secondary">
@@ -109,15 +140,10 @@ function MembersPage() {
                       {m.status}
                     </Badge>
                   </td>
-                  <td className="px-4 py-3 text-right">
-                    <Button asChild variant="ghost" size="sm">
-                      <Link to="/dashboard/members/$id" params={{ id: m.id }}>View</Link>
-                    </Button>
-                  </td>
                 </tr>
               ))}
               {filtered.length === 0 && (
-                <tr><td colSpan={8} className="py-10 text-center text-muted-foreground">No members match those filters.</td></tr>
+                <tr><td colSpan={9} className="py-10 text-center text-muted-foreground">No members match those filters.</td></tr>
               )}
             </tbody>
           </table>
@@ -152,14 +178,14 @@ function AddMemberDialog() {
           <div className="space-y-1.5"><Label>Email</Label><Input type="email" placeholder="esther@ministry.org" /></div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Stage</Label>
+              <Label>Position</Label>
               <Select defaultValue="First Timer">
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>{STAGES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Branch</Label>
+              <Label>Church</Label>
               <Select defaultValue={branches[0].id}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
