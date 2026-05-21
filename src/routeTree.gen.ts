@@ -24,7 +24,6 @@ import { Route as DashboardInviteesRouteImport } from './routes/dashboard.invite
 import { Route as DashboardEventsRouteImport } from './routes/dashboard.events'
 import { Route as DashboardChurchRouteImport } from './routes/dashboard.church'
 import { Route as DashboardCellsRouteImport } from './routes/dashboard.cells'
-import { Route as DashboardAttendanceRouteImport } from './routes/dashboard.attendance'
 import { Route as DashboardMembersIdRouteImport } from './routes/dashboard.members.$id'
 
 const RegisterRoute = RegisterRouteImport.update({
@@ -102,11 +101,6 @@ const DashboardCellsRoute = DashboardCellsRouteImport.update({
   path: '/cells',
   getParentRoute: () => DashboardRoute,
 } as any)
-const DashboardAttendanceRoute = DashboardAttendanceRouteImport.update({
-  id: '/attendance',
-  path: '/attendance',
-  getParentRoute: () => DashboardRoute,
-} as any)
 const DashboardMembersIdRoute = DashboardMembersIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -120,7 +114,6 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
-  '/dashboard/attendance': typeof DashboardAttendanceRoute
   '/dashboard/cells': typeof DashboardCellsRoute
   '/dashboard/church': typeof DashboardChurchRoute
   '/dashboard/events': typeof DashboardEventsRoute
@@ -138,7 +131,6 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
-  '/dashboard/attendance': typeof DashboardAttendanceRoute
   '/dashboard/cells': typeof DashboardCellsRoute
   '/dashboard/church': typeof DashboardChurchRoute
   '/dashboard/events': typeof DashboardEventsRoute
@@ -158,7 +150,6 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
-  '/dashboard/attendance': typeof DashboardAttendanceRoute
   '/dashboard/cells': typeof DashboardCellsRoute
   '/dashboard/church': typeof DashboardChurchRoute
   '/dashboard/events': typeof DashboardEventsRoute
@@ -179,7 +170,6 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/register'
-    | '/dashboard/attendance'
     | '/dashboard/cells'
     | '/dashboard/church'
     | '/dashboard/events'
@@ -197,7 +187,6 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/register'
-    | '/dashboard/attendance'
     | '/dashboard/cells'
     | '/dashboard/church'
     | '/dashboard/events'
@@ -216,7 +205,6 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/register'
-    | '/dashboard/attendance'
     | '/dashboard/cells'
     | '/dashboard/church'
     | '/dashboard/events'
@@ -345,13 +333,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardCellsRouteImport
       parentRoute: typeof DashboardRoute
     }
-    '/dashboard/attendance': {
-      id: '/dashboard/attendance'
-      path: '/attendance'
-      fullPath: '/dashboard/attendance'
-      preLoaderRoute: typeof DashboardAttendanceRouteImport
-      parentRoute: typeof DashboardRoute
-    }
     '/dashboard/members/$id': {
       id: '/dashboard/members/$id'
       path: '/$id'
@@ -374,7 +355,6 @@ const DashboardMembersRouteWithChildren =
   DashboardMembersRoute._addFileChildren(DashboardMembersRouteChildren)
 
 interface DashboardRouteChildren {
-  DashboardAttendanceRoute: typeof DashboardAttendanceRoute
   DashboardCellsRoute: typeof DashboardCellsRoute
   DashboardChurchRoute: typeof DashboardChurchRoute
   DashboardEventsRoute: typeof DashboardEventsRoute
@@ -387,7 +367,6 @@ interface DashboardRouteChildren {
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
-  DashboardAttendanceRoute: DashboardAttendanceRoute,
   DashboardCellsRoute: DashboardCellsRoute,
   DashboardChurchRoute: DashboardChurchRoute,
   DashboardEventsRoute: DashboardEventsRoute,
@@ -414,3 +393,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

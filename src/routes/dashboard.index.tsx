@@ -10,10 +10,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
-  DropdownMenuSeparator, DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import {
   attendanceForDate, branches, cellGroups, events, members, stats,
@@ -42,7 +38,7 @@ function Overview() {
           { metric: "Cell members", value: stats.cellMembers.toLocaleString(), scope: "Global", trend: "+5.2%" },
           { metric: "Leaders", value: stats.leaders, scope: "Global", trend: "+2.8%" },
           { metric: "Pastors", value: stats.pastors, scope: "Global", trend: "+1.2%" },
-          { metric: "Branches", value: stats.branches, scope: "Active", trend: "+3.0%" },
+          { metric: "Churches", value: stats.branches, scope: "Active", trend: "+3.0%" },
         ];
       case "Pastor":
         return [
@@ -85,6 +81,9 @@ function Overview() {
     Member: "Your spiritual snapshot",
   }[role];
 
+  const eventsToday = events.filter((e) => e.date === dateISO).length;
+  const rate = Math.round((attendedIds.size / members.length) * 100);
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -92,7 +91,6 @@ function Overview() {
         subtitle={greeting}
         action={
           <>
-            {/* Date filter */}
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="gap-2">
@@ -105,17 +103,24 @@ function Overview() {
               </PopoverContent>
             </Popover>
 
-            {/* Quick action */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
+            <Popover>
+              <PopoverTrigger asChild>
                 <Button className="bg-gradient-royal text-primary-foreground gap-2">
                   <Zap className="h-4 w-4" /> Quick action
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-72 p-3">
-                <DropdownMenuLabel>Mark attendance — {format(date, "PPP")}</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <div className="space-y-2 p-1">
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-96 p-0">
+                <div className="border-b border-border p-4">
+                  <p className="font-display text-base font-bold">Attendance · {format(date, "PPP")}</p>
+                  <p className="text-xs text-muted-foreground">Mark attendance and see the day's numbers.</p>
+                </div>
+                <div className="grid grid-cols-3 divide-x divide-border border-b border-border">
+                  <MiniStat label="Present" value={attendedIds.size} />
+                  <MiniStat label="Events" value={eventsToday} />
+                  <MiniStat label="Rate" value={`${rate}%`} />
+                </div>
+                <div className="space-y-2 p-4">
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Mark a member present</p>
                   <Select value={selectedMember} onValueChange={setSelectedMember}>
                     <SelectTrigger><SelectValue placeholder="Select member" /></SelectTrigger>
                     <SelectContent className="max-h-72">
@@ -128,8 +133,8 @@ function Overview() {
                     <CheckCircle2 className="mr-1 h-4 w-4" /> Mark present
                   </Button>
                 </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
+              </PopoverContent>
+            </Popover>
           </>
         }
       />
@@ -162,23 +167,15 @@ function Overview() {
           </table>
         </div>
       </SectionCard>
-
-      <SectionCard title={`Attendance for ${format(date, "PPP")}`}>
-        <div className="grid gap-4 sm:grid-cols-3">
-          <Stat label="Members present" value={attendedIds.size} />
-          <Stat label="Events held" value={events.filter((e) => e.date === dateISO).length} />
-          <Stat label="Attendance rate" value={`${Math.round((attendedIds.size / members.length) * 100)}%`} />
-        </div>
-      </SectionCard>
     </div>
   );
 }
 
-function Stat({ label, value }: { label: string; value: string | number }) {
+function MiniStat({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-xl border border-border p-4">
-      <p className="text-xs uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p className="mt-1 font-display text-2xl font-bold">{value}</p>
+    <div className="p-3 text-center">
+      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className="mt-0.5 font-display text-lg font-bold">{value}</p>
     </div>
   );
 }
