@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Filter, Plus, Search, Upload } from "lucide-react";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { Eye, Filter, Plus, Search, Upload } from "lucide-react";
 import { PageHeader, SectionCard } from "@/components/dashboard/ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
