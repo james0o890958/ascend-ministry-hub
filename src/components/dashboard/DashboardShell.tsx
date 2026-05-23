@@ -2,9 +2,11 @@ import { ReactNode, useState } from "react";
 import { Link, Outlet, useRouterState } from "@tanstack/react-router";
 import {
   Bell, ChevronDown, LayoutDashboard, Users,
-  HeartHandshake, Crown, Settings, Search, Menu, X, LogOut,
+  HeartHandshake, Settings, Search, Menu, X, LogOut,
   Church, CalendarDays, UserPlus, UserCircle2, ShieldCheck,
+  Zap, CalendarIcon, CheckCircle2,
 } from "lucide-react";
+import { format } from "date-fns";
 import { Logo } from "@/components/brand/Logo";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -15,7 +17,10 @@ import {
   DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuRadioGroup, DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { notifications } from "@/lib/data";
+import { Calendar } from "@/components/ui/calendar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
+import { notifications, members, attendanceForDate, events } from "@/lib/data";
 import { useRole, ROLES, Role } from "@/lib/role";
 import { cn } from "@/lib/utils";
 
@@ -85,41 +90,23 @@ export function DashboardShell({ children }: { children?: ReactNode }) {
       {mobileOpen && <div className="fixed inset-0 z-30 bg-black/40 lg:hidden" onClick={() => setMobileOpen(false)} />}
 
       <div className="lg:pl-72">
-        <header className="sticky top-0 z-20 border-b border-primary/20 bg-gradient-to-r from-primary via-primary to-sidebar-accent text-primary-foreground shadow-soft backdrop-blur">
-          <div className="flex h-16 items-center gap-4 px-4 sm:px-6">
-            <button className="rounded-md p-2 text-primary-foreground hover:bg-white/10 lg:hidden" onClick={() => setMobileOpen(true)}>
+        <header className="sticky top-0 z-20 border-b border-sidebar-border bg-sidebar text-sidebar-foreground shadow-elegant backdrop-blur">
+          <div className="flex h-16 items-center gap-3 px-4 sm:px-6">
+            <button className="rounded-md p-2 text-white hover:bg-white/10 lg:hidden" onClick={() => setMobileOpen(true)}>
               <Menu className="h-5 w-5" />
             </button>
-            <div className="relative max-w-md flex-1">
+            <div className="relative hidden max-w-md flex-1 sm:block">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/60" />
-              <Input placeholder="Search…" className="pl-9 bg-white/10 border-white/15 text-primary-foreground placeholder:text-white/60 focus-visible:bg-white/15 focus-visible:ring-gold/40" />
+              <Input placeholder="Search…" className="pl-9 bg-white/10 border-white/15 text-white placeholder:text-white/60 focus-visible:bg-white/15 focus-visible:ring-gold/40" />
             </div>
             <div className="ml-auto flex items-center gap-2">
-              {/* Role switcher (demo) */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-2 border-white/20 bg-white/10 text-primary-foreground hover:bg-white/20 hover:text-primary-foreground">
-                    <Crown className="h-4 w-4 text-gold" />
-                    <span className="hidden sm:inline">{role}</span>
-                    <ChevronDown className="h-3 w-3" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-44">
-                  <DropdownMenuLabel>View as</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuRadioGroup value={role} onValueChange={(v) => setRole(v as Role)}>
-                    {ROLES.map((r) => (
-                      <DropdownMenuRadioItem key={r} value={r}>{r}</DropdownMenuRadioItem>
-                    ))}
-                  </DropdownMenuRadioGroup>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <QuickAction />
 
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="ghost" size="icon" className="relative text-primary-foreground hover:bg-white/15 hover:text-primary-foreground">
+                  <Button variant="ghost" size="icon" className="relative text-white hover:bg-white/15 hover:text-white">
                     <Bell className="h-5 w-5" />
-                    <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-gold ring-2 ring-primary" />
+                    <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-gold ring-2 ring-sidebar" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent align="end" className="w-80 p-0">
@@ -143,7 +130,7 @@ export function DashboardShell({ children }: { children?: ReactNode }) {
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-2 rounded-full border border-white/20 bg-white/10 p-1 pr-3 text-primary-foreground hover:bg-white/20 transition">
+                  <button className="flex items-center gap-2 rounded-full border border-white/20 bg-white/10 p-1 pr-3 text-white hover:bg-white/20 transition">
                     <Avatar className="h-8 w-8 ring-2 ring-gold/60">
                       <AvatarImage src="https://i.pravatar.cc/80?img=12" />
                       <AvatarFallback>DO</AvatarFallback>
@@ -161,6 +148,13 @@ export function DashboardShell({ children }: { children?: ReactNode }) {
                   <DropdownMenuItem asChild><Link to="/dashboard/profile">Profile</Link></DropdownMenuItem>
                   <DropdownMenuItem asChild><Link to="/dashboard/settings">Settings</Link></DropdownMenuItem>
                   <DropdownMenuSeparator />
+                  <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">View as</DropdownMenuLabel>
+                  <DropdownMenuRadioGroup value={role} onValueChange={(v) => setRole(v as Role)}>
+                    {ROLES.map((r) => (
+                      <DropdownMenuRadioItem key={r} value={r}>{r}</DropdownMenuRadioItem>
+                    ))}
+                  </DropdownMenuRadioGroup>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <Link to="/login" className="text-destructive"><LogOut className="mr-2 h-4 w-4" />Sign out</Link>
                   </DropdownMenuItem>
@@ -172,6 +166,81 @@ export function DashboardShell({ children }: { children?: ReactNode }) {
 
         <main className="px-4 py-6 sm:px-6 lg:px-8">{children ?? <Outlet />}</main>
       </div>
+    </div>
+  );
+}
+
+function QuickAction() {
+  const [date, setDate] = useState<Date>(new Date());
+  const [selectedMember, setSelectedMember] = useState<string>("");
+  const dateISO = format(date, "yyyy-MM-dd");
+  const attended = attendanceForDate(dateISO);
+  const eventsToday = events.filter((e) => e.date === dateISO).length;
+  const rate = Math.round((attended.length / members.length) * 100);
+
+  function mark() {
+    if (!selectedMember) return toast.error("Select a member first");
+    const m = members.find((x) => x.id === selectedMember);
+    toast.success(`Marked ${m?.name} present for ${format(date, "PPP")}`);
+    setSelectedMember("");
+  }
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button size="sm" className="gap-2 bg-gradient-gold text-gold-foreground shadow-gold hover:opacity-90">
+          <Zap className="h-4 w-4" />
+          <span className="hidden sm:inline">Quick action</span>
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-[22rem] p-0">
+        <div className="border-b border-border p-4">
+          <p className="font-display text-base font-bold">Quick action</p>
+          <p className="text-xs text-muted-foreground">Mark attendance for any member on any date.</p>
+        </div>
+        <div className="grid grid-cols-3 divide-x divide-border border-b border-border">
+          <Mini label="Present" value={attended.length} />
+          <Mini label="Events" value={eventsToday} />
+          <Mini label="Rate" value={`${rate}%`} />
+        </div>
+        <div className="space-y-3 p-4">
+          <div>
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Date</p>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-full justify-start gap-2">
+                  <CalendarIcon className="h-4 w-4" />
+                  {format(date, "PPP")}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="start" className="w-auto p-0">
+                <Calendar mode="single" selected={date} onSelect={(d) => d && setDate(d)} initialFocus className="p-3 pointer-events-auto" />
+              </PopoverContent>
+            </Popover>
+          </div>
+          <div>
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Member</p>
+            <Select value={selectedMember} onValueChange={setSelectedMember}>
+              <SelectTrigger><SelectValue placeholder="Select member" /></SelectTrigger>
+              <SelectContent className="max-h-64">
+                {members.map((m) => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button onClick={mark} className="w-full bg-gradient-royal text-primary-foreground">
+            <CheckCircle2 className="mr-1 h-4 w-4" /> Mark present
+          </Button>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function Mini({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="p-3 text-center">
+      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className="mt-0.5 font-display text-lg font-bold">{value}</p>
     </div>
   );
 }

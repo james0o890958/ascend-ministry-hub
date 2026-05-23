@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Filter, Plus, Search, Upload } from "lucide-react";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { Eye, Filter, Plus, Search, Upload } from "lucide-react";
 import { PageHeader, SectionCard } from "@/components/dashboard/ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -101,6 +101,7 @@ function MembersPage() {
                 <th className="px-4 py-3 text-left font-semibold">Joined</th>
                 <th className="px-4 py-3 text-left font-semibold">Attendance</th>
                 <th className="px-4 py-3 text-left font-semibold">Status</th>
+                <th className="px-4 py-3 text-right font-semibold">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border bg-card">
@@ -140,10 +141,17 @@ function MembersPage() {
                       {m.status}
                     </Badge>
                   </td>
+                  <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
+                    <Button asChild size="sm" variant="outline" className="gap-1">
+                      <Link to="/dashboard/members/$id" params={{ id: m.id }}>
+                        <Eye className="h-3.5 w-3.5" /> View
+                      </Link>
+                    </Button>
+                  </td>
                 </tr>
               ))}
               {filtered.length === 0 && (
-                <tr><td colSpan={9} className="py-10 text-center text-muted-foreground">No members match those filters.</td></tr>
+                <tr><td colSpan={10} className="py-10 text-center text-muted-foreground">No members match those filters.</td></tr>
               )}
             </tbody>
           </table>
