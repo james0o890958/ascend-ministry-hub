@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { branches } from "@/lib/data";
 import { useRole } from "@/lib/role";
 
-export const Route = createFileRoute("/dashboard/church")({ component: ChurchPage });
+export const Route = createFileRoute("/dashboard/church/")({ component: ChurchPage });
 
 function ChurchPage() {
   const { role } = useRole();
