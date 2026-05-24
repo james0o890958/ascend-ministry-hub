@@ -18,12 +18,12 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
 import { Route as DashboardSettingsRouteImport } from './routes/dashboard.settings'
 import { Route as DashboardProfileRouteImport } from './routes/dashboard.profile'
-import { Route as DashboardMembersRouteImport } from './routes/dashboard.members'
 import { Route as DashboardLeadershipRouteImport } from './routes/dashboard.leadership'
 import { Route as DashboardInviteesRouteImport } from './routes/dashboard.invitees'
-import { Route as DashboardEventsRouteImport } from './routes/dashboard.events'
-import { Route as DashboardChurchRouteImport } from './routes/dashboard.church'
 import { Route as DashboardCellsRouteImport } from './routes/dashboard.cells'
+import { Route as DashboardMembersIndexRouteImport } from './routes/dashboard.members.index'
+import { Route as DashboardEventsIndexRouteImport } from './routes/dashboard.events.index'
+import { Route as DashboardChurchIndexRouteImport } from './routes/dashboard.church.index'
 import { Route as DashboardMembersIdRouteImport } from './routes/dashboard.members.$id'
 import { Route as DashboardEventsIdRouteImport } from './routes/dashboard.events.$id'
 import { Route as DashboardChurchIdRouteImport } from './routes/dashboard.church.$id'
@@ -73,11 +73,6 @@ const DashboardProfileRoute = DashboardProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => DashboardRoute,
 } as any)
-const DashboardMembersRoute = DashboardMembersRouteImport.update({
-  id: '/members',
-  path: '/members',
-  getParentRoute: () => DashboardRoute,
-} as any)
 const DashboardLeadershipRoute = DashboardLeadershipRouteImport.update({
   id: '/leadership',
   path: '/leadership',
@@ -88,35 +83,40 @@ const DashboardInviteesRoute = DashboardInviteesRouteImport.update({
   path: '/invitees',
   getParentRoute: () => DashboardRoute,
 } as any)
-const DashboardEventsRoute = DashboardEventsRouteImport.update({
-  id: '/events',
-  path: '/events',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardChurchRoute = DashboardChurchRouteImport.update({
-  id: '/church',
-  path: '/church',
-  getParentRoute: () => DashboardRoute,
-} as any)
 const DashboardCellsRoute = DashboardCellsRouteImport.update({
   id: '/cells',
   path: '/cells',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardMembersIndexRoute = DashboardMembersIndexRouteImport.update({
+  id: '/members/',
+  path: '/members/',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardEventsIndexRoute = DashboardEventsIndexRouteImport.update({
+  id: '/events/',
+  path: '/events/',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardChurchIndexRoute = DashboardChurchIndexRouteImport.update({
+  id: '/church/',
+  path: '/church/',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardMembersIdRoute = DashboardMembersIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => DashboardMembersRoute,
+  id: '/members/$id',
+  path: '/members/$id',
+  getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardEventsIdRoute = DashboardEventsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => DashboardEventsRoute,
+  id: '/events/$id',
+  path: '/events/$id',
+  getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardChurchIdRoute = DashboardChurchIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => DashboardChurchRoute,
+  id: '/church/$id',
+  path: '/church/$id',
+  getParentRoute: () => DashboardRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -127,17 +127,17 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/dashboard/cells': typeof DashboardCellsRoute
-  '/dashboard/church': typeof DashboardChurchRouteWithChildren
-  '/dashboard/events': typeof DashboardEventsRouteWithChildren
   '/dashboard/invitees': typeof DashboardInviteesRoute
   '/dashboard/leadership': typeof DashboardLeadershipRoute
-  '/dashboard/members': typeof DashboardMembersRouteWithChildren
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/church/$id': typeof DashboardChurchIdRoute
   '/dashboard/events/$id': typeof DashboardEventsIdRoute
   '/dashboard/members/$id': typeof DashboardMembersIdRoute
+  '/dashboard/church/': typeof DashboardChurchIndexRoute
+  '/dashboard/events/': typeof DashboardEventsIndexRoute
+  '/dashboard/members/': typeof DashboardMembersIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -146,17 +146,17 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/dashboard/cells': typeof DashboardCellsRoute
-  '/dashboard/church': typeof DashboardChurchRouteWithChildren
-  '/dashboard/events': typeof DashboardEventsRouteWithChildren
   '/dashboard/invitees': typeof DashboardInviteesRoute
   '/dashboard/leadership': typeof DashboardLeadershipRoute
-  '/dashboard/members': typeof DashboardMembersRouteWithChildren
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard': typeof DashboardIndexRoute
   '/dashboard/church/$id': typeof DashboardChurchIdRoute
   '/dashboard/events/$id': typeof DashboardEventsIdRoute
   '/dashboard/members/$id': typeof DashboardMembersIdRoute
+  '/dashboard/church': typeof DashboardChurchIndexRoute
+  '/dashboard/events': typeof DashboardEventsIndexRoute
+  '/dashboard/members': typeof DashboardMembersIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -167,17 +167,17 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/dashboard/cells': typeof DashboardCellsRoute
-  '/dashboard/church': typeof DashboardChurchRouteWithChildren
-  '/dashboard/events': typeof DashboardEventsRouteWithChildren
   '/dashboard/invitees': typeof DashboardInviteesRoute
   '/dashboard/leadership': typeof DashboardLeadershipRoute
-  '/dashboard/members': typeof DashboardMembersRouteWithChildren
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/church/$id': typeof DashboardChurchIdRoute
   '/dashboard/events/$id': typeof DashboardEventsIdRoute
   '/dashboard/members/$id': typeof DashboardMembersIdRoute
+  '/dashboard/church/': typeof DashboardChurchIndexRoute
+  '/dashboard/events/': typeof DashboardEventsIndexRoute
+  '/dashboard/members/': typeof DashboardMembersIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -189,17 +189,17 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/dashboard/cells'
-    | '/dashboard/church'
-    | '/dashboard/events'
     | '/dashboard/invitees'
     | '/dashboard/leadership'
-    | '/dashboard/members'
     | '/dashboard/profile'
     | '/dashboard/settings'
     | '/dashboard/'
     | '/dashboard/church/$id'
     | '/dashboard/events/$id'
     | '/dashboard/members/$id'
+    | '/dashboard/church/'
+    | '/dashboard/events/'
+    | '/dashboard/members/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -208,17 +208,17 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/dashboard/cells'
-    | '/dashboard/church'
-    | '/dashboard/events'
     | '/dashboard/invitees'
     | '/dashboard/leadership'
-    | '/dashboard/members'
     | '/dashboard/profile'
     | '/dashboard/settings'
     | '/dashboard'
     | '/dashboard/church/$id'
     | '/dashboard/events/$id'
     | '/dashboard/members/$id'
+    | '/dashboard/church'
+    | '/dashboard/events'
+    | '/dashboard/members'
   id:
     | '__root__'
     | '/'
@@ -228,17 +228,17 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/dashboard/cells'
-    | '/dashboard/church'
-    | '/dashboard/events'
     | '/dashboard/invitees'
     | '/dashboard/leadership'
-    | '/dashboard/members'
     | '/dashboard/profile'
     | '/dashboard/settings'
     | '/dashboard/'
     | '/dashboard/church/$id'
     | '/dashboard/events/$id'
     | '/dashboard/members/$id'
+    | '/dashboard/church/'
+    | '/dashboard/events/'
+    | '/dashboard/members/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -315,13 +315,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardProfileRouteImport
       parentRoute: typeof DashboardRoute
     }
-    '/dashboard/members': {
-      id: '/dashboard/members'
-      path: '/members'
-      fullPath: '/dashboard/members'
-      preLoaderRoute: typeof DashboardMembersRouteImport
-      parentRoute: typeof DashboardRoute
-    }
     '/dashboard/leadership': {
       id: '/dashboard/leadership'
       path: '/leadership'
@@ -336,20 +329,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardInviteesRouteImport
       parentRoute: typeof DashboardRoute
     }
-    '/dashboard/events': {
-      id: '/dashboard/events'
-      path: '/events'
-      fullPath: '/dashboard/events'
-      preLoaderRoute: typeof DashboardEventsRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/church': {
-      id: '/dashboard/church'
-      path: '/church'
-      fullPath: '/dashboard/church'
-      preLoaderRoute: typeof DashboardChurchRouteImport
-      parentRoute: typeof DashboardRoute
-    }
     '/dashboard/cells': {
       id: '/dashboard/cells'
       path: '/cells'
@@ -357,87 +336,79 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardCellsRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/members/': {
+      id: '/dashboard/members/'
+      path: '/members'
+      fullPath: '/dashboard/members/'
+      preLoaderRoute: typeof DashboardMembersIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/events/': {
+      id: '/dashboard/events/'
+      path: '/events'
+      fullPath: '/dashboard/events/'
+      preLoaderRoute: typeof DashboardEventsIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/church/': {
+      id: '/dashboard/church/'
+      path: '/church'
+      fullPath: '/dashboard/church/'
+      preLoaderRoute: typeof DashboardChurchIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/members/$id': {
       id: '/dashboard/members/$id'
-      path: '/$id'
+      path: '/members/$id'
       fullPath: '/dashboard/members/$id'
       preLoaderRoute: typeof DashboardMembersIdRouteImport
-      parentRoute: typeof DashboardMembersRoute
+      parentRoute: typeof DashboardRoute
     }
     '/dashboard/events/$id': {
       id: '/dashboard/events/$id'
-      path: '/$id'
+      path: '/events/$id'
       fullPath: '/dashboard/events/$id'
       preLoaderRoute: typeof DashboardEventsIdRouteImport
-      parentRoute: typeof DashboardEventsRoute
+      parentRoute: typeof DashboardRoute
     }
     '/dashboard/church/$id': {
       id: '/dashboard/church/$id'
-      path: '/$id'
+      path: '/church/$id'
       fullPath: '/dashboard/church/$id'
       preLoaderRoute: typeof DashboardChurchIdRouteImport
-      parentRoute: typeof DashboardChurchRoute
+      parentRoute: typeof DashboardRoute
     }
   }
 }
 
-interface DashboardChurchRouteChildren {
-  DashboardChurchIdRoute: typeof DashboardChurchIdRoute
-}
-
-const DashboardChurchRouteChildren: DashboardChurchRouteChildren = {
-  DashboardChurchIdRoute: DashboardChurchIdRoute,
-}
-
-const DashboardChurchRouteWithChildren = DashboardChurchRoute._addFileChildren(
-  DashboardChurchRouteChildren,
-)
-
-interface DashboardEventsRouteChildren {
-  DashboardEventsIdRoute: typeof DashboardEventsIdRoute
-}
-
-const DashboardEventsRouteChildren: DashboardEventsRouteChildren = {
-  DashboardEventsIdRoute: DashboardEventsIdRoute,
-}
-
-const DashboardEventsRouteWithChildren = DashboardEventsRoute._addFileChildren(
-  DashboardEventsRouteChildren,
-)
-
-interface DashboardMembersRouteChildren {
-  DashboardMembersIdRoute: typeof DashboardMembersIdRoute
-}
-
-const DashboardMembersRouteChildren: DashboardMembersRouteChildren = {
-  DashboardMembersIdRoute: DashboardMembersIdRoute,
-}
-
-const DashboardMembersRouteWithChildren =
-  DashboardMembersRoute._addFileChildren(DashboardMembersRouteChildren)
-
 interface DashboardRouteChildren {
   DashboardCellsRoute: typeof DashboardCellsRoute
-  DashboardChurchRoute: typeof DashboardChurchRouteWithChildren
-  DashboardEventsRoute: typeof DashboardEventsRouteWithChildren
   DashboardInviteesRoute: typeof DashboardInviteesRoute
   DashboardLeadershipRoute: typeof DashboardLeadershipRoute
-  DashboardMembersRoute: typeof DashboardMembersRouteWithChildren
   DashboardProfileRoute: typeof DashboardProfileRoute
   DashboardSettingsRoute: typeof DashboardSettingsRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
+  DashboardChurchIdRoute: typeof DashboardChurchIdRoute
+  DashboardEventsIdRoute: typeof DashboardEventsIdRoute
+  DashboardMembersIdRoute: typeof DashboardMembersIdRoute
+  DashboardChurchIndexRoute: typeof DashboardChurchIndexRoute
+  DashboardEventsIndexRoute: typeof DashboardEventsIndexRoute
+  DashboardMembersIndexRoute: typeof DashboardMembersIndexRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardCellsRoute: DashboardCellsRoute,
-  DashboardChurchRoute: DashboardChurchRouteWithChildren,
-  DashboardEventsRoute: DashboardEventsRouteWithChildren,
   DashboardInviteesRoute: DashboardInviteesRoute,
   DashboardLeadershipRoute: DashboardLeadershipRoute,
-  DashboardMembersRoute: DashboardMembersRouteWithChildren,
   DashboardProfileRoute: DashboardProfileRoute,
   DashboardSettingsRoute: DashboardSettingsRoute,
   DashboardIndexRoute: DashboardIndexRoute,
+  DashboardChurchIdRoute: DashboardChurchIdRoute,
+  DashboardEventsIdRoute: DashboardEventsIdRoute,
+  DashboardMembersIdRoute: DashboardMembersIdRoute,
+  DashboardChurchIndexRoute: DashboardChurchIndexRoute,
+  DashboardEventsIndexRoute: DashboardEventsIndexRoute,
+  DashboardMembersIndexRoute: DashboardMembersIndexRoute,
 }
 
 const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
