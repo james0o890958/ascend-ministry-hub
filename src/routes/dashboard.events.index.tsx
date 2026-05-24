@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { events } from "@/lib/data";
 import { useRole } from "@/lib/role";
 
-export const Route = createFileRoute("/dashboard/events")({ component: EventsPage });
+export const Route = createFileRoute("/dashboard/events/")({ component: EventsPage });
 
 function EventsPage() {
   const { role } = useRole();

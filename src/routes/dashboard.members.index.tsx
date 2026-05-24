@@ -16,7 +16,7 @@ import {
 import { branches, cellGroups, members, myLedCells, STAGES } from "@/lib/data";
 import { useRole } from "@/lib/role";
 
-export const Route = createFileRoute("/dashboard/members")({ component: MembersPage });
+export const Route = createFileRoute("/dashboard/members/")({ component: MembersPage });
 
 function MembersPage() {
   const { role } = useRole();
