@@ -3,6 +3,7 @@ import { SectionCard } from "@/components/dashboard/ui";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Plus, X, BarChart3 } from "lucide-react";
 
 type Entity = { id: string; name: string };
