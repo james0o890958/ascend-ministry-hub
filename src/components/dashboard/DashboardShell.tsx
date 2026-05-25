@@ -1,12 +1,10 @@
 import { ReactNode, useState } from "react";
 import { Link, Outlet, useRouterState } from "@tanstack/react-router";
 import {
-  Bell, ChevronDown, LayoutDashboard, Users,
-  HeartHandshake, Settings, Search, Menu, X, LogOut,
-  Church, CalendarDays, UserPlus, UserCircle2, ShieldCheck,
-  Zap, CalendarIcon, CheckCircle2,
+  Bell, ChevronDown, LayoutDashboard, Church, HeartHandshake, UsersRound,
+  CalendarDays, CheckSquare, HandCoins, MessageSquare, BellRing, BarChart3,
+  Settings, LifeBuoy, Search, Menu, X, LogOut,
 } from "lucide-react";
-import { format } from "date-fns";
 import { Logo } from "@/components/brand/Logo";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -17,10 +15,7 @@ import {
   DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuRadioGroup, DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { toast } from "sonner";
-import { notifications, members, attendanceForDate, events } from "@/lib/data";
+import { notifications } from "@/lib/data";
 import { useRole, ROLES, Role } from "@/lib/role";
 import { cn } from "@/lib/utils";
 
@@ -28,14 +23,15 @@ type NavItem = { to: string; label: string; icon: typeof LayoutDashboard; exact?
 
 const nav: NavItem[] = [
   { to: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true },
-  { to: "/dashboard/members", label: "Membership", icon: Users, roles: ["Admin", "Pastor", "Cell Leader"] },
   { to: "/dashboard/church", label: "Church Ministry", icon: Church, roles: ["Admin", "Pastor"] },
   { to: "/dashboard/cells", label: "Cell Ministry", icon: HeartHandshake, roles: ["Admin", "Pastor", "Cell Leader"] },
-  { to: "/dashboard/leadership", label: "Leadership", icon: ShieldCheck, roles: ["Admin", "Pastor"] },
+  { to: "/dashboard/groups", label: "Groups", icon: UsersRound },
   { to: "/dashboard/events", label: "Events", icon: CalendarDays },
-  { to: "/dashboard/invitees", label: "Invitees", icon: UserPlus },
-  { to: "/dashboard/profile", label: "Profile", icon: UserCircle2 },
-  { to: "/dashboard/settings", label: "Settings", icon: Settings },
+  { to: "/dashboard/tasks", label: "Tasks", icon: CheckSquare },
+  { to: "/dashboard/giving", label: "Giving", icon: HandCoins },
+  { to: "/dashboard/messages", label: "Messages", icon: MessageSquare },
+  { to: "/dashboard/notifications", label: "Notifications", icon: BellRing },
+  { to: "/dashboard/reports", label: "Reports", icon: BarChart3, roles: ["Admin", "Pastor", "Cell Leader"] },
 ];
 
 export function DashboardShell({ children }: { children?: ReactNode }) {
@@ -100,8 +96,6 @@ export function DashboardShell({ children }: { children?: ReactNode }) {
               <Input placeholder="Search…" className="pl-9 bg-white/10 border-white/15 text-white placeholder:text-white/60 focus-visible:bg-white/15 focus-visible:ring-gold/40" />
             </div>
             <div className="ml-auto flex items-center gap-2">
-              <QuickAction />
-
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="ghost" size="icon" className="relative text-white hover:bg-white/15 hover:text-white">
@@ -114,7 +108,7 @@ export function DashboardShell({ children }: { children?: ReactNode }) {
                     <p className="font-semibold">Notifications</p>
                     <Badge variant="secondary" className="bg-gold-soft text-primary">{notifications.length} new</Badge>
                   </div>
-                  <ul className="divide-y divide-border">
+                  <ul className="divide-y divide-border max-h-80 overflow-y-auto">
                     {notifications.map((n) => (
                       <li key={n.id} className="p-4 hover:bg-secondary/60 transition">
                         <div className="flex justify-between gap-3">
@@ -125,6 +119,9 @@ export function DashboardShell({ children }: { children?: ReactNode }) {
                       </li>
                     ))}
                   </ul>
+                  <div className="border-t border-border p-2">
+                    <Button asChild variant="ghost" size="sm" className="w-full"><Link to="/dashboard/notifications">View all</Link></Button>
+                  </div>
                 </PopoverContent>
               </Popover>
 
@@ -145,8 +142,9 @@ export function DashboardShell({ children }: { children?: ReactNode }) {
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel>My account</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild><Link to="/dashboard/profile">Profile</Link></DropdownMenuItem>
-                  <DropdownMenuItem asChild><Link to="/dashboard/settings">Settings</Link></DropdownMenuItem>
+                  <DropdownMenuItem asChild><Link to="/dashboard/profile"><Avatar className="mr-2 h-4 w-4"><AvatarFallback>P</AvatarFallback></Avatar>Profile</Link></DropdownMenuItem>
+                  <DropdownMenuItem asChild><Link to="/dashboard/settings"><Settings className="mr-2 h-4 w-4"/>Settings</Link></DropdownMenuItem>
+                  <DropdownMenuItem asChild><Link to="/dashboard/help"><LifeBuoy className="mr-2 h-4 w-4"/>Help &amp; Support</Link></DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">View as</DropdownMenuLabel>
                   <DropdownMenuRadioGroup value={role} onValueChange={(v) => setRole(v as Role)}>
@@ -156,7 +154,7 @@ export function DashboardShell({ children }: { children?: ReactNode }) {
                   </DropdownMenuRadioGroup>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link to="/login" className="text-destructive"><LogOut className="mr-2 h-4 w-4" />Sign out</Link>
+                    <Link to="/login" className="text-destructive"><LogOut className="mr-2 h-4 w-4" />Logout</Link>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -166,81 +164,6 @@ export function DashboardShell({ children }: { children?: ReactNode }) {
 
         <main className="px-4 py-6 sm:px-6 lg:px-8">{children ?? <Outlet />}</main>
       </div>
-    </div>
-  );
-}
-
-function QuickAction() {
-  const [date, setDate] = useState<Date>(new Date());
-  const [selectedMember, setSelectedMember] = useState<string>("");
-  const dateISO = format(date, "yyyy-MM-dd");
-  const attended = attendanceForDate(dateISO);
-  const eventsToday = events.filter((e) => e.date === dateISO).length;
-  const rate = Math.round((attended.length / members.length) * 100);
-
-  function mark() {
-    if (!selectedMember) return toast.error("Select a member first");
-    const m = members.find((x) => x.id === selectedMember);
-    toast.success(`Marked ${m?.name} present for ${format(date, "PPP")}`);
-    setSelectedMember("");
-  }
-
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button size="sm" className="gap-2 bg-gradient-gold text-gold-foreground shadow-gold hover:opacity-90">
-          <Zap className="h-4 w-4" />
-          <span className="hidden sm:inline">Quick action</span>
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent align="end" className="w-[22rem] p-0">
-        <div className="border-b border-border p-4">
-          <p className="font-display text-base font-bold">Quick action</p>
-          <p className="text-xs text-muted-foreground">Mark attendance for any member on any date.</p>
-        </div>
-        <div className="grid grid-cols-3 divide-x divide-border border-b border-border">
-          <Mini label="Present" value={attended.length} />
-          <Mini label="Events" value={eventsToday} />
-          <Mini label="Rate" value={`${rate}%`} />
-        </div>
-        <div className="space-y-3 p-4">
-          <div>
-            <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Date</p>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="w-full justify-start gap-2">
-                  <CalendarIcon className="h-4 w-4" />
-                  {format(date, "PPP")}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent align="start" className="w-auto p-0">
-                <Calendar mode="single" selected={date} onSelect={(d) => d && setDate(d)} initialFocus className="p-3 pointer-events-auto" />
-              </PopoverContent>
-            </Popover>
-          </div>
-          <div>
-            <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Member</p>
-            <Select value={selectedMember} onValueChange={setSelectedMember}>
-              <SelectTrigger><SelectValue placeholder="Select member" /></SelectTrigger>
-              <SelectContent className="max-h-64">
-                {members.map((m) => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <Button onClick={mark} className="w-full bg-gradient-royal text-primary-foreground">
-            <CheckCircle2 className="mr-1 h-4 w-4" /> Mark present
-          </Button>
-        </div>
-      </PopoverContent>
-    </Popover>
-  );
-}
-
-function Mini({ label, value }: { label: string; value: string | number }) {
-  return (
-    <div className="p-3 text-center">
-      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p className="mt-0.5 font-display text-lg font-bold">{value}</p>
     </div>
   );
 }

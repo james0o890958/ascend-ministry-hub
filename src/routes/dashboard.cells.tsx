@@ -9,11 +9,21 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { cellGroups, members, myLedCells } from "@/lib/data";
 import { useRole } from "@/lib/role";
+import { ReportComparison } from "@/components/dashboard/ReportComparison";
 
 export const Route = createFileRoute("/dashboard/cells")({ component: CellsPage });
 
 function CellsPage() {
   const { role } = useRole();
+
+  if (role !== "Admin" && role !== "Pastor" && role !== "Cell Leader") {
+    return (
+      <SectionCard title="Restricted">
+        <p className="text-sm text-muted-foreground">Cell Ministry is only available to Pastors and Cell Leaders.</p>
+      </SectionCard>
+    );
+  }
+
   const isLeader = role === "Cell Leader";
   const myCells = isLeader ? cellGroups.filter((c) => myLedCells.includes(c.id)) : cellGroups;
   const [activeCellId, setActiveCellId] = useState<string>(myCells[0]?.id ?? cellGroups[0].id);
@@ -26,10 +36,10 @@ function CellsPage() {
         title="Cell Ministry"
         subtitle={isLeader ? `Managing ${myCells.length} cell${myCells.length > 1 ? "s" : ""}` : "Cell groups, leaders, attendance and growth"}
         action={
-          isLeader && myCells.length > 1 ? (
+          myCells.length > 1 ? (
             <Tabs value={activeCellId} onValueChange={setActiveCellId}>
-              <TabsList>
-                {myCells.map((c) => <TabsTrigger key={c.id} value={c.id}>{c.name}</TabsTrigger>)}
+              <TabsList className="flex flex-wrap">
+                {myCells.slice(0, 6).map((c) => <TabsTrigger key={c.id} value={c.id}>{c.name}</TabsTrigger>)}
               </TabsList>
             </Tabs>
           ) : null
@@ -39,15 +49,17 @@ function CellsPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Members" value={activeCell.members} icon={Users} change={5.2} accent="primary" />
         <StatCard label="Attendance" value={`${activeCell.attendance}%`} icon={TrendingUp} change={activeCell.growth} accent="gold" />
-        <StatCard label="Branch" value={activeCell.branch} icon={HeartHandshake} accent="blue" />
+        <StatCard label="Church" value={activeCell.branch} icon={HeartHandshake} accent="blue" />
         <StatCard label="Leader" value={activeCell.leader} icon={Users} accent="success" />
       </div>
 
       <Tabs defaultValue="members">
-        <TabsList>
+        <TabsList className="flex flex-wrap">
           <TabsTrigger value="members">Members</TabsTrigger>
           <TabsTrigger value="attendance">Attendance</TabsTrigger>
+          <TabsTrigger value="engagement">Engagement</TabsTrigger>
           <TabsTrigger value="meetings">Meetings</TabsTrigger>
+          <TabsTrigger value="reports">Reports</TabsTrigger>
         </TabsList>
 
         <TabsContent value="members" className="mt-4">
@@ -55,12 +67,7 @@ function CellsPage() {
             <div className="overflow-hidden rounded-xl border border-border">
               <table className="w-full text-sm">
                 <thead className="bg-secondary/60 text-xs uppercase tracking-wider text-muted-foreground">
-                  <tr>
-                    <th className="px-4 py-3 text-left">Member</th>
-                    <th className="px-4 py-3 text-left">Stage</th>
-                    <th className="px-4 py-3 text-left">Attendance</th>
-                    <th className="px-4 py-3"/>
-                  </tr>
+                  <tr><th className="px-4 py-3 text-left">Member</th><th className="px-4 py-3 text-left">Position</th><th className="px-4 py-3 text-left">Attendance</th><th className="px-4 py-3"/></tr>
                 </thead>
                 <tbody className="divide-y divide-border bg-card">
                   {cellMembers.map((m) => (
@@ -94,6 +101,14 @@ function CellsPage() {
           </SectionCard>
         </TabsContent>
 
+        <TabsContent value="engagement" className="mt-4">
+          <div className="grid gap-4 sm:grid-cols-3">
+            <StatCard label="Active members" value={Math.round(activeCell.members * 0.86)} icon={Users} accent="primary"/>
+            <StatCard label="New invitees" value={3} icon={Users} change={2} accent="gold"/>
+            <StatCard label="Avg engagement" value="74%" icon={TrendingUp} change={3.1} accent="success"/>
+          </div>
+        </TabsContent>
+
         <TabsContent value="meetings" className="mt-4">
           <SectionCard title="Schedule" action={<Button className="bg-gradient-royal text-primary-foreground" onClick={() => toast.success("New meeting scheduled")}><CalendarPlus className="mr-1 h-4 w-4"/>New meeting</Button>}>
             <ul className="divide-y divide-border">
@@ -102,6 +117,10 @@ function CellsPage() {
               ))}
             </ul>
           </SectionCard>
+        </TabsContent>
+
+        <TabsContent value="reports" className="mt-4">
+          <ReportComparison label="Cells" entities={cellGroups.map((c) => ({ id: c.id, name: `${c.name} · ${c.branch}` }))} />
         </TabsContent>
       </Tabs>
     </div>
