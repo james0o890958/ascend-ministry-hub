@@ -79,10 +79,16 @@ export function ReportComparison({ label, entities }: { label: string; entities:
                 );
               })}
               {remaining.length > 0 && (
-                <Select value="" onValueChange={(v) => v && setSelected((s) => [...s, v])}>
-                  <SelectTrigger className="h-8 w-44"><SelectValue placeholder={<span className="flex items-center gap-1 text-xs"><Plus className="h-3 w-3"/>Add to compare</span>} /></SelectTrigger>
-                  <SelectContent>{remaining.map((e) => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}</SelectContent>
-                </Select>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-7 gap-1 text-xs"><Plus className="h-3 w-3"/>Add to compare</Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="max-h-72 overflow-y-auto">
+                    {remaining.map((e) => (
+                      <DropdownMenuItem key={e.id} onSelect={() => setSelected((s) => [...s, e.id])}>{e.name}</DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               )}
             </div>
           </div>
