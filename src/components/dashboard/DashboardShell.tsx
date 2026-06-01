@@ -1,7 +1,7 @@
 import { ReactNode, useState } from "react";
 import { Link, Outlet, useRouterState } from "@tanstack/react-router";
 import {
-  Bell, ChevronDown, LayoutDashboard, Church, HeartHandshake, UsersRound,
+  Bell, ChevronDown, LayoutDashboard, Church, HeartHandshake, Sparkles,
   CalendarDays, CheckSquare, HandCoins, MessageSquare, BellRing, BarChart3,
   Settings, LifeBuoy, Search, Menu, X, LogOut,
 } from "lucide-react";
