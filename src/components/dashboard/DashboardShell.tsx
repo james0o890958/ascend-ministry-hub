@@ -1,7 +1,7 @@
 import { ReactNode, useState } from "react";
 import { Link, Outlet, useRouterState } from "@tanstack/react-router";
 import {
-  Bell, ChevronDown, LayoutDashboard, Church, HeartHandshake, UsersRound,
+  Bell, ChevronDown, LayoutDashboard, Church, HeartHandshake, Sparkles,
   CalendarDays, CheckSquare, HandCoins, MessageSquare, BellRing, BarChart3,
   Settings, LifeBuoy, Search, Menu, X, LogOut,
 } from "lucide-react";
@@ -25,7 +25,7 @@ const nav: NavItem[] = [
   { to: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true },
   { to: "/dashboard/church", label: "Church Ministry", icon: Church, roles: ["Admin", "Pastor"] },
   { to: "/dashboard/cells", label: "Cell Ministry", icon: HeartHandshake, roles: ["Admin", "Pastor", "Cell Leader"] },
-  { to: "/dashboard/groups", label: "Groups", icon: UsersRound },
+  { to: "/dashboard/groups", label: "Souls", icon: Sparkles },
   { to: "/dashboard/events", label: "Events", icon: CalendarDays },
   { to: "/dashboard/tasks", label: "Tasks", icon: CheckSquare },
   { to: "/dashboard/giving", label: "Giving", icon: HandCoins },
