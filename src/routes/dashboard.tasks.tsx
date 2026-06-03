@@ -25,8 +25,10 @@ function TasksPage() {
 
   function toggle(id: string) { setTasks((t) => t.map((x) => x.id === id ? { ...x, done: !x.done } : x)); }
   function add() {
-    if (!newTitle.trim()) return;
-    setTasks((t) => [{ id: `t${Date.now()}`, title: newTitle, due: new Date().toISOString().slice(0,10), assignee: "Unassigned", priority: "Medium", done: false }, ...t]);
+    const title = newTitle.trim();
+    if (!title) { toast.error("Enter a task title"); return; }
+    const newTask: Task = { id: `t${Date.now()}`, title, due: new Date().toISOString().slice(0,10), assignee: "Unassigned", priority: "Medium", done: false };
+    setTasks((t) => [newTask, ...t]);
     setNewTitle(""); toast.success("Task added");
   }
 
@@ -44,10 +46,10 @@ function TasksPage() {
       </div>
 
       <SectionCard title="Add task">
-        <div className="flex gap-2">
-          <Input placeholder="Task title…" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} onKeyDown={(e) => e.key === "Enter" && add()} />
-          <Button className="bg-gradient-royal text-primary-foreground" onClick={add}><Plus className="mr-1 h-4 w-4"/>Add</Button>
-        </div>
+        <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); add(); }}>
+          <Input placeholder="Task title…" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} />
+          <Button type="submit" className="bg-gradient-royal text-primary-foreground"><Plus className="mr-1 h-4 w-4"/>Add</Button>
+        </form>
       </SectionCard>
 
       <SectionCard title="Tasks">

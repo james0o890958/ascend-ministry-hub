@@ -54,12 +54,12 @@ function CellsPage() {
       </div>
 
       <Tabs defaultValue="members">
-        <TabsList className="flex flex-wrap">
-          <TabsTrigger value="members">Members</TabsTrigger>
-          <TabsTrigger value="attendance">Attendance</TabsTrigger>
-          <TabsTrigger value="engagement">Engagement</TabsTrigger>
-          <TabsTrigger value="meetings">Meetings</TabsTrigger>
-          <TabsTrigger value="reports">Reports</TabsTrigger>
+        <TabsList className="flex w-full flex-wrap justify-start gap-1 h-auto">
+          <TabsTrigger value="members" className="flex-1 min-w-fit px-4">Members</TabsTrigger>
+          <TabsTrigger value="attendance" className="flex-1 min-w-fit px-4">Attendance</TabsTrigger>
+          <TabsTrigger value="engagement" className="flex-1 min-w-fit px-4">Engagement</TabsTrigger>
+          <TabsTrigger value="meetings" className="flex-1 min-w-fit px-4">Meetings</TabsTrigger>
+          <TabsTrigger value="reports" className="flex-1 min-w-fit px-4">Reports</TabsTrigger>
         </TabsList>
 
         <TabsContent value="members" className="mt-4">
