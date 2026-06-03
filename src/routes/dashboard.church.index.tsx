@@ -57,14 +57,14 @@ function ChurchPage() {
       />
 
       <Tabs defaultValue="overview">
-        <TabsList className="flex flex-wrap">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="members">Members</TabsTrigger>
-          <TabsTrigger value="attendance">Attendance</TabsTrigger>
-          <TabsTrigger value="giving">Giving</TabsTrigger>
-          <TabsTrigger value="events">Events</TabsTrigger>
-          <TabsTrigger value="activities">Activities</TabsTrigger>
-          <TabsTrigger value="reports">Reports</TabsTrigger>
+        <TabsList className="flex w-full flex-wrap justify-start gap-1 h-auto">
+          <TabsTrigger value="overview" className="flex-1 min-w-fit px-4">Overview</TabsTrigger>
+          <TabsTrigger value="members" className="flex-1 min-w-fit px-4">Members</TabsTrigger>
+          <TabsTrigger value="attendance" className="flex-1 min-w-fit px-4">Attendance</TabsTrigger>
+          <TabsTrigger value="giving" className="flex-1 min-w-fit px-4">Giving</TabsTrigger>
+          <TabsTrigger value="events" className="flex-1 min-w-fit px-4">Events</TabsTrigger>
+          <TabsTrigger value="activities" className="flex-1 min-w-fit px-4">Activities</TabsTrigger>
+          <TabsTrigger value="reports" className="flex-1 min-w-fit px-4">Reports</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="mt-4 space-y-6">
