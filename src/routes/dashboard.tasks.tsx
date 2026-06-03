@@ -25,8 +25,10 @@ function TasksPage() {
 
   function toggle(id: string) { setTasks((t) => t.map((x) => x.id === id ? { ...x, done: !x.done } : x)); }
   function add() {
-    if (!newTitle.trim()) return;
-    setTasks((t) => [{ id: `t${Date.now()}`, title: newTitle, due: new Date().toISOString().slice(0,10), assignee: "Unassigned", priority: "Medium", done: false }, ...t]);
+    const title = newTitle.trim();
+    if (!title) { toast.error("Enter a task title"); return; }
+    const newTask: Task = { id: `t${Date.now()}`, title, due: new Date().toISOString().slice(0,10), assignee: "Unassigned", priority: "Medium", done: false };
+    setTasks((t) => [newTask, ...t]);
     setNewTitle(""); toast.success("Task added");
   }
 
