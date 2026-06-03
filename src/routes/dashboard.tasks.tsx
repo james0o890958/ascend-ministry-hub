@@ -46,10 +46,10 @@ function TasksPage() {
       </div>
 
       <SectionCard title="Add task">
-        <div className="flex gap-2">
-          <Input placeholder="Task title…" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} onKeyDown={(e) => e.key === "Enter" && add()} />
-          <Button className="bg-gradient-royal text-primary-foreground" onClick={add}><Plus className="mr-1 h-4 w-4"/>Add</Button>
-        </div>
+        <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); add(); }}>
+          <Input placeholder="Task title…" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} />
+          <Button type="submit" className="bg-gradient-royal text-primary-foreground"><Plus className="mr-1 h-4 w-4"/>Add</Button>
+        </form>
       </SectionCard>
 
       <SectionCard title="Tasks">
