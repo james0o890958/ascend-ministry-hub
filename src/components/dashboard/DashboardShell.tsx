@@ -37,6 +37,7 @@ const nav: NavItem[] = [
 export function DashboardShell({ children }: { children?: ReactNode }) {
   const path = useRouterState({ select: (r) => r.location.pathname });
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
   const { role, setRole } = useRole();
 
   const isActive = (to: string, exact?: boolean) =>
@@ -46,37 +47,64 @@ export function DashboardShell({ children }: { children?: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-secondary/30">
-      <aside className={cn(
-        "fixed inset-y-0 left-0 z-40 w-72 transform border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-transform lg:translate-x-0",
-        mobileOpen ? "translate-x-0" : "-translate-x-full"
-      )}>
-        <div className="flex h-16 items-center justify-between px-5 border-b border-sidebar-border">
-          <Logo variant="light" />
+      <aside
+        className={cn(
+          "group/sidebar fixed inset-y-0 left-0 z-40 transform border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-[transform,width] duration-200 lg:translate-x-0",
+          mobileOpen ? "translate-x-0" : "-translate-x-full",
+          collapsed ? "w-[72px] lg:hover:w-72" : "w-72",
+        )}
+      >
+        <div className="flex h-16 items-center justify-between gap-2 px-3 border-b border-sidebar-border">
+          <div className={cn(
+            "flex-1 overflow-hidden pl-2 transition-opacity",
+            collapsed ? "opacity-0 group-hover/sidebar:opacity-100" : "opacity-100"
+          )}>
+            <Logo variant="light" />
+          </div>
+          <button
+            className="hidden rounded-md p-1.5 text-white/70 hover:bg-white/10 lg:inline-flex"
+            onClick={() => setCollapsed((v) => !v)}
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {collapsed ? <ChevronsRight className="h-5 w-5" /> : <ChevronsLeft className="h-5 w-5" />}
+          </button>
           <button className="rounded-md p-1.5 text-white/70 hover:bg-white/10 lg:hidden" onClick={() => setMobileOpen(false)}>
             <X className="h-5 w-5" />
           </button>
         </div>
-        <nav className="flex flex-col gap-1 p-4 overflow-y-auto h-[calc(100vh-4rem)] pb-32">
-          <p className="px-3 py-2 text-[10px] font-semibold uppercase tracking-widest text-white/40">Ministry</p>
+        <nav className="flex flex-col gap-1 p-3 overflow-y-auto h-[calc(100vh-4rem)] pb-32">
+          <p className={cn(
+            "px-3 py-2 text-[10px] font-semibold uppercase tracking-widest text-white/40 transition-opacity",
+            collapsed ? "opacity-0 group-hover/sidebar:opacity-100" : "opacity-100"
+          )}>Ministry</p>
           {visible.map((item) => {
             const active = isActive(item.to, item.exact);
             return (
               <Link key={item.to} to={item.to as "/dashboard"} onClick={() => setMobileOpen(false)}
+                title={collapsed ? item.label : undefined}
                 className={cn(
-                  "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition",
+                  "group/item flex items-center gap-3 rounded-xl px-2 py-2.5 text-sm font-medium transition",
                   active
                     ? "bg-gradient-to-r from-sidebar-accent to-sidebar-accent/40 text-white shadow-soft ring-1 ring-gold/30"
                     : "text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-white"
                 )}
               >
                 <span className={cn(
-                  "grid h-8 w-8 place-items-center rounded-lg transition",
-                  active ? "bg-gold text-gold-foreground" : "bg-white/5 text-sidebar-foreground/70 group-hover:bg-white/10"
+                  "grid h-9 w-9 shrink-0 place-items-center rounded-lg transition",
+                  active ? "bg-gold text-gold-foreground" : "bg-white/5 text-sidebar-foreground/70 group-hover/item:bg-white/10"
                 )}>
                   <item.icon className="h-4 w-4" />
                 </span>
-                {item.label}
-                {active && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-gold" />}
+                <span className={cn(
+                  "truncate transition-opacity",
+                  collapsed ? "opacity-0 group-hover/sidebar:opacity-100" : "opacity-100"
+                )}>{item.label}</span>
+                {active && (
+                  <span className={cn(
+                    "ml-auto h-1.5 w-1.5 rounded-full bg-gold transition-opacity",
+                    collapsed ? "opacity-0 group-hover/sidebar:opacity-100" : "opacity-100"
+                  )} />
+                )}
               </Link>
             );
           })}
@@ -85,7 +113,8 @@ export function DashboardShell({ children }: { children?: ReactNode }) {
 
       {mobileOpen && <div className="fixed inset-0 z-30 bg-black/40 lg:hidden" onClick={() => setMobileOpen(false)} />}
 
-      <div className="lg:pl-72">
+      <div className={cn("transition-[padding] duration-200", collapsed ? "lg:pl-[72px]" : "lg:pl-72")}>
+
         <header className="sticky top-0 z-20 border-b border-sidebar-border bg-sidebar text-sidebar-foreground shadow-elegant backdrop-blur">
           <div className="flex h-16 items-center gap-3 px-4 sm:px-6">
             <button className="rounded-md p-2 text-white hover:bg-white/10 lg:hidden" onClick={() => setMobileOpen(true)}>
