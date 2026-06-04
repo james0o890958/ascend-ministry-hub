@@ -3,7 +3,7 @@ import { Link, Outlet, useRouterState } from "@tanstack/react-router";
 import {
   Bell, ChevronDown, LayoutDashboard, Church, HeartHandshake, Sparkles,
   CalendarDays, CheckSquare, HandCoins, MessageSquare, BellRing, BarChart3,
-  Settings, LifeBuoy, Search, Menu, X, LogOut,
+  Settings, LifeBuoy, Search, Menu, X, LogOut, ChevronsLeft, ChevronsRight,
 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { Input } from "@/components/ui/input";
