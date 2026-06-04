@@ -33,9 +33,9 @@ function SoulsPage() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Stage | "All">("All");
-  const [form, setForm] = useState<Omit<Soul, "id" | "date">>({
-    name: "", phone: "", email: "", location: "", stage: "Contacted", invitedBy: "", notes: "",
-  });
+  type FormState = Pick<Soul, "name" | "phone" | "email" | "location" | "stage" | "invitedBy" | "notes">;
+  const emptyForm: FormState = { name: "", phone: "", email: "", location: "", stage: "Contacted", invitedBy: "", notes: "" };
+  const [form, setForm] = useState<FormState>(emptyForm);
 
   const filtered = souls.filter((s) => {
     const matchQ = s.name.toLowerCase().includes(query.toLowerCase()) || s.invitedBy.toLowerCase().includes(query.toLowerCase());
@@ -52,9 +52,16 @@ function SoulsPage() {
       ...form,
       id: `s${Date.now()}`,
       date: new Date().toISOString().slice(0, 10),
+      mentor: "Unassigned",
+      badges: [],
+      milestones: [],
+      prayers: [],
+      followUps: [],
+      noteLog: [],
+      growth: { discipleship: 0, bibleStudy: 0, churchInvolvement: 0, followUpCompletion: 0 },
     };
     setSouls([next, ...souls]);
-    setForm({ name: "", phone: "", email: "", location: "", stage: "Contacted", invitedBy: "", notes: "" });
+    setForm(emptyForm);
     setOpen(false);
     toast.success(`${next.name} added to souls`);
   };
