@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { PageHeader, SectionCard, StatCard } from "@/components/dashboard/ui";
 import { Button } from "@/components/ui/button";
@@ -14,29 +14,9 @@ import {
 } from "@/components/ui/select";
 import { Sparkles, Plus, Phone, Mail, MapPin, Search } from "lucide-react";
 import { toast } from "sonner";
+import { souls as seed, type Soul, type SoulStage as Stage } from "@/lib/souls";
 
 export const Route = createFileRoute("/dashboard/groups")({ component: SoulsPage });
-
-type Stage = "Contacted" | "Visited" | "Following Up" | "Converted" | "Discipled";
-
-type Soul = {
-  id: string;
-  name: string;
-  phone: string;
-  email?: string;
-  location?: string;
-  stage: Stage;
-  invitedBy: string;
-  notes?: string;
-  date: string;
-};
-
-const seed: Soul[] = [
-  { id: "s1", name: "Tunde Adebola", phone: "+234 803 111 2233", email: "tunde@mail.com", location: "Lagos", stage: "Visited", invitedBy: "Grace Adeyemi", date: "2026-05-22" },
-  { id: "s2", name: "Ngozi Eze", phone: "+234 805 444 7788", location: "Abuja", stage: "Following Up", invitedBy: "Daniel Okafor", date: "2026-05-18" },
-  { id: "s3", name: "Samuel Bassey", phone: "+234 802 998 1212", email: "sam@mail.com", stage: "Converted", invitedBy: "Esther Adebayo", date: "2026-04-30" },
-  { id: "s4", name: "Aisha Mohammed", phone: "+234 809 222 4455", location: "Kaduna", stage: "Contacted", invitedBy: "Michael Bello", date: "2026-05-28" },
-];
 
 const stages: Stage[] = ["Contacted", "Visited", "Following Up", "Converted", "Discipled"];
 
