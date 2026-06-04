@@ -142,9 +142,10 @@ function SoulsPage() {
                 {s.email && <p className="flex items-center gap-2"><Mail className="h-3.5 w-3.5 text-gold"/>{s.email}</p>}
                 {s.location && <p className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5 text-gold"/>{s.location}</p>}
               </div>
-              <div className="mt-4 flex gap-2">
-                <Button size="sm" variant="outline" className="flex-1">View</Button>
-                <Button size="sm" variant="ghost" onClick={() => toast.success("Follow-up logged")}>Follow up</Button>
+              <div className="mt-4">
+                <Button asChild size="sm" variant="outline" className="w-full">
+                  <Link to="/dashboard/groups/$id" params={{ id: s.id }}>View</Link>
+                </Button>
               </div>
             </div>
           ))}
