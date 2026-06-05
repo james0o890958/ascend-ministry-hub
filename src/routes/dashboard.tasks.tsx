@@ -7,8 +7,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { CheckSquare, Plus, Clock, CheckCircle2, Feather } from "lucide-react";
+import { CheckSquare, Plus, Clock, CheckCircle2, Feather, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/dashboard/tasks")({ component: TasksPage });
@@ -50,6 +51,13 @@ function TasksPage() {
   const [priority, setPriority] = useState<Priority>("High");
   const [due, setDue] = useState("");
 
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editTag, setEditTag] = useState("");
+  const [editPriority, setEditPriority] = useState<Priority>("High");
+  const [editDue, setEditDue] = useState("");
+
   function toggle(id: string) {
     setTasks((t) => t.map((x) => (x.id === id ? { ...x, done: !x.done } : x)));
   }
@@ -70,6 +78,47 @@ function TasksPage() {
     setTasks((prev) => [newTask, ...prev]);
     setTitle(""); setDescription(""); setTag(""); setPriority("High"); setDue("");
     toast.success("Task added");
+  }
+
+  function remove(id: string) {
+    setTasks((t) => t.filter((x) => x.id !== id));
+    toast.success("Task deleted");
+  }
+
+  function openEdit(task: Task) {
+    setEditingId(task.id);
+    setEditTitle(task.title);
+    setEditDescription(task.description || "");
+    setEditTag(task.tag || "");
+    setEditPriority(task.priority);
+    setEditDue(task.due);
+  }
+
+  function saveEdit() {
+    if (!editTitle.trim()) {
+      toast.error("Task title is required");
+      return;
+    }
+    setTasks((t) =>
+      t.map((x) =>
+        x.id === editingId
+          ? {
+              ...x,
+              title: editTitle.trim(),
+              description: editDescription.trim() || undefined,
+              tag: editTag.trim() || undefined,
+              priority: editPriority,
+              due: editDue || x.due,
+            }
+          : x
+      )
+    );
+    setEditingId(null);
+    toast.success("Task updated");
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
   }
 
   const open = tasks.filter((t) => !t.done);
@@ -173,7 +222,7 @@ function TasksPage() {
         ) : (
           <ul className="divide-y divide-border">
             {visible.map((t) => (
-              <li key={t.id} className="flex items-center gap-3 py-3 transition hover:bg-muted/40 -mx-2 px-2 rounded-lg">
+              <li key={t.id} className="flex items-center gap-3 py-3 transition hover:bg-muted/40 -mx-2 px-2 rounded-lg group">
                 <Checkbox checked={t.done} onCheckedChange={() => toggle(t.id)} />
                 <div className="min-w-0 flex-1">
                   <p className={t.done ? "line-through text-muted-foreground" : "font-semibold"}>{t.title}</p>
@@ -182,20 +231,92 @@ function TasksPage() {
                     {t.tag ? `${t.tag} · ` : ""}{t.assignee} · due {new Date(t.due).toLocaleDateString()}
                   </p>
                 </div>
-                <Badge
-                  variant="outline"
-                  className={cn(
-                    t.priority === "High" && "border-destructive/40 text-destructive",
-                    t.priority === "Medium" && "border-gold/40 text-gold-foreground bg-gold-soft",
-                  )}
-                >
-                  {t.priority}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      t.priority === "High" && "border-destructive/40 text-destructive",
+                      t.priority === "Medium" && "border-gold/40 text-gold-foreground bg-gold-soft",
+                    )}
+                  >
+                    {t.priority}
+                  </Badge>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 opacity-0 group-hover:opacity-100 transition"
+                    onClick={() => openEdit(t)}
+                  >
+                    <Pencil className="h-4 w-4 text-muted-foreground" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 opacity-0 group-hover:opacity-100 transition"
+                    onClick={() => remove(t.id)}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
               </li>
             ))}
           </ul>
         )}
       </SectionCard>
+
+      <Dialog open={!!editingId} onOpenChange={(open) => !open && cancelEdit()}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Edit task</DialogTitle>
+          </DialogHeader>
+          <form
+            className="space-y-3"
+            onSubmit={(e) => { e.preventDefault(); saveEdit(); }}
+          >
+            <Input
+              placeholder="Task title *"
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              className="rounded-full h-11 px-5"
+            />
+            <Textarea
+              placeholder="Description (optional)"
+              value={editDescription}
+              onChange={(e) => setEditDescription(e.target.value)}
+              className="rounded-2xl px-5 py-3 min-h-[64px]"
+            />
+            <Input
+              placeholder="Tag (e.g. Worship, Finance)"
+              value={editTag}
+              onChange={(e) => setEditTag(e.target.value)}
+              className="rounded-full h-11 px-5"
+            />
+            <Select value={editPriority} onValueChange={(v) => setEditPriority(v as Priority)}>
+              <SelectTrigger className="rounded-full h-11 px-5">
+                <span className="flex items-center gap-2">
+                  <span className={cn("h-2.5 w-2.5 rounded-full", priorityDot[editPriority])} />
+                  <SelectValue />
+                </span>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="High"><span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-destructive" />High priority</span></SelectItem>
+                <SelectItem value="Medium"><span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-gold" />Medium priority</span></SelectItem>
+                <SelectItem value="Low"><span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-success" />Low priority</span></SelectItem>
+              </SelectContent>
+            </Select>
+            <Input
+              type="date"
+              value={editDue}
+              onChange={(e) => setEditDue(e.target.value)}
+              className="rounded-full h-11 px-5"
+            />
+            <DialogFooter className="gap-2 pt-2">
+              <Button type="button" variant="outline" onClick={cancelEdit}>Cancel</Button>
+              <Button type="submit" className="bg-gradient-royal text-primary-foreground shadow-elegant hover:opacity-95">Save changes</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

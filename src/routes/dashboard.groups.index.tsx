@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { PageHeader, SectionCard, StatCard } from "@/components/dashboard/ui";
 import { Button } from "@/components/ui/button";
@@ -14,29 +14,9 @@ import {
 } from "@/components/ui/select";
 import { Sparkles, Plus, Phone, Mail, MapPin, Search } from "lucide-react";
 import { toast } from "sonner";
+import { addSoulToStore, getSouls, type Soul, type SoulStage as Stage } from "@/lib/souls";
 
-export const Route = createFileRoute("/dashboard/groups")({ component: SoulsPage });
-
-type Stage = "Contacted" | "Visited" | "Following Up" | "Converted" | "Discipled";
-
-type Soul = {
-  id: string;
-  name: string;
-  phone: string;
-  email?: string;
-  location?: string;
-  stage: Stage;
-  invitedBy: string;
-  notes?: string;
-  date: string;
-};
-
-const seed: Soul[] = [
-  { id: "s1", name: "Tunde Adebola", phone: "+234 803 111 2233", email: "tunde@mail.com", location: "Lagos", stage: "Visited", invitedBy: "Grace Adeyemi", date: "2026-05-22" },
-  { id: "s2", name: "Ngozi Eze", phone: "+234 805 444 7788", location: "Abuja", stage: "Following Up", invitedBy: "Daniel Okafor", date: "2026-05-18" },
-  { id: "s3", name: "Samuel Bassey", phone: "+234 802 998 1212", email: "sam@mail.com", stage: "Converted", invitedBy: "Esther Adebayo", date: "2026-04-30" },
-  { id: "s4", name: "Aisha Mohammed", phone: "+234 809 222 4455", location: "Kaduna", stage: "Contacted", invitedBy: "Michael Bello", date: "2026-05-28" },
-];
+export const Route = createFileRoute("/dashboard/groups/")({ component: SoulsPage });
 
 const stages: Stage[] = ["Contacted", "Visited", "Following Up", "Converted", "Discipled"];
 
@@ -49,13 +29,13 @@ const stageColor: Record<Stage, string> = {
 };
 
 function SoulsPage() {
-  const [souls, setSouls] = useState<Soul[]>(seed);
+  const [souls, setSouls] = useState<Soul[]>(() => getSouls());
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Stage | "All">("All");
-  const [form, setForm] = useState<Omit<Soul, "id" | "date">>({
-    name: "", phone: "", email: "", location: "", stage: "Contacted", invitedBy: "", notes: "",
-  });
+  type FormState = Pick<Soul, "name" | "phone" | "email" | "location" | "stage" | "invitedBy" | "notes">;
+  const emptyForm: FormState = { name: "", phone: "", email: "", location: "", stage: "Contacted", invitedBy: "", notes: "" };
+  const [form, setForm] = useState<FormState>(emptyForm);
 
   const filtered = souls.filter((s) => {
     const matchQ = s.name.toLowerCase().includes(query.toLowerCase()) || s.invitedBy.toLowerCase().includes(query.toLowerCase());
@@ -72,9 +52,16 @@ function SoulsPage() {
       ...form,
       id: `s${Date.now()}`,
       date: new Date().toISOString().slice(0, 10),
+      mentor: "Unassigned",
+      badges: [],
+      milestones: [],
+      prayers: [],
+      followUps: [],
+      noteLog: [],
+      growth: { discipleship: 0, bibleStudy: 0, churchInvolvement: 0, followUpCompletion: 0 },
     };
-    setSouls([next, ...souls]);
-    setForm({ name: "", phone: "", email: "", location: "", stage: "Contacted", invitedBy: "", notes: "" });
+    setSouls(addSoulToStore(next));
+    setForm(emptyForm);
     setOpen(false);
     toast.success(`${next.name} added to souls`);
   };
@@ -155,9 +142,10 @@ function SoulsPage() {
                 {s.email && <p className="flex items-center gap-2"><Mail className="h-3.5 w-3.5 text-gold"/>{s.email}</p>}
                 {s.location && <p className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5 text-gold"/>{s.location}</p>}
               </div>
-              <div className="mt-4 flex gap-2">
-                <Button size="sm" variant="outline" className="flex-1">View</Button>
-                <Button size="sm" variant="ghost" onClick={() => toast.success("Follow-up logged")}>Follow up</Button>
+              <div className="mt-4">
+                <Button asChild size="sm" variant="outline" className="w-full">
+                  <Link to="/dashboard/groups/$id" params={{ id: s.id }}>View</Link>
+                </Button>
               </div>
             </div>
           ))}
