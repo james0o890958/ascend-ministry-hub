@@ -57,14 +57,14 @@ function ChurchPage() {
       />
 
       <Tabs defaultValue="overview">
-        <TabsList className="flex w-full flex-wrap justify-start gap-1 h-auto">
-          <TabsTrigger value="overview" className="flex-1 min-w-fit px-4">Overview</TabsTrigger>
-          <TabsTrigger value="members" className="flex-1 min-w-fit px-4">Members</TabsTrigger>
-          <TabsTrigger value="attendance" className="flex-1 min-w-fit px-4">Attendance</TabsTrigger>
-          <TabsTrigger value="giving" className="flex-1 min-w-fit px-4">Giving</TabsTrigger>
-          <TabsTrigger value="events" className="flex-1 min-w-fit px-4">Events</TabsTrigger>
-          <TabsTrigger value="activities" className="flex-1 min-w-fit px-4">Activities</TabsTrigger>
-          <TabsTrigger value="reports" className="flex-1 min-w-fit px-4">Reports</TabsTrigger>
+        <TabsList className="flex w-full flex-wrap justify-start gap-1 h-auto pt-2.5 pb-[15px]">
+          <TabsTrigger value="overview" className="flex-1 min-w-fit px-4 py-2.5">Overview</TabsTrigger>
+          <TabsTrigger value="members" className="flex-1 min-w-fit px-4 py-2.5">Members</TabsTrigger>
+          <TabsTrigger value="attendance" className="flex-1 min-w-fit px-4 py-2.5">Attendance</TabsTrigger>
+          <TabsTrigger value="giving" className="flex-1 min-w-fit px-4 py-2.5">Giving</TabsTrigger>
+          <TabsTrigger value="events" className="flex-1 min-w-fit px-4 py-2.5">Events</TabsTrigger>
+          <TabsTrigger value="activities" className="flex-1 min-w-fit px-4 py-2.5">Activities</TabsTrigger>
+          <TabsTrigger value="reports" className="flex-1 min-w-fit px-4 py-2.5">Reports</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="mt-4 space-y-6">
