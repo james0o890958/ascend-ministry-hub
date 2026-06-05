@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import { Sparkles, Plus, Phone, Mail, MapPin, Search } from "lucide-react";
 import { toast } from "sonner";
-import { souls as seed, type Soul, type SoulStage as Stage } from "@/lib/souls";
+import { addSoulToStore, getSouls, type Soul, type SoulStage as Stage } from "@/lib/souls";
 
 export const Route = createFileRoute("/dashboard/groups")({ component: SoulsPage });
 
@@ -29,7 +29,7 @@ const stageColor: Record<Stage, string> = {
 };
 
 function SoulsPage() {
-  const [souls, setSouls] = useState<Soul[]>(seed);
+  const [souls, setSouls] = useState<Soul[]>(() => getSouls());
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Stage | "All">("All");
@@ -60,7 +60,7 @@ function SoulsPage() {
       noteLog: [],
       growth: { discipleship: 0, bibleStudy: 0, churchInvolvement: 0, followUpCompletion: 0 },
     };
-    setSouls([next, ...souls]);
+    setSouls(addSoulToStore(next));
     setForm(emptyForm);
     setOpen(false);
     toast.success(`${next.name} added to souls`);

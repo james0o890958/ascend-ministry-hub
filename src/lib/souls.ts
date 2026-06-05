@@ -157,3 +157,18 @@ export const souls: Soul[] = [
 ];
 
 export const ALL_BADGES: SoulBadge[] = ["Born Again", "Baptized", "Spirit Filled", "New Convert", "Faithful Attender", "Tithing"];
+
+let soulStore: Soul[] = [...souls];
+
+export function getSouls() {
+  return soulStore;
+}
+
+export function getSoulById(id: string) {
+  return soulStore.find((soul) => soul.id === id);
+}
+
+export function addSoulToStore(soul: Soul) {
+  soulStore = [soul, ...soulStore];
+  return soulStore;
+}
