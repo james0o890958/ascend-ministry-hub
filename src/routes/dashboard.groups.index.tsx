@@ -16,7 +16,7 @@ import { Sparkles, Plus, Phone, Mail, MapPin, Search } from "lucide-react";
 import { toast } from "sonner";
 import { addSoulToStore, getSouls, type Soul, type SoulStage as Stage } from "@/lib/souls";
 
-export const Route = createFileRoute("/dashboard/groups")({ component: SoulsPage });
+export const Route = createFileRoute("/dashboard/groups/")({ component: SoulsPage });
 
 const stages: Stage[] = ["Contacted", "Visited", "Following Up", "Converted", "Discipled"];
 
