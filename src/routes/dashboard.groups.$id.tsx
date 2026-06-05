@@ -14,13 +14,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { souls as seed, ALL_BADGES, type Soul, type SoulBadge } from "@/lib/souls";
+import { ALL_BADGES, getSoulById, type Soul, type SoulBadge } from "@/lib/souls";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/dashboard/groups/$id")({
   loader: ({ params }) => {
-    const s = seed.find((x) => x.id === params.id);
+    const s = getSoulById(params.id);
     if (!s) throw notFound();
     return s;
   },
