@@ -3,7 +3,7 @@ import { Link, Outlet, useRouterState } from "@tanstack/react-router";
 import {
   Bell, ChevronDown, LayoutDashboard, Church, HeartHandshake, Sparkles,
   CalendarDays, CheckSquare, HandCoins, MessageSquare, BellRing, BarChart3,
-  Settings, LifeBuoy, Search, Menu, X, LogOut, ChevronsLeft, ChevronsRight,
+  Settings, LifeBuoy, Search, Menu, X, LogOut, ChevronsLeft, ChevronsRight, Shield,
 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { Input } from "@/components/ui/input";
@@ -32,6 +32,7 @@ const nav: NavItem[] = [
   { to: "/dashboard/messages", label: "Messages", icon: MessageSquare },
   { to: "/dashboard/notifications", label: "Notifications", icon: BellRing },
   { to: "/dashboard/reports", label: "Reports", icon: BarChart3, roles: ["Admin", "Pastor", "Cell Leader"] },
+  { to: "/dashboard/admins", label: "Administrators", icon: Shield, roles: ["Admin"] },
 ];
 
 export function DashboardShell({ children }: { children?: ReactNode }) {
