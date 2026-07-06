@@ -239,7 +239,9 @@ Soul {
 **Profile page** (`dashboard.groups.$id.tsx`) — Metronic-inspired single scrollable page with:
 - Profile header: avatar, name, stage, mentor, date added, quick stats, spiritual badges
 - Sticky scroll-spy nav: Overview · Spiritual Journey · Prayer Requests · Follow-Up History · Notes · Growth Tracker
-- Header action buttons including **Convert to User**
+- Header actions:
+  - **Schedule Follow-Up** — opens a modal that captures type (Call / Visit / Meeting / Message), date, time, assignee, and details; appends to the soul's follow-up history via `addSoulFollowUp` and fires a toast notification.
+  - **Convert to User** — opens a registration modal pre-filled from the soul's name/phone/email/location/mentor. On submit, `updateSoul` marks the stage as `Converted` and the user is navigated to `/dashboard/members`. (No real member row is created yet — that awaits Lovable Cloud.)
 
 ### 6.2 Tasks (`/dashboard/tasks`)
 Tabs/chips for **Open**, **Done**, **High priority** filter the task list. Each task supports **edit** and **delete**. Brand colors maintained.
@@ -250,7 +252,20 @@ The dashboard root computes a different set of KPI rows based on `useRole()`, so
 ### 6.4 Branch-aware UI
 `CurrentChurchProvider` (`src/lib/current-church.tsx`) holds the currently-selected branch so branch-scoped pages can switch context without prop drilling.
 
+### 6.5 Cell Ministry — New Meeting
+On `/dashboard/cells`, the **Meetings** tab's "New meeting" button opens a modal (title, date, time, location, agenda). On save, the meeting is appended to an in-memory `meetingStore` scoped to the active cell and a toast confirms all cell members are notified.
+
+### 6.6 Events — creation flow
+The **New event** button on `/dashboard/events` now navigates to a dedicated page `/dashboard/events/new` (`dashboard.events.new.tsx`) with a full form: name, type, church/branch, date, time, location, capacity, organizer, description. Submitting calls `addEvent` in `src/lib/events-store.ts`; the list re-renders via `useSyncExternalStore`. Only Admin / Pastor / Cell Leader see the button. The `events` seed from `data.ts` is copied into the store on first load, so the list stays populated.
+
+### 6.7 Giving & Partnership (`/dashboard/giving`)
+Records are no longer hardcoded — they live in `src/lib/giving-store.ts` (types include Tithe, Offering, Project, **Partnership**, Seed). Only **Admin** and **Pastor** see the "Record" button and the per-row delete action; the record modal captures type, amount, source, church, giver, and date. The four KPI cards recompute on every add/delete.
+
+### 6.8 Administrators (`/dashboard/admins`)
+Admin-only route (hidden from other roles in the sidebar). Lists administrators from `src/lib/admins-store.ts` and exposes an **Invite admin** modal (name, email, scope). Invited admins land with a `Pending Invite` badge; existing admins can be removed. This is UI-only for now — real invites require Lovable Cloud.
+
 ---
+
 
 ## 7. SSR, server runtime & errors
 
