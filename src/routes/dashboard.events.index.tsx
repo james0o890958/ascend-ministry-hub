@@ -32,7 +32,11 @@ function EventsPage() {
                 {events.map((e) => <SelectItem key={e.id} value={e.id}>{e.name} · {new Date(e.date).toLocaleDateString()}</SelectItem>)}
               </SelectContent>
             </Select>
-            {canModify && <Button className="bg-gradient-royal text-primary-foreground"><Plus className="mr-1 h-4 w-4"/>New event</Button>}
+            {canModify && (
+              <Button asChild className="bg-gradient-royal text-primary-foreground">
+                <Link to="/dashboard/events/new"><Plus className="mr-1 h-4 w-4"/>New event</Link>
+              </Button>
+            )}
           </>
         }
       />
