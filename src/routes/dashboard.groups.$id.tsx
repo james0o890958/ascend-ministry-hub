@@ -382,3 +382,122 @@ function BadgeManager({ badges, onToggle }: { badges: SoulBadge[]; onToggle: (b:
     </Popover>
   );
 }
+
+function FollowUpDialog({ soul, onAdded }: { soul: Soul; onAdded: (f: SoulFollowUp) => void }) {
+  const [open, setOpen] = useState(false);
+  const [type, setType] = useState<SoulFollowUp["type"]>("Call");
+  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [time, setTime] = useState("10:00");
+  const [by, setBy] = useState(soul.mentor);
+  const [notes, setNotes] = useState("");
+
+  function submit() {
+    if (!notes.trim()) { toast.error("Add a short note"); return; }
+    const f: SoulFollowUp = {
+      id: `f${Date.now()}`,
+      date,
+      type,
+      by,
+      notes: `${time} — ${notes}`,
+    };
+    addSoulFollowUp(soul.id, f);
+    onAdded(f);
+    toast.success(`Follow-up scheduled for ${soul.name}`, {
+      description: `${type} · ${new Date(date).toLocaleDateString()} · ${time} · ${by}`,
+    });
+    setOpen(false);
+    setNotes("");
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="outline"><CalendarDays className="mr-1 h-4 w-4" />Schedule Follow-Up</Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-lg">
+        <DialogHeader><DialogTitle>Schedule follow-up — {soul.name}</DialogTitle></DialogHeader>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label>Type</Label>
+            <Select value={type} onValueChange={(v) => setType(v as SoulFollowUp["type"])}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {(["Call", "Visit", "Meeting", "Message"] as const).map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Assigned to</Label>
+            <Input value={by} onChange={(e) => setBy(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Date</Label>
+            <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Time</Label>
+            <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
+          </div>
+          <div className="space-y-1.5 sm:col-span-2">
+            <Label>Details</Label>
+            <Textarea rows={4} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Purpose, prayer points, what to share…" />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+          <Button className="bg-gradient-royal text-primary-foreground" onClick={submit}>Schedule &amp; notify</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ConvertToUserDialog({ soul, onConverted }: { soul: Soul; onConverted: (patch: Partial<Soul>) => void }) {
+  const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
+  const [name, setName] = useState(soul.name);
+  const [email, setEmail] = useState(soul.email ?? "");
+  const [phone, setPhone] = useState(soul.phone);
+  const [location, setLocation] = useState(soul.location ?? "");
+  const [cell, setCell] = useState("");
+  const [mentor, setMentor] = useState(soul.mentor);
+  const [stage, setStage] = useState("Regular Attendee");
+
+  function submit() {
+    if (!name || !email || !phone) { toast.error("Name, email, and phone are required"); return; }
+    updateSoul(soul.id, { stage: "Converted", name, email, phone, location, mentor });
+    onConverted({ stage: "Converted", name, email, phone, location, mentor });
+    toast.success(`${name} registered as a member`, {
+      description: `Stage: ${stage}${cell ? ` · Cell: ${cell}` : ""}`,
+    });
+    setOpen(false);
+    setTimeout(() => navigate({ to: "/dashboard/members" }), 400);
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm" className="bg-gradient-royal text-primary-foreground shadow-elegant hover:opacity-95">
+          <Repeat className="mr-1 h-4 w-4" />Convert to User
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-xl">
+        <DialogHeader><DialogTitle>Register {soul.name} as a member</DialogTitle></DialogHeader>
+        <p className="text-xs text-muted-foreground">Fields are pre-filled from the soul profile. Adjust as needed.</p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-1.5"><Label>Full name</Label><Input value={name} onChange={(e) => setName(e.target.value)} /></div>
+          <div className="space-y-1.5"><Label>Email</Label><Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></div>
+          <div className="space-y-1.5"><Label>Phone</Label><Input value={phone} onChange={(e) => setPhone(e.target.value)} /></div>
+          <div className="space-y-1.5"><Label>Location</Label><Input value={location} onChange={(e) => setLocation(e.target.value)} /></div>
+          <div className="space-y-1.5"><Label>Assigned mentor</Label><Input value={mentor} onChange={(e) => setMentor(e.target.value)} /></div>
+          <div className="space-y-1.5"><Label>Cell group</Label><Input value={cell} onChange={(e) => setCell(e.target.value)} placeholder="Cell A-1" /></div>
+          <div className="space-y-1.5 sm:col-span-2"><Label>Starting stage</Label><Input value={stage} onChange={(e) => setStage(e.target.value)} /></div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+          <Button className="bg-gradient-royal text-primary-foreground" onClick={submit}>Register member</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
