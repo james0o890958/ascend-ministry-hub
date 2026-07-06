@@ -78,7 +78,10 @@ Lint: `eslint`. Format: `prettier`. Type-check: `tsgo`.
 │   │   └── ui/                     # shadcn/ui primitives
 │   ├── lib/
 │   │   ├── data.ts                 # Dummy seed data
-│   │   ├── souls.ts                # Souls in-memory store
+│   │   ├── souls.ts                # Souls in-memory store (+ updateSoul, addSoulFollowUp)
+│   │   ├── events-store.ts         # In-memory events store with subscribe (useSyncExternalStore)
+│   │   ├── giving-store.ts         # In-memory giving/partnership store with subscribe
+│   │   ├── admins-store.ts         # In-memory admin roster + invites (Admin-only)
 │   │   ├── role.tsx                # RoleProvider + useRole
 │   │   ├── current-church.tsx      # CurrentChurchProvider + useCurrentChurch
 │   │   ├── utils.ts                # cn()
