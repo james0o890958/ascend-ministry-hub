@@ -117,10 +117,19 @@ function CellsPage() {
         </TabsContent>
 
         <TabsContent value="meetings" className="mt-4">
-          <SectionCard title="Schedule" action={<Button className="bg-gradient-royal text-primary-foreground" onClick={() => toast.success("New meeting scheduled")}><CalendarPlus className="mr-1 h-4 w-4"/>New meeting</Button>}>
+          <SectionCard title="Schedule" action={<NewMeetingDialog cellId={activeCell.id} cellName={activeCell.name} memberCount={activeCell.members} />}>
             <ul className="divide-y divide-border">
+              {meetingStore.filter((m) => m.cellId === activeCell.id).map((m) => (
+                <li key={m.id} className="py-3 flex items-center justify-between">
+                  <div>
+                    <p className="font-semibold text-sm">{m.title}</p>
+                    <p className="text-xs text-muted-foreground">{new Date(m.date).toLocaleDateString()} · {m.time} · {m.location}</p>
+                  </div>
+                  <Badge variant="outline">Upcoming</Badge>
+                </li>
+              ))}
               {["Fri May 22 · 7:00 PM · Bible Study","Fri May 29 · 7:00 PM · Outreach Planning","Fri Jun 5 · 7:00 PM · Worship Night"].map((m) => (
-                <li key={m} className="py-3 flex items-center justify-between"><span>{m}</span><Badge variant="outline">Upcoming</Badge></li>
+                <li key={m} className="py-3 flex items-center justify-between"><span className="text-sm">{m}</span><Badge variant="outline">Upcoming</Badge></li>
               ))}
             </ul>
           </SectionCard>
