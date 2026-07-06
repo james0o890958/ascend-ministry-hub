@@ -114,12 +114,10 @@ function SoulProfile() {
               <ActionButton icon={Pencil} label="Edit Soul" />
               <ActionButton icon={StickyNote} label="Add Note" />
               <ActionButton icon={BellPlus} label="Add Prayer" />
-              <ActionButton icon={CalendarDays} label="Schedule Follow-Up" />
+              <FollowUpDialog soul={soul} onAdded={(f) => setSoul((s) => ({ ...s, followUps: [f, ...s.followUps] }))} />
               <ActionButton icon={UserPlus} label="Assign Leader" />
               <ActionButton icon={Flag} label="Record Milestone" />
-              <Button size="sm" className="bg-gradient-royal text-primary-foreground shadow-elegant hover:opacity-95" onClick={() => toast.success(`${soul.name} converted to User`)}>
-                <Repeat className="mr-1 h-4 w-4" />Convert to User
-              </Button>
+              <ConvertToUserDialog soul={soul} onConverted={(patch) => setSoul((s) => ({ ...s, ...patch }))} />
             </div>
           </div>
 
