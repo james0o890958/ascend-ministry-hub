@@ -1,11 +1,11 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useSyncExternalStore } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageHeader, SectionCard } from "@/components/dashboard/ui";
 import { Plus, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { events } from "@/lib/data";
+import { getEvents, subscribeEvents } from "@/lib/events-store";
 import { useRole } from "@/lib/role";
 
 export const Route = createFileRoute("/dashboard/events/")({ component: EventsPage });
@@ -14,8 +14,9 @@ function EventsPage() {
   const { role } = useRole();
   const canModify = role === "Admin" || role === "Pastor" || role === "Cell Leader";
   const [filter, setFilter] = useState<string>("all");
+  const events = useSyncExternalStore(subscribeEvents, getEvents, getEvents);
 
-  const filtered = useMemo(() => filter === "all" ? events : events.filter((e) => e.id === filter), [filter]);
+  const filtered = useMemo(() => filter === "all" ? events : events.filter((e) => e.id === filter), [filter, events]);
 
   return (
     <div className="space-y-6">
