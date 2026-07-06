@@ -33,6 +33,7 @@ import { Route as DashboardEventsIndexRouteImport } from './routes/dashboard.eve
 import { Route as DashboardChurchIndexRouteImport } from './routes/dashboard.church.index'
 import { Route as DashboardMembersIdRouteImport } from './routes/dashboard.members.$id'
 import { Route as DashboardGroupsIdRouteImport } from './routes/dashboard.groups.$id'
+import { Route as DashboardEventsNewRouteImport } from './routes/dashboard.events.new'
 import { Route as DashboardEventsIdRouteImport } from './routes/dashboard.events.$id'
 import { Route as DashboardChurchIdRouteImport } from './routes/dashboard.church.$id'
 
@@ -156,6 +157,11 @@ const DashboardGroupsIdRoute = DashboardGroupsIdRouteImport.update({
   path: '/groups/$id',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardEventsNewRoute = DashboardEventsNewRouteImport.update({
+  id: '/events/new',
+  path: '/events/new',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardEventsIdRoute = DashboardEventsIdRouteImport.update({
   id: '/events/$id',
   path: '/events/$id',
@@ -188,6 +194,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/church/$id': typeof DashboardChurchIdRoute
   '/dashboard/events/$id': typeof DashboardEventsIdRoute
+  '/dashboard/events/new': typeof DashboardEventsNewRoute
   '/dashboard/groups/$id': typeof DashboardGroupsIdRoute
   '/dashboard/members/$id': typeof DashboardMembersIdRoute
   '/dashboard/church/': typeof DashboardChurchIndexRoute
@@ -215,6 +222,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardIndexRoute
   '/dashboard/church/$id': typeof DashboardChurchIdRoute
   '/dashboard/events/$id': typeof DashboardEventsIdRoute
+  '/dashboard/events/new': typeof DashboardEventsNewRoute
   '/dashboard/groups/$id': typeof DashboardGroupsIdRoute
   '/dashboard/members/$id': typeof DashboardMembersIdRoute
   '/dashboard/church': typeof DashboardChurchIndexRoute
@@ -244,6 +252,7 @@ export interface FileRoutesById {
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/church/$id': typeof DashboardChurchIdRoute
   '/dashboard/events/$id': typeof DashboardEventsIdRoute
+  '/dashboard/events/new': typeof DashboardEventsNewRoute
   '/dashboard/groups/$id': typeof DashboardGroupsIdRoute
   '/dashboard/members/$id': typeof DashboardMembersIdRoute
   '/dashboard/church/': typeof DashboardChurchIndexRoute
@@ -274,6 +283,7 @@ export interface FileRouteTypes {
     | '/dashboard/'
     | '/dashboard/church/$id'
     | '/dashboard/events/$id'
+    | '/dashboard/events/new'
     | '/dashboard/groups/$id'
     | '/dashboard/members/$id'
     | '/dashboard/church/'
@@ -301,6 +311,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/dashboard/church/$id'
     | '/dashboard/events/$id'
+    | '/dashboard/events/new'
     | '/dashboard/groups/$id'
     | '/dashboard/members/$id'
     | '/dashboard/church'
@@ -329,6 +340,7 @@ export interface FileRouteTypes {
     | '/dashboard/'
     | '/dashboard/church/$id'
     | '/dashboard/events/$id'
+    | '/dashboard/events/new'
     | '/dashboard/groups/$id'
     | '/dashboard/members/$id'
     | '/dashboard/church/'
@@ -516,6 +528,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardGroupsIdRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/events/new': {
+      id: '/dashboard/events/new'
+      path: '/events/new'
+      fullPath: '/dashboard/events/new'
+      preLoaderRoute: typeof DashboardEventsNewRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/events/$id': {
       id: '/dashboard/events/$id'
       path: '/events/$id'
@@ -548,6 +567,7 @@ interface DashboardRouteChildren {
   DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardChurchIdRoute: typeof DashboardChurchIdRoute
   DashboardEventsIdRoute: typeof DashboardEventsIdRoute
+  DashboardEventsNewRoute: typeof DashboardEventsNewRoute
   DashboardGroupsIdRoute: typeof DashboardGroupsIdRoute
   DashboardMembersIdRoute: typeof DashboardMembersIdRoute
   DashboardChurchIndexRoute: typeof DashboardChurchIndexRoute
@@ -571,6 +591,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardIndexRoute: DashboardIndexRoute,
   DashboardChurchIdRoute: DashboardChurchIdRoute,
   DashboardEventsIdRoute: DashboardEventsIdRoute,
+  DashboardEventsNewRoute: DashboardEventsNewRoute,
   DashboardGroupsIdRoute: DashboardGroupsIdRoute,
   DashboardMembersIdRoute: DashboardMembersIdRoute,
   DashboardChurchIndexRoute: DashboardChurchIndexRoute,
