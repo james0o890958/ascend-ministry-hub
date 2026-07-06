@@ -27,6 +27,7 @@ import { Route as DashboardInviteesRouteImport } from './routes/dashboard.invite
 import { Route as DashboardHelpRouteImport } from './routes/dashboard.help'
 import { Route as DashboardGivingRouteImport } from './routes/dashboard.giving'
 import { Route as DashboardCellsRouteImport } from './routes/dashboard.cells'
+import { Route as DashboardAdminsRouteImport } from './routes/dashboard.admins'
 import { Route as DashboardMembersIndexRouteImport } from './routes/dashboard.members.index'
 import { Route as DashboardGroupsIndexRouteImport } from './routes/dashboard.groups.index'
 import { Route as DashboardEventsIndexRouteImport } from './routes/dashboard.events.index'
@@ -127,6 +128,11 @@ const DashboardCellsRoute = DashboardCellsRouteImport.update({
   path: '/cells',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardAdminsRoute = DashboardAdminsRouteImport.update({
+  id: '/admins',
+  path: '/admins',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardMembersIndexRoute = DashboardMembersIndexRouteImport.update({
   id: '/members/',
   path: '/members/',
@@ -180,6 +186,7 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/dashboard/admins': typeof DashboardAdminsRoute
   '/dashboard/cells': typeof DashboardCellsRoute
   '/dashboard/giving': typeof DashboardGivingRoute
   '/dashboard/help': typeof DashboardHelpRoute
@@ -208,6 +215,7 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/dashboard/admins': typeof DashboardAdminsRoute
   '/dashboard/cells': typeof DashboardCellsRoute
   '/dashboard/giving': typeof DashboardGivingRoute
   '/dashboard/help': typeof DashboardHelpRoute
@@ -238,6 +246,7 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/dashboard/admins': typeof DashboardAdminsRoute
   '/dashboard/cells': typeof DashboardCellsRoute
   '/dashboard/giving': typeof DashboardGivingRoute
   '/dashboard/help': typeof DashboardHelpRoute
@@ -269,6 +278,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/register'
+    | '/dashboard/admins'
     | '/dashboard/cells'
     | '/dashboard/giving'
     | '/dashboard/help'
@@ -297,6 +307,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/register'
+    | '/dashboard/admins'
     | '/dashboard/cells'
     | '/dashboard/giving'
     | '/dashboard/help'
@@ -326,6 +337,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/register'
+    | '/dashboard/admins'
     | '/dashboard/cells'
     | '/dashboard/giving'
     | '/dashboard/help'
@@ -486,6 +498,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardCellsRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/admins': {
+      id: '/dashboard/admins'
+      path: '/admins'
+      fullPath: '/dashboard/admins'
+      preLoaderRoute: typeof DashboardAdminsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/members/': {
       id: '/dashboard/members/'
       path: '/members'
@@ -553,6 +572,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface DashboardRouteChildren {
+  DashboardAdminsRoute: typeof DashboardAdminsRoute
   DashboardCellsRoute: typeof DashboardCellsRoute
   DashboardGivingRoute: typeof DashboardGivingRoute
   DashboardHelpRoute: typeof DashboardHelpRoute
@@ -577,6 +597,7 @@ interface DashboardRouteChildren {
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardAdminsRoute: DashboardAdminsRoute,
   DashboardCellsRoute: DashboardCellsRoute,
   DashboardGivingRoute: DashboardGivingRoute,
   DashboardHelpRoute: DashboardHelpRoute,

@@ -14,9 +14,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ALL_BADGES, getSoulById, type Soul, type SoulBadge } from "@/lib/souls";
+import { ALL_BADGES, getSoulById, addSoulFollowUp, updateSoul, type Soul, type SoulBadge, type SoulFollowUp } from "@/lib/souls";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useNavigate } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/dashboard/groups/$id")({
   loader: ({ params }) => {
