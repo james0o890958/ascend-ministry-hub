@@ -6,12 +6,19 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { cellGroups, members, myLedCells } from "@/lib/data";
 import { useRole } from "@/lib/role";
 import { ReportComparison } from "@/components/dashboard/ReportComparison";
 
 export const Route = createFileRoute("/dashboard/cells")({ component: CellsPage });
+
+type Meeting = { id: string; cellId: string; title: string; date: string; time: string; location: string; agenda: string };
+let meetingStore: Meeting[] = [];
 
 function CellsPage() {
   const { role } = useRole();
