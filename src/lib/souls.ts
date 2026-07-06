@@ -172,3 +172,15 @@ export function addSoulToStore(soul: Soul) {
   soulStore = [soul, ...soulStore];
   return soulStore;
 }
+
+export function updateSoul(id: string, patch: Partial<Soul>) {
+  soulStore = soulStore.map((s) => (s.id === id ? { ...s, ...patch } : s));
+  return soulStore.find((s) => s.id === id);
+}
+
+export function addSoulFollowUp(id: string, f: SoulFollowUp) {
+  soulStore = soulStore.map((s) =>
+    s.id === id ? { ...s, followUps: [f, ...s.followUps] } : s,
+  );
+  return soulStore.find((s) => s.id === id);
+}

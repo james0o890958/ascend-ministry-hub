@@ -78,7 +78,10 @@ Lint: `eslint`. Format: `prettier`. Type-check: `tsgo`.
 │   │   └── ui/                     # shadcn/ui primitives
 │   ├── lib/
 │   │   ├── data.ts                 # Dummy seed data
-│   │   ├── souls.ts                # Souls in-memory store
+│   │   ├── souls.ts                # Souls in-memory store (+ updateSoul, addSoulFollowUp)
+│   │   ├── events-store.ts         # In-memory events store with subscribe (useSyncExternalStore)
+│   │   ├── giving-store.ts         # In-memory giving/partnership store with subscribe
+│   │   ├── admins-store.ts         # In-memory admin roster + invites (Admin-only)
 │   │   ├── role.tsx                # RoleProvider + useRole
 │   │   ├── current-church.tsx      # CurrentChurchProvider + useCurrentChurch
 │   │   ├── utils.ts                # cn()
@@ -118,6 +121,8 @@ TanStack Router uses **flat dot-separated filenames** that map directly to URLs:
 | `dashboard.members.$id.tsx` | `/dashboard/members/:id` |
 | `dashboard.church.$id.tsx` | `/dashboard/church/:id` |
 | `dashboard.events.$id.tsx` | `/dashboard/events/:id` |
+| `dashboard.events.new.tsx` | `/dashboard/events/new` (create event form) |
+| `dashboard.admins.tsx` | `/dashboard/admins` (Admin-only roster + invites) |
 
 The string in `createFileRoute("...")` MUST match the generated route ID — see the bottom of `src/routeTree.gen.ts` to verify.
 
@@ -157,12 +162,14 @@ So role and current-church context are available to every dashboard page. Adding
 | `/dashboard/cells` | `dashboard.cells.tsx` | Cell ministry list |
 | `/dashboard/groups` | `dashboard.groups.index.tsx` | **Souls** list with filter, add-soul dialog |
 | `/dashboard/groups/:id` | `dashboard.groups.$id.tsx` | **Soul profile** (Metronic-style scroll-spy page) |
-| `/dashboard/events` | `dashboard.events.index.tsx` | Events list |
+| `/dashboard/events` | `dashboard.events.index.tsx` | Events list (reads from `events-store`) |
+| `/dashboard/events/new` | `dashboard.events.new.tsx` | Full-page **New Event** form (Admin / Pastor / Cell Leader) |
 | `/dashboard/events/:id` | `dashboard.events.$id.tsx` | Event detail (attendees) |
 | `/dashboard/members` | `dashboard.members.index.tsx` | Member directory |
 | `/dashboard/members/:id` | `dashboard.members.$id.tsx` | Member profile + journey timeline |
 | `/dashboard/tasks` | `dashboard.tasks.tsx` | Tasks board (Open / Done / High priority filters, edit + delete) |
-| `/dashboard/giving` | `dashboard.giving.tsx` | Giving overview |
+| `/dashboard/giving` | `dashboard.giving.tsx` | Giving + partnership records (Admin / Pastor can add & delete) |
+| `/dashboard/admins` | `dashboard.admins.tsx` | **Admin roster + invite dialog** (Admin-only) |
 | `/dashboard/leadership` | `dashboard.leadership.tsx` | Leader-request approval queue |
 | `/dashboard/invitees` | `dashboard.invitees.tsx` | Personal invitees |
 | `/dashboard/messages` | `dashboard.messages.tsx` | Inbox |
@@ -232,7 +239,9 @@ Soul {
 **Profile page** (`dashboard.groups.$id.tsx`) — Metronic-inspired single scrollable page with:
 - Profile header: avatar, name, stage, mentor, date added, quick stats, spiritual badges
 - Sticky scroll-spy nav: Overview · Spiritual Journey · Prayer Requests · Follow-Up History · Notes · Growth Tracker
-- Header action buttons including **Convert to User**
+- Header actions:
+  - **Schedule Follow-Up** — opens a modal that captures type (Call / Visit / Meeting / Message), date, time, assignee, and details; appends to the soul's follow-up history via `addSoulFollowUp` and fires a toast notification.
+  - **Convert to User** — opens a registration modal pre-filled from the soul's name/phone/email/location/mentor. On submit, `updateSoul` marks the stage as `Converted` and the user is navigated to `/dashboard/members`. (No real member row is created yet — that awaits Lovable Cloud.)
 
 ### 6.2 Tasks (`/dashboard/tasks`)
 Tabs/chips for **Open**, **Done**, **High priority** filter the task list. Each task supports **edit** and **delete**. Brand colors maintained.
@@ -243,7 +252,20 @@ The dashboard root computes a different set of KPI rows based on `useRole()`, so
 ### 6.4 Branch-aware UI
 `CurrentChurchProvider` (`src/lib/current-church.tsx`) holds the currently-selected branch so branch-scoped pages can switch context without prop drilling.
 
+### 6.5 Cell Ministry — New Meeting
+On `/dashboard/cells`, the **Meetings** tab's "New meeting" button opens a modal (title, date, time, location, agenda). On save, the meeting is appended to an in-memory `meetingStore` scoped to the active cell and a toast confirms all cell members are notified.
+
+### 6.6 Events — creation flow
+The **New event** button on `/dashboard/events` now navigates to a dedicated page `/dashboard/events/new` (`dashboard.events.new.tsx`) with a full form: name, type, church/branch, date, time, location, capacity, organizer, description. Submitting calls `addEvent` in `src/lib/events-store.ts`; the list re-renders via `useSyncExternalStore`. Only Admin / Pastor / Cell Leader see the button. The `events` seed from `data.ts` is copied into the store on first load, so the list stays populated.
+
+### 6.7 Giving & Partnership (`/dashboard/giving`)
+Records are no longer hardcoded — they live in `src/lib/giving-store.ts` (types include Tithe, Offering, Project, **Partnership**, Seed). Only **Admin** and **Pastor** see the "Record" button and the per-row delete action; the record modal captures type, amount, source, church, giver, and date. The four KPI cards recompute on every add/delete.
+
+### 6.8 Administrators (`/dashboard/admins`)
+Admin-only route (hidden from other roles in the sidebar). Lists administrators from `src/lib/admins-store.ts` and exposes an **Invite admin** modal (name, email, scope). Invited admins land with a `Pending Invite` badge; existing admins can be removed. This is UI-only for now — real invites require Lovable Cloud.
+
 ---
+
 
 ## 7. SSR, server runtime & errors
 

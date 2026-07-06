@@ -27,12 +27,14 @@ import { Route as DashboardInviteesRouteImport } from './routes/dashboard.invite
 import { Route as DashboardHelpRouteImport } from './routes/dashboard.help'
 import { Route as DashboardGivingRouteImport } from './routes/dashboard.giving'
 import { Route as DashboardCellsRouteImport } from './routes/dashboard.cells'
+import { Route as DashboardAdminsRouteImport } from './routes/dashboard.admins'
 import { Route as DashboardMembersIndexRouteImport } from './routes/dashboard.members.index'
 import { Route as DashboardGroupsIndexRouteImport } from './routes/dashboard.groups.index'
 import { Route as DashboardEventsIndexRouteImport } from './routes/dashboard.events.index'
 import { Route as DashboardChurchIndexRouteImport } from './routes/dashboard.church.index'
 import { Route as DashboardMembersIdRouteImport } from './routes/dashboard.members.$id'
 import { Route as DashboardGroupsIdRouteImport } from './routes/dashboard.groups.$id'
+import { Route as DashboardEventsNewRouteImport } from './routes/dashboard.events.new'
 import { Route as DashboardEventsIdRouteImport } from './routes/dashboard.events.$id'
 import { Route as DashboardChurchIdRouteImport } from './routes/dashboard.church.$id'
 
@@ -126,6 +128,11 @@ const DashboardCellsRoute = DashboardCellsRouteImport.update({
   path: '/cells',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardAdminsRoute = DashboardAdminsRouteImport.update({
+  id: '/admins',
+  path: '/admins',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardMembersIndexRoute = DashboardMembersIndexRouteImport.update({
   id: '/members/',
   path: '/members/',
@@ -156,6 +163,11 @@ const DashboardGroupsIdRoute = DashboardGroupsIdRouteImport.update({
   path: '/groups/$id',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardEventsNewRoute = DashboardEventsNewRouteImport.update({
+  id: '/events/new',
+  path: '/events/new',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardEventsIdRoute = DashboardEventsIdRouteImport.update({
   id: '/events/$id',
   path: '/events/$id',
@@ -174,6 +186,7 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/dashboard/admins': typeof DashboardAdminsRoute
   '/dashboard/cells': typeof DashboardCellsRoute
   '/dashboard/giving': typeof DashboardGivingRoute
   '/dashboard/help': typeof DashboardHelpRoute
@@ -188,6 +201,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/church/$id': typeof DashboardChurchIdRoute
   '/dashboard/events/$id': typeof DashboardEventsIdRoute
+  '/dashboard/events/new': typeof DashboardEventsNewRoute
   '/dashboard/groups/$id': typeof DashboardGroupsIdRoute
   '/dashboard/members/$id': typeof DashboardMembersIdRoute
   '/dashboard/church/': typeof DashboardChurchIndexRoute
@@ -201,6 +215,7 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/dashboard/admins': typeof DashboardAdminsRoute
   '/dashboard/cells': typeof DashboardCellsRoute
   '/dashboard/giving': typeof DashboardGivingRoute
   '/dashboard/help': typeof DashboardHelpRoute
@@ -215,6 +230,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardIndexRoute
   '/dashboard/church/$id': typeof DashboardChurchIdRoute
   '/dashboard/events/$id': typeof DashboardEventsIdRoute
+  '/dashboard/events/new': typeof DashboardEventsNewRoute
   '/dashboard/groups/$id': typeof DashboardGroupsIdRoute
   '/dashboard/members/$id': typeof DashboardMembersIdRoute
   '/dashboard/church': typeof DashboardChurchIndexRoute
@@ -230,6 +246,7 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/dashboard/admins': typeof DashboardAdminsRoute
   '/dashboard/cells': typeof DashboardCellsRoute
   '/dashboard/giving': typeof DashboardGivingRoute
   '/dashboard/help': typeof DashboardHelpRoute
@@ -244,6 +261,7 @@ export interface FileRoutesById {
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/church/$id': typeof DashboardChurchIdRoute
   '/dashboard/events/$id': typeof DashboardEventsIdRoute
+  '/dashboard/events/new': typeof DashboardEventsNewRoute
   '/dashboard/groups/$id': typeof DashboardGroupsIdRoute
   '/dashboard/members/$id': typeof DashboardMembersIdRoute
   '/dashboard/church/': typeof DashboardChurchIndexRoute
@@ -260,6 +278,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/register'
+    | '/dashboard/admins'
     | '/dashboard/cells'
     | '/dashboard/giving'
     | '/dashboard/help'
@@ -274,6 +293,7 @@ export interface FileRouteTypes {
     | '/dashboard/'
     | '/dashboard/church/$id'
     | '/dashboard/events/$id'
+    | '/dashboard/events/new'
     | '/dashboard/groups/$id'
     | '/dashboard/members/$id'
     | '/dashboard/church/'
@@ -287,6 +307,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/register'
+    | '/dashboard/admins'
     | '/dashboard/cells'
     | '/dashboard/giving'
     | '/dashboard/help'
@@ -301,6 +322,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/dashboard/church/$id'
     | '/dashboard/events/$id'
+    | '/dashboard/events/new'
     | '/dashboard/groups/$id'
     | '/dashboard/members/$id'
     | '/dashboard/church'
@@ -315,6 +337,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/register'
+    | '/dashboard/admins'
     | '/dashboard/cells'
     | '/dashboard/giving'
     | '/dashboard/help'
@@ -329,6 +352,7 @@ export interface FileRouteTypes {
     | '/dashboard/'
     | '/dashboard/church/$id'
     | '/dashboard/events/$id'
+    | '/dashboard/events/new'
     | '/dashboard/groups/$id'
     | '/dashboard/members/$id'
     | '/dashboard/church/'
@@ -474,6 +498,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardCellsRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/admins': {
+      id: '/dashboard/admins'
+      path: '/admins'
+      fullPath: '/dashboard/admins'
+      preLoaderRoute: typeof DashboardAdminsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/members/': {
       id: '/dashboard/members/'
       path: '/members'
@@ -516,6 +547,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardGroupsIdRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/events/new': {
+      id: '/dashboard/events/new'
+      path: '/events/new'
+      fullPath: '/dashboard/events/new'
+      preLoaderRoute: typeof DashboardEventsNewRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/events/$id': {
       id: '/dashboard/events/$id'
       path: '/events/$id'
@@ -534,6 +572,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface DashboardRouteChildren {
+  DashboardAdminsRoute: typeof DashboardAdminsRoute
   DashboardCellsRoute: typeof DashboardCellsRoute
   DashboardGivingRoute: typeof DashboardGivingRoute
   DashboardHelpRoute: typeof DashboardHelpRoute
@@ -548,6 +587,7 @@ interface DashboardRouteChildren {
   DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardChurchIdRoute: typeof DashboardChurchIdRoute
   DashboardEventsIdRoute: typeof DashboardEventsIdRoute
+  DashboardEventsNewRoute: typeof DashboardEventsNewRoute
   DashboardGroupsIdRoute: typeof DashboardGroupsIdRoute
   DashboardMembersIdRoute: typeof DashboardMembersIdRoute
   DashboardChurchIndexRoute: typeof DashboardChurchIndexRoute
@@ -557,6 +597,7 @@ interface DashboardRouteChildren {
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardAdminsRoute: DashboardAdminsRoute,
   DashboardCellsRoute: DashboardCellsRoute,
   DashboardGivingRoute: DashboardGivingRoute,
   DashboardHelpRoute: DashboardHelpRoute,
@@ -571,6 +612,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardIndexRoute: DashboardIndexRoute,
   DashboardChurchIdRoute: DashboardChurchIdRoute,
   DashboardEventsIdRoute: DashboardEventsIdRoute,
+  DashboardEventsNewRoute: DashboardEventsNewRoute,
   DashboardGroupsIdRoute: DashboardGroupsIdRoute,
   DashboardMembersIdRoute: DashboardMembersIdRoute,
   DashboardChurchIndexRoute: DashboardChurchIndexRoute,

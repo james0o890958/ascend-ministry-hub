@@ -6,12 +6,19 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { cellGroups, members, myLedCells } from "@/lib/data";
 import { useRole } from "@/lib/role";
 import { ReportComparison } from "@/components/dashboard/ReportComparison";
 
 export const Route = createFileRoute("/dashboard/cells")({ component: CellsPage });
+
+type Meeting = { id: string; cellId: string; title: string; date: string; time: string; location: string; agenda: string };
+let meetingStore: Meeting[] = [];
 
 function CellsPage() {
   const { role } = useRole();
@@ -110,10 +117,19 @@ function CellsPage() {
         </TabsContent>
 
         <TabsContent value="meetings" className="mt-4">
-          <SectionCard title="Schedule" action={<Button className="bg-gradient-royal text-primary-foreground" onClick={() => toast.success("New meeting scheduled")}><CalendarPlus className="mr-1 h-4 w-4"/>New meeting</Button>}>
+          <SectionCard title="Schedule" action={<NewMeetingDialog cellId={activeCell.id} cellName={activeCell.name} memberCount={activeCell.members} />}>
             <ul className="divide-y divide-border">
+              {meetingStore.filter((m) => m.cellId === activeCell.id).map((m) => (
+                <li key={m.id} className="py-3 flex items-center justify-between">
+                  <div>
+                    <p className="font-semibold text-sm">{m.title}</p>
+                    <p className="text-xs text-muted-foreground">{new Date(m.date).toLocaleDateString()} · {m.time} · {m.location}</p>
+                  </div>
+                  <Badge variant="outline">Upcoming</Badge>
+                </li>
+              ))}
               {["Fri May 22 · 7:00 PM · Bible Study","Fri May 29 · 7:00 PM · Outreach Planning","Fri Jun 5 · 7:00 PM · Worship Night"].map((m) => (
-                <li key={m} className="py-3 flex items-center justify-between"><span>{m}</span><Badge variant="outline">Upcoming</Badge></li>
+                <li key={m} className="py-3 flex items-center justify-between"><span className="text-sm">{m}</span><Badge variant="outline">Upcoming</Badge></li>
               ))}
             </ul>
           </SectionCard>
@@ -124,5 +140,50 @@ function CellsPage() {
         </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+function NewMeetingDialog({ cellId, cellName, memberCount }: { cellId: string; cellName: string; memberCount: number }) {
+  const [open, setOpen] = useState(false);
+  const [title, setTitle] = useState("");
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("19:00");
+  const [location, setLocation] = useState("");
+  const [agenda, setAgenda] = useState("");
+
+  function submit() {
+    if (!title || !date) {
+      toast.error("Title and date are required");
+      return;
+    }
+    const m: Meeting = { id: `mt${Date.now()}`, cellId, title, date, time, location, agenda };
+    meetingStore = [m, ...meetingStore];
+    toast.success(`Meeting scheduled — ${memberCount} members in ${cellName} notified`);
+    setOpen(false);
+    setTitle(""); setDate(""); setLocation(""); setAgenda("");
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button className="bg-gradient-royal text-primary-foreground"><CalendarPlus className="mr-1 h-4 w-4"/>New meeting</Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-lg">
+        <DialogHeader><DialogTitle>New meeting — {cellName}</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <div className="space-y-1.5"><Label>Title</Label><Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Bible Study" /></div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5"><Label>Date</Label><Input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></div>
+            <div className="space-y-1.5"><Label>Time</Label><Input type="time" value={time} onChange={(e) => setTime(e.target.value)} /></div>
+          </div>
+          <div className="space-y-1.5"><Label>Location</Label><Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Leader's home / Zoom link" /></div>
+          <div className="space-y-1.5"><Label>Agenda / details</Label><Textarea rows={4} value={agenda} onChange={(e) => setAgenda(e.target.value)} placeholder="Topic, scripture, prayer points…" /></div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+          <Button className="bg-gradient-royal text-primary-foreground" onClick={submit}>Schedule &amp; notify cell</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
