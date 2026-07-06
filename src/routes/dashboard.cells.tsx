@@ -142,3 +142,48 @@ function CellsPage() {
     </div>
   );
 }
+
+function NewMeetingDialog({ cellId, cellName, memberCount }: { cellId: string; cellName: string; memberCount: number }) {
+  const [open, setOpen] = useState(false);
+  const [title, setTitle] = useState("");
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("19:00");
+  const [location, setLocation] = useState("");
+  const [agenda, setAgenda] = useState("");
+
+  function submit() {
+    if (!title || !date) {
+      toast.error("Title and date are required");
+      return;
+    }
+    const m: Meeting = { id: `mt${Date.now()}`, cellId, title, date, time, location, agenda };
+    meetingStore = [m, ...meetingStore];
+    toast.success(`Meeting scheduled — ${memberCount} members in ${cellName} notified`);
+    setOpen(false);
+    setTitle(""); setDate(""); setLocation(""); setAgenda("");
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button className="bg-gradient-royal text-primary-foreground"><CalendarPlus className="mr-1 h-4 w-4"/>New meeting</Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-lg">
+        <DialogHeader><DialogTitle>New meeting — {cellName}</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <div className="space-y-1.5"><Label>Title</Label><Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Bible Study" /></div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5"><Label>Date</Label><Input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></div>
+            <div className="space-y-1.5"><Label>Time</Label><Input type="time" value={time} onChange={(e) => setTime(e.target.value)} /></div>
+          </div>
+          <div className="space-y-1.5"><Label>Location</Label><Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Leader's home / Zoom link" /></div>
+          <div className="space-y-1.5"><Label>Agenda / details</Label><Textarea rows={4} value={agenda} onChange={(e) => setAgenda(e.target.value)} placeholder="Topic, scripture, prayer points…" /></div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+          <Button className="bg-gradient-royal text-primary-foreground" onClick={submit}>Schedule &amp; notify cell</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
