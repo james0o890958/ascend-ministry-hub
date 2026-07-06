@@ -162,12 +162,14 @@ So role and current-church context are available to every dashboard page. Adding
 | `/dashboard/cells` | `dashboard.cells.tsx` | Cell ministry list |
 | `/dashboard/groups` | `dashboard.groups.index.tsx` | **Souls** list with filter, add-soul dialog |
 | `/dashboard/groups/:id` | `dashboard.groups.$id.tsx` | **Soul profile** (Metronic-style scroll-spy page) |
-| `/dashboard/events` | `dashboard.events.index.tsx` | Events list |
+| `/dashboard/events` | `dashboard.events.index.tsx` | Events list (reads from `events-store`) |
+| `/dashboard/events/new` | `dashboard.events.new.tsx` | Full-page **New Event** form (Admin / Pastor / Cell Leader) |
 | `/dashboard/events/:id` | `dashboard.events.$id.tsx` | Event detail (attendees) |
 | `/dashboard/members` | `dashboard.members.index.tsx` | Member directory |
 | `/dashboard/members/:id` | `dashboard.members.$id.tsx` | Member profile + journey timeline |
 | `/dashboard/tasks` | `dashboard.tasks.tsx` | Tasks board (Open / Done / High priority filters, edit + delete) |
-| `/dashboard/giving` | `dashboard.giving.tsx` | Giving overview |
+| `/dashboard/giving` | `dashboard.giving.tsx` | Giving + partnership records (Admin / Pastor can add & delete) |
+| `/dashboard/admins` | `dashboard.admins.tsx` | **Admin roster + invite dialog** (Admin-only) |
 | `/dashboard/leadership` | `dashboard.leadership.tsx` | Leader-request approval queue |
 | `/dashboard/invitees` | `dashboard.invitees.tsx` | Personal invitees |
 | `/dashboard/messages` | `dashboard.messages.tsx` | Inbox |
