@@ -121,6 +121,8 @@ TanStack Router uses **flat dot-separated filenames** that map directly to URLs:
 | `dashboard.members.$id.tsx` | `/dashboard/members/:id` |
 | `dashboard.church.$id.tsx` | `/dashboard/church/:id` |
 | `dashboard.events.$id.tsx` | `/dashboard/events/:id` |
+| `dashboard.events.new.tsx` | `/dashboard/events/new` (create event form) |
+| `dashboard.admins.tsx` | `/dashboard/admins` (Admin-only roster + invites) |
 
 The string in `createFileRoute("...")` MUST match the generated route ID — see the bottom of `src/routeTree.gen.ts` to verify.
 
