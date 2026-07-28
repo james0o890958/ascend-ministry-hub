@@ -1,6 +1,12 @@
 export type SoulStage = "Contacted" | "Visited" | "Following Up" | "Converted" | "Discipled";
 
-export type SoulBadge = "Born Again" | "Baptized" | "Spirit Filled" | "New Convert" | "Faithful Attender" | "Tithing";
+export type SoulBadge =
+  | "Born Again"
+  | "Baptized"
+  | "Spirit Filled"
+  | "New Convert"
+  | "Faithful Attender"
+  | "Tithing";
 
 export type SoulMilestone = {
   date: string;
@@ -70,22 +76,75 @@ export const souls: Soul[] = [
     mentor: "Pst. Daniel Okafor",
     badges: ["Born Again", "New Convert"],
     milestones: [
-      { date: "2026-05-22", title: "First visit to church", detail: "Attended Sunday service for the first time", kind: "Moment" },
-      { date: "2026-05-26", title: "Received salvation", detail: "Made decision for Christ during altar call", kind: "Salvation" },
-      { date: "2026-06-04", title: "Joined Foundation School", detail: "Module 1 — New beginnings", kind: "Discipleship" },
+      {
+        date: "2026-05-22",
+        title: "First visit to church",
+        detail: "Attended Sunday service for the first time",
+        kind: "Moment",
+      },
+      {
+        date: "2026-05-26",
+        title: "Received salvation",
+        detail: "Made decision for Christ during altar call",
+        kind: "Salvation",
+      },
+      {
+        date: "2026-06-04",
+        title: "Joined Foundation School",
+        detail: "Module 1 — New beginnings",
+        kind: "Discipleship",
+      },
     ],
     prayers: [
-      { id: "p1", date: "2026-05-26", text: "Stability in his new job and family salvation", status: "Active" },
-      { id: "p2", date: "2026-05-22", text: "Open heart to receive the gospel", status: "Answered" },
+      {
+        id: "p1",
+        date: "2026-05-26",
+        text: "Stability in his new job and family salvation",
+        status: "Active",
+      },
+      {
+        id: "p2",
+        date: "2026-05-22",
+        text: "Open heart to receive the gospel",
+        status: "Answered",
+      },
     ],
     followUps: [
-      { id: "f1", date: "2026-05-23", type: "Call", by: "Grace Adeyemi", notes: "Welcome call, sent service link" },
-      { id: "f2", date: "2026-05-27", type: "Visit", by: "Pst. Daniel", notes: "Home visit, prayed with the family" },
-      { id: "f3", date: "2026-06-02", type: "Message", by: "Care Team", notes: "Sent weekly devotional" },
+      {
+        id: "f1",
+        date: "2026-05-23",
+        type: "Call",
+        by: "Grace Adeyemi",
+        notes: "Welcome call, sent service link",
+      },
+      {
+        id: "f2",
+        date: "2026-05-27",
+        type: "Visit",
+        by: "Pst. Daniel",
+        notes: "Home visit, prayed with the family",
+      },
+      {
+        id: "f3",
+        date: "2026-06-02",
+        type: "Message",
+        by: "Care Team",
+        notes: "Sent weekly devotional",
+      },
     ],
     noteLog: [
-      { id: "n1", date: "2026-05-22", by: "Grace Adeyemi", text: "Soft-hearted, hungry for the Word. Lost his father recently." },
-      { id: "n2", date: "2026-05-30", by: "Pst. Daniel", text: "Showing consistency, ready for discipleship." },
+      {
+        id: "n1",
+        date: "2026-05-22",
+        by: "Grace Adeyemi",
+        text: "Soft-hearted, hungry for the Word. Lost his father recently.",
+      },
+      {
+        id: "n2",
+        date: "2026-05-30",
+        by: "Pst. Daniel",
+        text: "Showing consistency, ready for discipleship.",
+      },
     ],
     growth: { discipleship: 35, bibleStudy: 55, churchInvolvement: 40, followUpCompletion: 80 },
   },
@@ -101,15 +160,46 @@ export const souls: Soul[] = [
     mentor: "Pst. Grace Adeyemi",
     badges: ["Born Again"],
     milestones: [
-      { date: "2026-05-18", title: "Contacted via outreach", detail: "Street evangelism in Wuse", kind: "Moment" },
-      { date: "2026-05-25", title: "Salvation prayer", detail: "Prayed the sinner's prayer", kind: "Salvation" },
+      {
+        date: "2026-05-18",
+        title: "Contacted via outreach",
+        detail: "Street evangelism in Wuse",
+        kind: "Moment",
+      },
+      {
+        date: "2026-05-25",
+        title: "Salvation prayer",
+        detail: "Prayed the sinner's prayer",
+        kind: "Salvation",
+      },
     ],
-    prayers: [{ id: "p1", date: "2026-05-25", text: "Grace to walk in her new faith", status: "Active" }],
+    prayers: [
+      { id: "p1", date: "2026-05-25", text: "Grace to walk in her new faith", status: "Active" },
+    ],
     followUps: [
-      { id: "f1", date: "2026-05-20", type: "Call", by: "Daniel Okafor", notes: "Checked in, invited to service" },
-      { id: "f2", date: "2026-05-28", type: "Meeting", by: "Care Team", notes: "Coffee meet, discussed next steps" },
+      {
+        id: "f1",
+        date: "2026-05-20",
+        type: "Call",
+        by: "Daniel Okafor",
+        notes: "Checked in, invited to service",
+      },
+      {
+        id: "f2",
+        date: "2026-05-28",
+        type: "Meeting",
+        by: "Care Team",
+        notes: "Coffee meet, discussed next steps",
+      },
     ],
-    noteLog: [{ id: "n1", date: "2026-05-25", by: "Daniel Okafor", text: "Very expressive, may join worship team eventually." }],
+    noteLog: [
+      {
+        id: "n1",
+        date: "2026-05-25",
+        by: "Daniel Okafor",
+        text: "Very expressive, may join worship team eventually.",
+      },
+    ],
     growth: { discipleship: 20, bibleStudy: 30, churchInvolvement: 25, followUpCompletion: 65 },
   },
   {
@@ -124,17 +214,58 @@ export const souls: Soul[] = [
     mentor: "Pst. Daniel Okafor",
     badges: ["Born Again", "Baptized", "Spirit Filled"],
     milestones: [
-      { date: "2026-03-15", title: "First contact", detail: "Met at workplace fellowship", kind: "Moment" },
-      { date: "2026-04-30", title: "Gave his life to Christ", detail: "Sunday altar call", kind: "Salvation" },
-      { date: "2026-05-15", title: "Water Baptism", detail: "Baptized at Lagos Central", kind: "Baptism" },
-      { date: "2026-05-28", title: "Joined Ushering team", detail: "First service serving", kind: "Ministry" },
+      {
+        date: "2026-03-15",
+        title: "First contact",
+        detail: "Met at workplace fellowship",
+        kind: "Moment",
+      },
+      {
+        date: "2026-04-30",
+        title: "Gave his life to Christ",
+        detail: "Sunday altar call",
+        kind: "Salvation",
+      },
+      {
+        date: "2026-05-15",
+        title: "Water Baptism",
+        detail: "Baptized at Lagos Central",
+        kind: "Baptism",
+      },
+      {
+        date: "2026-05-28",
+        title: "Joined Ushering team",
+        detail: "First service serving",
+        kind: "Ministry",
+      },
     ],
-    prayers: [{ id: "p1", date: "2026-05-15", text: "Wisdom in his new role at work", status: "Active" }],
+    prayers: [
+      { id: "p1", date: "2026-05-15", text: "Wisdom in his new role at work", status: "Active" },
+    ],
     followUps: [
-      { id: "f1", date: "2026-05-02", type: "Call", by: "Esther Adebayo", notes: "Discipleship orientation" },
-      { id: "f2", date: "2026-05-10", type: "Meeting", by: "Pst. Daniel", notes: "Prepared for baptism" },
+      {
+        id: "f1",
+        date: "2026-05-02",
+        type: "Call",
+        by: "Esther Adebayo",
+        notes: "Discipleship orientation",
+      },
+      {
+        id: "f2",
+        date: "2026-05-10",
+        type: "Meeting",
+        by: "Pst. Daniel",
+        notes: "Prepared for baptism",
+      },
     ],
-    noteLog: [{ id: "n1", date: "2026-05-16", by: "Pst. Daniel", text: "Strong character, leadership material." }],
+    noteLog: [
+      {
+        id: "n1",
+        date: "2026-05-16",
+        by: "Pst. Daniel",
+        text: "Strong character, leadership material.",
+      },
+    ],
     growth: { discipleship: 80, bibleStudy: 75, churchInvolvement: 70, followUpCompletion: 95 },
   },
   {
@@ -148,15 +279,46 @@ export const souls: Soul[] = [
     avatar: "https://i.pravatar.cc/200?img=49",
     mentor: "Pst. Grace Adeyemi",
     badges: [],
-    milestones: [{ date: "2026-05-28", title: "First contact", detail: "Through a friend's invite", kind: "Moment" }],
-    prayers: [{ id: "p1", date: "2026-05-28", text: "Open heart and divine encounters", status: "Active" }],
-    followUps: [{ id: "f1", date: "2026-05-29", type: "Message", by: "Michael Bello", notes: "Sent welcome message" }],
-    noteLog: [{ id: "n1", date: "2026-05-28", by: "Michael Bello", text: "Curious and asking good questions." }],
+    milestones: [
+      {
+        date: "2026-05-28",
+        title: "First contact",
+        detail: "Through a friend's invite",
+        kind: "Moment",
+      },
+    ],
+    prayers: [
+      { id: "p1", date: "2026-05-28", text: "Open heart and divine encounters", status: "Active" },
+    ],
+    followUps: [
+      {
+        id: "f1",
+        date: "2026-05-29",
+        type: "Message",
+        by: "Michael Bello",
+        notes: "Sent welcome message",
+      },
+    ],
+    noteLog: [
+      {
+        id: "n1",
+        date: "2026-05-28",
+        by: "Michael Bello",
+        text: "Curious and asking good questions.",
+      },
+    ],
     growth: { discipleship: 5, bibleStudy: 10, churchInvolvement: 5, followUpCompletion: 40 },
   },
 ];
 
-export const ALL_BADGES: SoulBadge[] = ["Born Again", "Baptized", "Spirit Filled", "New Convert", "Faithful Attender", "Tithing"];
+export const ALL_BADGES: SoulBadge[] = [
+  "Born Again",
+  "Baptized",
+  "Spirit Filled",
+  "New Convert",
+  "Faithful Attender",
+  "Tithing",
+];
 
 let soulStore: Soul[] = [...souls];
 
@@ -179,8 +341,21 @@ export function updateSoul(id: string, patch: Partial<Soul>) {
 }
 
 export function addSoulFollowUp(id: string, f: SoulFollowUp) {
-  soulStore = soulStore.map((s) =>
-    s.id === id ? { ...s, followUps: [f, ...s.followUps] } : s,
-  );
+  soulStore = soulStore.map((s) => (s.id === id ? { ...s, followUps: [f, ...s.followUps] } : s));
+  return soulStore.find((s) => s.id === id);
+}
+
+export function addSoulNote(id: string, n: SoulNote) {
+  soulStore = soulStore.map((s) => (s.id === id ? { ...s, noteLog: [n, ...s.noteLog] } : s));
+  return soulStore.find((s) => s.id === id);
+}
+
+export function addSoulPrayer(id: string, p: SoulPrayer) {
+  soulStore = soulStore.map((s) => (s.id === id ? { ...s, prayers: [p, ...s.prayers] } : s));
+  return soulStore.find((s) => s.id === id);
+}
+
+export function addSoulMilestone(id: string, m: SoulMilestone) {
+  soulStore = soulStore.map((s) => (s.id === id ? { ...s, milestones: [m, ...s.milestones] } : s));
   return soulStore.find((s) => s.id === id);
 }

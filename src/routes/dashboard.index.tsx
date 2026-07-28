@@ -14,18 +14,48 @@ function Overview() {
     switch (role) {
       case "Admin":
         return [
-          { metric: "Total members", value: stats.totalMembers.toLocaleString(), scope: "Global", trend: "+8.2%" },
-          { metric: "First timers", value: stats.firstTimers, scope: "This Sunday", trend: "+12.4%" },
-          { metric: "Baptized", value: stats.baptized.toLocaleString(), scope: "Global", trend: "+4.6%" },
-          { metric: "Foundation school", value: stats.foundationStudents.toLocaleString(), scope: "Active", trend: "+6.1%" },
-          { metric: "Cell members", value: stats.cellMembers.toLocaleString(), scope: "Global", trend: "+5.2%" },
+          {
+            metric: "Total members",
+            value: stats.totalMembers.toLocaleString(),
+            scope: "Global",
+            trend: "+8.2%",
+          },
+          {
+            metric: "First timers",
+            value: stats.firstTimers,
+            scope: "This Sunday",
+            trend: "+12.4%",
+          },
+          {
+            metric: "Baptized",
+            value: stats.baptized.toLocaleString(),
+            scope: "Global",
+            trend: "+4.6%",
+          },
+          {
+            metric: "Foundation school",
+            value: stats.foundationStudents.toLocaleString(),
+            scope: "Active",
+            trend: "+6.1%",
+          },
+          {
+            metric: "Cell members",
+            value: stats.cellMembers.toLocaleString(),
+            scope: "Global",
+            trend: "+5.2%",
+          },
           { metric: "Leaders", value: stats.leaders, scope: "Global", trend: "+2.8%" },
           { metric: "Pastors", value: stats.pastors, scope: "Global", trend: "+1.2%" },
           { metric: "Churches", value: stats.branches, scope: "Active", trend: "+3.0%" },
         ];
       case "Pastor":
         return [
-          { metric: "Church members", value: branches[0].members.toLocaleString(), scope: branches[0].name, trend: "+7.1%" },
+          {
+            metric: "Church members",
+            value: branches[0].members.toLocaleString(),
+            scope: branches[0].name,
+            trend: "+7.1%",
+          },
           { metric: "First timers", value: 42, scope: "This Sunday", trend: "+9.8%" },
           { metric: "Baptized", value: 1240, scope: "YTD", trend: "+5.0%" },
           { metric: "Cells", value: cellGroups.length, scope: "Active", trend: "+2.0%" },
@@ -44,7 +74,12 @@ function Overview() {
         return [
           { metric: "My attendance", value: "88%", scope: "Last 8 weeks", trend: "+4%" },
           { metric: "My cell", value: "Cell A-1", scope: "Leader: E. Adebayo", trend: "" },
-          { metric: "Current stage", value: "Cell Member", scope: "Discipleship", trend: "Next: Workforce" },
+          {
+            metric: "Current stage",
+            value: "Cell Member",
+            scope: "Discipleship",
+            trend: "Next: Workforce",
+          },
           { metric: "My invitees", value: 3, scope: "Tracked", trend: "+1" },
         ];
     }
@@ -79,7 +114,11 @@ function Overview() {
                   <td className="px-4 py-3 font-display text-lg">{r.value}</td>
                   <td className="px-4 py-3 text-muted-foreground">{r.scope}</td>
                   <td className="px-4 py-3">
-                    {r.trend && <Badge className="bg-success/15 text-success border-success/30">{r.trend}</Badge>}
+                    {r.trend && (
+                      <Badge className="bg-success/15 text-success border-success/30">
+                        {r.trend}
+                      </Badge>
+                    )}
                   </td>
                 </tr>
               ))}

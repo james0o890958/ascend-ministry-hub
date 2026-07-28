@@ -4,7 +4,7 @@ import { branches } from "@/lib/data";
 type Ctx = {
   currentChurchId: string;
   setCurrentChurchId: (id: string) => void;
-  current: typeof branches[number];
+  current: (typeof branches)[number];
 };
 
 const C = createContext<Ctx | null>(null);
@@ -12,7 +12,9 @@ const C = createContext<Ctx | null>(null);
 export function CurrentChurchProvider({ children }: { children: ReactNode }) {
   const [currentChurchId, setCurrentChurchId] = useState(branches[0].id);
   const current = branches.find((b) => b.id === currentChurchId) ?? branches[0];
-  return <C.Provider value={{ currentChurchId, setCurrentChurchId, current }}>{children}</C.Provider>;
+  return (
+    <C.Provider value={{ currentChurchId, setCurrentChurchId, current }}>{children}</C.Provider>
+  );
 }
 
 export function useCurrentChurch() {

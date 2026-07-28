@@ -1,383 +1,283 @@
-# Soul Tracer — Project Documentation
+# Soul Tracer — Master Technical & Product Documentation
 
-> **Soul Tracer** is a ministry tracking platform for churches: it follows every soul from first contact through salvation, baptism, foundation school, cell membership and leadership — across multiple branches of a global ministry.
+> **Soul Tracer** is an enterprise-grade ministry tracking platform for global churches. It shepherds every soul from first contact through salvation, water baptism, foundation school, cell group involvement, workforce service, and church leadership — across multiple branches of a global ministry.
 
-This document is the complete technical and product reference for the codebase as it stands today. It is written for a new developer (or AI agent) joining the project.
+This document serves as the **authoritative live reference** for the entire codebase architecture, data models, state stores, device responsive strategies, and backend REST API specifications.
 
 ---
 
-## 1. Product overview
+## 1. Product & Architecture Overview
 
-### 1.1 What the app does
-Soul Tracer is a multi-role dashboard application for church ministries. It models the full **membership lifecycle**:
+### 1.1 Core Mission & Lifecycle Flow
+
+Soul Tracer tracks the complete spiritual and discipleship lifecycle:
 
 ```
-Invitee → First Timer → Regular Attendee → Baptized Member →
-Foundation School Student → Foundation School Graduate →
-Cell Member → Workforce Member → Leader → Pastor
+Contacted → Visited → Following Up → Converted (Registered Member) →
+First Timer → Regular Attendee → Water Baptized → Foundation School Student →
+Foundation School Graduate → Cell Member → Workforce Member → Cell Leader → Pastor → Admin
 ```
 
-It also tracks **Souls** — people being prayed for, followed up, discipled or ministered to who do *not* yet have a platform account. A Soul can later be **converted into a User**.
+The system manages both:
 
-### 1.2 Primary user roles
-Defined in `src/lib/role.tsx`:
-
-| Role | What they see |
-|------|---------------|
-| **Admin** | Global KPIs across all branches, all menu items, leader approval |
-| **Pastor** | Their branch's KPIs, cells, members, reports |
-| **Cell Leader** | Their cell only — members, attendance, invitees |
-| **Member** | Personal journey, events they're invited to |
-
-The current role is held in `RoleProvider` (in-memory) and can be switched at runtime from the avatar dropdown (`View as …`). The sidebar filters nav items by role via the `roles?: Role[]` field on each `NavItem`.
-
-### 1.3 Current state of the data layer
-**There is no backend yet.** All data is dummy/seed data in:
-- `src/lib/data.ts` — branches, members, events, invitees, cells, notifications, growth/attendance series, leader requests
-- `src/lib/souls.ts` — souls store (with `getSouls`, `getSoulById`, `addSoulToStore` for in-memory persistence across navigation)
-
-If/when Lovable Cloud is enabled, these stores become the canonical shape for the eventual Postgres schema.
+1. **Souls**: Contacts, visitors, and converts being prayed for and discipled before or after registering.
+2. **Members**: Registered church members with profile pages, attendance histories, cell groups, and giving records.
 
 ---
 
-## 2. Technology stack
+### 1.2 User Roles & Access Matrix (`src/lib/role.tsx`)
 
-| Layer | Choice |
-|-------|--------|
-| Framework | **TanStack Start v1** (React 19, SSR, server functions) |
-| Routing | TanStack Router file-based (`src/routes/`) |
-| Build / dev | Vite 7 via `@lovable.dev/vite-tanstack-config` |
-| Runtime target | **Cloudflare Workers** (see `wrangler.jsonc`, `src/server.ts`) |
-| Styling | **Tailwind CSS v4** (via `@tailwindcss/vite`, configured in `src/styles.css`) |
-| Component library | **shadcn/ui** (Radix primitives in `src/components/ui/*`) |
-| Data fetching | TanStack Query 5 (provider in `src/router.tsx`) |
-| Forms | `react-hook-form` + `@hookform/resolvers` (zod-ready) |
-| Charts | `recharts` |
-| Animation | `framer-motion` |
-| Icons | `lucide-react` |
-| Toasts | `sonner` |
-| Fonts | `Playfair Display` (display) + `Plus Jakarta Sans` (sans), loaded via `<link>` in `__root.tsx` |
+| Role            | Access Scope                                                                          | Menu Items Visible                                                                                                                   |
+| :-------------- | :------------------------------------------------------------------------------------ | :----------------------------------------------------------------------------------------------------------------------------------- |
+| **Admin**       | Global KPIs, all churches, full member directory, financial reports, admin management | All 11 navigation sections (Overview, Church, Cells, Souls, Events, Tasks, Giving, Messages, Notifications, Reports, Administrators) |
+| **Pastor**      | Branch KPIs, branch cells, branch members, branch giving, event management            | Overview, Church, Cells, Souls, Events, Tasks, Giving, Messages, Notifications, Reports                                              |
+| **Cell Leader** | Assigned cell groups, cell members, cell meetings, soul follow-ups                    | Overview, Cells, Souls, Events, Tasks, Messages, Notifications, Reports                                                              |
+| **Member**      | Personal journey, assigned cell, invited events, prayer requests                      | Overview, Souls, Events, Tasks, Messages, Notifications                                                                              |
 
-Lint: `eslint`. Format: `prettier`. Type-check: `tsgo`.
+Role switching is available in runtime via the avatar dropdown (`View as...`) for testing and previewing role-scoped experiences.
 
 ---
 
-## 3. Project structure
+## 2. In-Memory Reactive Data Stores
 
-```
-.
-├── src/
-│   ├── routes/                 # File-based routes (TanStack Router)
-│   ├── components/
-│   │   ├── auth/AuthShell.tsx
-│   │   ├── brand/Logo.tsx
-│   │   ├── dashboard/
-│   │   │   ├── DashboardShell.tsx  # Sidebar + topbar layout
-│   │   │   ├── ReportComparison.tsx
-│   │   │   └── ui.tsx              # PageHeader, StatCard, SectionCard
-│   │   └── ui/                     # shadcn/ui primitives
-│   ├── lib/
-│   │   ├── data.ts                 # Dummy seed data
-│   │   ├── souls.ts                # Souls in-memory store (+ updateSoul, addSoulFollowUp)
-│   │   ├── events-store.ts         # In-memory events store with subscribe (useSyncExternalStore)
-│   │   ├── giving-store.ts         # In-memory giving/partnership store with subscribe
-│   │   ├── admins-store.ts         # In-memory admin roster + invites (Admin-only)
-│   │   ├── role.tsx                # RoleProvider + useRole
-│   │   ├── current-church.tsx      # CurrentChurchProvider + useCurrentChurch
-│   │   ├── utils.ts                # cn()
-│   │   ├── error-capture.ts        # SSR error capture for branded 500 page
-│   │   └── error-page.ts           # renderErrorPage()
-│   ├── hooks/use-mobile.tsx
-│   ├── styles.css                  # Tailwind v4 entry + theme tokens
-│   ├── router.tsx                  # createRouter (+ QueryClient context)
-│   ├── start.ts                    # createStart + request middleware
-│   ├── server.ts                   # Worker fetch handler (SSR + error wrap)
-│   └── routeTree.gen.ts            # AUTO-GENERATED — never edit
-├── vite.config.ts                  # Re-export of @lovable.dev/vite-tanstack-config
-├── wrangler.jsonc                  # Cloudflare Worker config
-├── components.json                 # shadcn config
-└── package.json
-```
+Since the project is currently in the frontend stage, state is managed via reactive in-memory stores using `useSyncExternalStore` for real-time reactivity without state lag:
 
-### 3.1 What is generated vs. authored
-- `src/routeTree.gen.ts` — **generated** by the TanStack Router Vite plugin from filenames in `src/routes/`. Never edit by hand.
-- Everything else under `src/` is authored.
+| Data Store File                  | Key Exports                                                                                                                                      | Description                                                                                                             |
+| :------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------- |
+| `src/lib/members-store.ts`       | `getMembers()`, `getMemberById()`, `addMember()`, `importMembers()`, `subscribeMembers()`                                                        | Centralized member repository for list view (`/dashboard/members`) and member profile pages (`/dashboard/members/$id`). |
+| `src/lib/souls.ts`               | `getSouls()`, `getSoulById()`, `addSoulToStore()`, `updateSoul()`, `addSoulFollowUp()`, `addSoulNote()`, `addSoulPrayer()`, `addSoulMilestone()` | Tracks souls through discipleship stages (_Contacted_, _Visited_, _Following Up_, _Converted_, _Discipled_).            |
+| `src/lib/cell-meetings-store.ts` | `getCellMeetings()`, `addCellMeeting()`, `subscribeCellMeetings()`                                                                               | Cell group meeting schedule store with dynamic notification triggers.                                                   |
+| `src/lib/notifications-store.ts` | `getNotifications()`, `addNotification()`, `markAllNotificationsRead()`, `subscribeNotifications()`                                              | Real-time topbar notification center for follow-ups, cell meetings, main church events, and admin invites.              |
+| `src/lib/events-store.ts`        | `getEvents()`, `addEvent()`, `subscribeEvents()`                                                                                                 | Main church events repository published by Pastors & Admins.                                                            |
+| `src/lib/giving-store.ts`        | `getGiving()`, `addGiving()`, `subscribeGiving()`                                                                                                | Tithes, offerings, partnership, and project funds giving store.                                                         |
+| `src/lib/admins-store.ts`        | `getAdmins()`, `inviteAdmin()`, `removeAdmin()`, `subscribeAdmins()`                                                                             | Ministry administrator roster and invitation passkey generator.                                                         |
+| `src/lib/current-church.tsx`     | `useCurrentChurch()`, `CurrentChurchProvider`                                                                                                    | Global branch selector context (_Lagos Central_, _Abuja Cathedral_, _Port Harcourt_, _All Branches_).                   |
 
 ---
 
-## 4. Routing
+## 3. Comprehensive Device Breakpoint & Responsive Strategy
 
-### 4.1 Conventions
-TanStack Router uses **flat dot-separated filenames** that map directly to URLs:
+To ensure Soul Tracer renders cleanly across **all device types**, the following design transformation matrix is enforced:
 
-| File | URL |
-|------|-----|
-| `index.tsx` | `/` |
-| `login.tsx` | `/login` |
-| `dashboard.tsx` | `/dashboard` (layout — renders `<Outlet />`) |
-| `dashboard.index.tsx` | `/dashboard` (leaf, the overview page) |
-| `dashboard.groups.index.tsx` | `/dashboard/groups` (souls list) |
-| `dashboard.groups.$id.tsx` | `/dashboard/groups/:id` (soul profile) |
-| `dashboard.members.$id.tsx` | `/dashboard/members/:id` |
-| `dashboard.church.$id.tsx` | `/dashboard/church/:id` |
-| `dashboard.events.$id.tsx` | `/dashboard/events/:id` |
-| `dashboard.events.new.tsx` | `/dashboard/events/new` (create event form) |
-| `dashboard.admins.tsx` | `/dashboard/admins` (Admin-only roster + invites) |
+### 3.1 Device Breakpoints Reference
 
-The string in `createFileRoute("...")` MUST match the generated route ID — see the bottom of `src/routeTree.gen.ts` to verify.
-
-### 4.2 Root route
-`src/routes/__root.tsx` defines:
-- HTML shell (`<html>`, `<head>`, `<body>`) via `shellComponent`
-- Default SEO meta tags (title, description, OG, Twitter)
-- Google Fonts `<link>` tags (Plus Jakarta Sans + Playfair Display)
-- The Tailwind stylesheet import (`appCss`)
-- `<QueryClientProvider>` + `<Toaster>`
-- A branded `404` `notFoundComponent` and a branded `errorComponent` with a "Try again" button that calls both `router.invalidate()` and `reset()`
-
-### 4.3 Dashboard layout
-`src/routes/dashboard.tsx` wraps every `/dashboard/*` route with:
-```tsx
-<RoleProvider>
-  <CurrentChurchProvider>
-    <DashboardShell><Outlet /></DashboardShell>
-  </CurrentChurchProvider>
-</RoleProvider>
-```
-So role and current-church context are available to every dashboard page. Adding a new dashboard page = drop a file in `src/routes/dashboard.*.tsx` and it inherits the shell.
-
-### 4.4 Route inventory
-
-**Public**
-- `/` — Marketing landing page (`index.tsx`) — hero, features, branches, stage timeline (uses `framer-motion`)
-- `/login`, `/register`, `/forgot-password`, `/find-account` — wrapped in `AuthShell`
-
-**Dashboard (under `/dashboard/*`)**
-
-| Path | File | Purpose |
-|------|------|---------|
-| `/dashboard` | `dashboard.index.tsx` | Role-aware KPI overview |
-| `/dashboard/church` | `dashboard.church.index.tsx` | Branch list |
-| `/dashboard/church/:id` | `dashboard.church.$id.tsx` | Branch detail |
-| `/dashboard/cells` | `dashboard.cells.tsx` | Cell ministry list |
-| `/dashboard/groups` | `dashboard.groups.index.tsx` | **Souls** list with filter, add-soul dialog |
-| `/dashboard/groups/:id` | `dashboard.groups.$id.tsx` | **Soul profile** (Metronic-style scroll-spy page) |
-| `/dashboard/events` | `dashboard.events.index.tsx` | Events list (reads from `events-store`) |
-| `/dashboard/events/new` | `dashboard.events.new.tsx` | Full-page **New Event** form (Admin / Pastor / Cell Leader) |
-| `/dashboard/events/:id` | `dashboard.events.$id.tsx` | Event detail (attendees) |
-| `/dashboard/members` | `dashboard.members.index.tsx` | Member directory |
-| `/dashboard/members/:id` | `dashboard.members.$id.tsx` | Member profile + journey timeline |
-| `/dashboard/tasks` | `dashboard.tasks.tsx` | Tasks board (Open / Done / High priority filters, edit + delete) |
-| `/dashboard/giving` | `dashboard.giving.tsx` | Giving + partnership records (Admin / Pastor can add & delete) |
-| `/dashboard/admins` | `dashboard.admins.tsx` | **Admin roster + invite dialog** (Admin-only) |
-| `/dashboard/leadership` | `dashboard.leadership.tsx` | Leader-request approval queue |
-| `/dashboard/invitees` | `dashboard.invitees.tsx` | Personal invitees |
-| `/dashboard/messages` | `dashboard.messages.tsx` | Inbox |
-| `/dashboard/notifications` | `dashboard.notifications.tsx` | Full notifications list |
-| `/dashboard/reports` | `dashboard.reports.tsx` | Reports + branch comparison |
-| `/dashboard/profile` | `dashboard.profile.tsx` | Current user profile |
-| `/dashboard/settings` | `dashboard.settings.tsx` | App settings |
-| `/dashboard/help` | `dashboard.help.tsx` | Help & support |
+| Device Category                    | Screen Width Range | Target Devices                        | Key Responsive Adaptation                                                                      |
+| :--------------------------------- | :----------------- | :------------------------------------ | :--------------------------------------------------------------------------------------------- |
+| **`xs` (Compact Mobile)**          | `< 480px`          | iPhone SE, Compact Androids           | 1-column stack, full-screen modals, compact 44px touch targets, mobile card stacks for tables. |
+| **`sm` (Phablets / Large Phones)** | `480px - 639px`    | iPhone Pro Max, Galaxy Ultra          | 2-column stat cards, horizontal scrollable tab bars, stacked form inputs.                      |
+| **`md` (Tablets / iPads)**         | `640px - 1023px`   | iPad Mini, iPad Air, Surface Go       | Collapsible slide-over sidebar drawer, 2-column analytics grid, scrollable data tables.        |
+| **`lg` (Laptops / Small Screens)** | `1024px - 1279px`  | MacBook Air, 13" Laptops              | Fixed 72px collapsed / 288px expanded sidebar, 3-column metric cards, full data tables.        |
+| **`xl` (Desktops)**                | `1280px - 1535px`  | 24" Monitors, iMac                    | 4-column KPI cards, side-by-side split profile panels, wide data tables.                       |
+| **`2xl` (Ultra-Wide Monitors)**    | `>= 1536px`        | 27"+ 4K Monitors, Ultra-wide Displays | Max container width constraint (`max-w-7xl mx-auto`), enhanced side margins.                   |
 
 ---
 
-## 5. Design system
+### 3.2 Specific Responsive Component Transformations
 
-### 5.1 Theme tokens
-All colors, gradients and shadows are defined as semantic tokens in `src/styles.css` under `@theme inline { … }` and consumed via Tailwind utility classes (`bg-primary`, `text-gold`, `bg-gradient-royal`, `shadow-elegant`, etc.).
+1. **Sidebar Navigation (`DashboardShell.tsx`)**:
+   - **Mobile / Tablet (`< 1024px`)**: Hidden off-screen. Tapping topbar hamburger icon (`<Menu />`) slides out full-height navigation drawer.
+   - **Desktop (`>= 1024px`)**: Fixed left panel with smooth toggle collapse (72px compact / 288px expanded).
 
-**Brand palette**
-- **Royal blue** — primary (`bg-primary`, `text-primary`, `bg-gradient-royal`)
-- **Gold** — accent (`text-gold`, `bg-gold`, `bg-gold-soft`, `bg-gradient-gold`)
-- `success`, `destructive`, `muted`, `border`, `card`, `sidebar`, `sidebar-accent`, `sidebar-border` — all token-driven
+2. **Sub-Navigation Tabs (`TabsList`)**:
+   - **Mobile / Tablet (`< 768px`)**: Single horizontal swipeable bar (`flex-nowrap overflow-x-auto no-scrollbar pb-1`) preventing multi-line tab wrapping.
+   - **Desktop (`>= 768px`)**: Stretched flex row filling available card width.
 
-**Never** hardcode `text-white`, `bg-black`, `#hex` color utilities in components — they bypass theming.
+3. **Data Tables (Members, Souls, Giving, Admins)**:
+   - **Mobile (`< 640px`)**: Table rows transform into **Mobile Card Stacks** displaying Avatar, Name, Stage Badge, and full-width touch buttons.
+   - **Tablet / Desktop (`>= 640px`)**: Responsive data table with touch overflow container.
 
-**Typography**
-- `font-display` → Playfair Display (page titles, stat values)
-- `font-sans` → Plus Jakarta Sans (body, default)
-
-### 5.2 Reusable dashboard primitives
-`src/components/dashboard/ui.tsx` exports three building blocks used across nearly every dashboard page:
-
-- **`<PageHeader title subtitle action />`** — large display title + subtitle + right-aligned action slot
-- **`<StatCard label value icon change accent hint />`** — KPI card with icon, optional trend %, gradient accent (`primary | gold | success | blue`), hover lift
-- **`<SectionCard title action>{children}</SectionCard>`** — bordered card with optional header row
-
-### 5.3 Sidebar / shell
-`src/components/dashboard/DashboardShell.tsx` provides:
-- **Collapsible sidebar** — toggle button persists collapse state; when collapsed, hovering the sidebar expands it (`group/sidebar` + `lg:hover:w-72`) and reveals labels
-- **Role-filtered nav** — `nav[].roles` controls visibility
-- **Mobile drawer** — slides in on `<lg`, dimmed overlay
-- **Sticky top bar** — search, notifications popover (uses `notifications` from `data.ts`), avatar menu with role switcher and logout link
-- Active link gets `bg-gradient-to-r from-sidebar-accent`, a gold icon background and a small gold dot indicator
+4. **Modals & Dialogs (`DialogContent`)**:
+   - **Mobile (`< 640px`)**: Fits within 90% viewport height with bottom sheet behavior and internal scrolling.
+   - **Desktop (`>= 640px`)**: Center-aligned modal dialog.
 
 ---
 
-## 6. Key features deep-dive
+## 4. Backend REST API Endpoint & Payload Specifications
 
-### 6.1 Souls (`/dashboard/groups`)
-A **Soul** = a person being followed up who does not yet have a platform account.
+For future backend development, the following REST API specification outlines the exact endpoint paths, HTTP methods, request payloads, and response structures:
 
-**Model** (`src/lib/souls.ts`):
-```ts
-Soul {
-  id, name, phone, email?, location?,
-  stage: "Contacted" | "Visited" | "Following Up" | "Converted" | "Discipled",
-  invitedBy, date, mentor, avatar?,
-  badges: SoulBadge[],          // Born Again, Baptized, Spirit Filled, ...
-  milestones: SoulMilestone[],  // Salvation / Baptism / Discipleship / Ministry / Moment
-  prayers: SoulPrayer[],        // Active | Answered
-  followUps: SoulFollowUp[],    // Call / Visit / Meeting / Message
-  noteLog: SoulNote[],
-  growth: { discipleship, bibleStudy, churchInvolvement, followUpCompletion }  // 0..100
+### 4.1 Souls Discipleship API (`/api/souls`)
+
+```typescript
+// GET /api/souls?branch={branchName}&stage={stageName}
+// Response:
+{
+  souls: Soul[];
+}
+
+// POST /api/souls
+// Request Body:
+{
+  name: string;
+  phone: string;
+  email?: string;
+  location?: string;
+  stage: "Contacted" | "Visited" | "Following Up" | "Converted" | "Discipled";
+  invitedBy: string;
+  mentor: string;
+}
+// Response: { soul: Soul }
+
+// PATCH /api/souls/:id
+// Request Body: Partial<Soul>
+// Response: { soul: Soul }
+
+// POST /api/souls/:id/followups
+// Request Body:
+{
+  type: "Call" | "Visit" | "Meeting" | "Message";
+  date: string; // YYYY-MM-DD
+  time: string; // HH:mm
+  by: string;
+  notes: string;
+}
+// Response: { followUp: SoulFollowUp, soulStage: SoulStage }
+
+// POST /api/souls/:id/convert
+// Request Body:
+{
+  name: string;
+  email: string;
+  phone: string;
+  branch: string;
+  cell: string;
+  stage: string;
+  mentor: string;
+}
+// Response:
+{
+  member: Member;
+  soul: Soul;
+  credentials: {
+    email: string;
+    tempPasskey: string;
+  };
 }
 ```
 
-**List page** (`dashboard.groups.index.tsx`) — search by name/inviter, filter by stage, "Add soul" dialog (writes to `addSoulToStore`), grid of cards each with a single **View** button → `/dashboard/groups/$id`.
-
-**Profile page** (`dashboard.groups.$id.tsx`) — Metronic-inspired single scrollable page with:
-- Profile header: avatar, name, stage, mentor, date added, quick stats, spiritual badges
-- Sticky scroll-spy nav: Overview · Spiritual Journey · Prayer Requests · Follow-Up History · Notes · Growth Tracker
-- Header actions:
-  - **Schedule Follow-Up** — opens a modal that captures type (Call / Visit / Meeting / Message), date, time, assignee, and details; appends to the soul's follow-up history via `addSoulFollowUp` and fires a toast notification.
-  - **Convert to User** — opens a registration modal pre-filled from the soul's name/phone/email/location/mentor. On submit, `updateSoul` marks the stage as `Converted` and the user is navigated to `/dashboard/members`. (No real member row is created yet — that awaits Lovable Cloud.)
-
-### 6.2 Tasks (`/dashboard/tasks`)
-Tabs/chips for **Open**, **Done**, **High priority** filter the task list. Each task supports **edit** and **delete**. Brand colors maintained.
-
-### 6.3 Role-aware overview (`/dashboard`)
-The dashboard root computes a different set of KPI rows based on `useRole()`, so an Admin sees global stats, a Pastor sees their branch, a Cell Leader sees their cell, a Member sees personal stats.
-
-### 6.4 Branch-aware UI
-`CurrentChurchProvider` (`src/lib/current-church.tsx`) holds the currently-selected branch so branch-scoped pages can switch context without prop drilling.
-
-### 6.5 Cell Ministry — New Meeting
-On `/dashboard/cells`, the **Meetings** tab's "New meeting" button opens a modal (title, date, time, location, agenda). On save, the meeting is appended to an in-memory `meetingStore` scoped to the active cell and a toast confirms all cell members are notified.
-
-### 6.6 Events — creation flow
-The **New event** button on `/dashboard/events` now navigates to a dedicated page `/dashboard/events/new` (`dashboard.events.new.tsx`) with a full form: name, type, church/branch, date, time, location, capacity, organizer, description. Submitting calls `addEvent` in `src/lib/events-store.ts`; the list re-renders via `useSyncExternalStore`. Only Admin / Pastor / Cell Leader see the button. The `events` seed from `data.ts` is copied into the store on first load, so the list stays populated.
-
-### 6.7 Giving & Partnership (`/dashboard/giving`)
-Records are no longer hardcoded — they live in `src/lib/giving-store.ts` (types include Tithe, Offering, Project, **Partnership**, Seed). Only **Admin** and **Pastor** see the "Record" button and the per-row delete action; the record modal captures type, amount, source, church, giver, and date. The four KPI cards recompute on every add/delete.
-
-### 6.8 Administrators (`/dashboard/admins`)
-Admin-only route (hidden from other roles in the sidebar). Lists administrators from `src/lib/admins-store.ts` and exposes an **Invite admin** modal (name, email, scope). Invited admins land with a `Pending Invite` badge; existing admins can be removed. This is UI-only for now — real invites require Lovable Cloud.
-
 ---
 
+### 4.2 Members Directory API (`/api/members`)
 
-## 7. SSR, server runtime & errors
+```typescript
+// GET /api/members?branch={branchName}&cell={cellName}&search={q}
+// Response: { members: Member[] }
 
-### 7.1 The Worker entry
-`src/server.ts` is the Cloudflare Worker `fetch` handler. It:
-1. Delegates to TanStack Start's bundled `server-entry`
-2. Wraps the response in `normalizeCatastrophicSsrResponse` — h3 sometimes swallows in-handler throws into a JSON 500 (`{"unhandled":true,"message":"HTTPError"}`); we detect that shape and replace it with our branded HTML error page (`renderErrorPage()`)
-3. Falls back to the branded error page on any other thrown error
+// GET /api/members/:id
+// Response: { member: Member, journey: JourneyItem[] }
 
-`vite.config.ts` redirects TanStack Start's server entry to `server` so this wrapper runs in both dev and production builds.
+// POST /api/members
+// Request Body:
+{
+  name: string;
+  email: string;
+  phone: string;
+  branch: string;
+  stage: Stage;
+  cell: string;
+  mentor: string;
+}
+// Response: { member: Member }
 
-### 7.2 Request middleware
-`src/start.ts` registers an `errorMiddleware` that catches errors thrown inside server functions and returns the branded HTML 500.
-
-### 7.3 Constraints (Cloudflare workerd)
-- `process.env` is server-only — read inside `.handler()`, never at module scope of shared files
-- No `child_process`, `sharp`, `canvas`, `puppeteer`, `fs.watch`
-- Public client config goes through `import.meta.env.VITE_*`
-
----
-
-## 8. State, data flow and persistence
-
-### 8.1 Today
-- **React state + Context** for role (`RoleProvider`) and current church (`CurrentChurchProvider`)
-- **Module-level store** for souls (`soulStore` in `src/lib/souls.ts`) — persists across route changes within a session but resets on full reload
-- **Seed data** in `src/lib/data.ts` is treated as read-only
-
-### 8.2 When persistence is needed
-Enable **Lovable Cloud** to get a Postgres database, auth, storage, edge functions and secrets. The shapes in `data.ts` / `souls.ts` are the natural starting schema. Auth-protected server functions should use `requireSupabaseAuth` middleware and the project-managed Supabase clients (see project rules).
-
----
-
-## 9. Adding things — recipes
-
-### 9.1 Add a new dashboard page
-1. Create `src/routes/dashboard.<thing>.tsx`
-2. Export `Route = createFileRoute("/dashboard/<thing>")({ component: MyPage })`
-3. Use `PageHeader`, `StatCard`, `SectionCard` for layout consistency
-4. Add an entry to `nav[]` in `DashboardShell.tsx` (with optional `roles` array)
-5. The TanStack Router plugin regenerates `routeTree.gen.ts` automatically
-
-### 9.2 Add a new dynamic route
-- File: `src/routes/dashboard.thing.$id.tsx`
-- Component reads params: `const { id } = Route.useParams()`
-- Link to it: `<Link to="/dashboard/thing/$id" params={{ id }}>View</Link>` — never `<a href>`
-
-### 9.3 Add a shadcn component
-Already-installed primitives live in `src/components/ui/*`. To add another, install via shadcn conventions (Radix dep + a wrapper in `src/components/ui/`).
-
-### 9.4 Add a new color / gradient
-Define the token in `src/styles.css` under `@theme inline`, then use it via Tailwind utility (`bg-<token>`). Never hex-literal in a component.
-
----
-
-## 10. Running, building, deploying
-
-```bash
-bun dev           # vite dev server (used in the sandbox preview)
-bun run build     # production build (Cloudflare Worker target)
-bun run build:dev # development-mode build (used for build-time checks)
-bun run preview   # preview production build locally
-bun run lint
-bun run format
+// POST /api/members/import
+// Request Body: { members: MemberInput[] }
+// Response: { count: number, members: Member[] }
 ```
 
-The build target is a Cloudflare Worker — `wrangler.jsonc` sets `main: src/server.ts`. The `@cloudflare/vite-plugin` (auto-included by `@lovable.dev/vite-tanstack-config`) bundles everything for `workerd`. Lovable handles publishing — there is no separate deploy step.
+---
+
+### 4.3 Cell Ministry API (`/api/cells`)
+
+```typescript
+// GET /api/cells?branch={branchName}
+// Response: { cells: CellGroup[] }
+
+// POST /api/cells/:id/meetings
+// Request Body:
+{
+  title: string;
+  date: string;
+  time: string;
+  location: string;
+  agenda: string;
+}
+// Response: { meeting: CellMeeting, notificationsDispatched: number }
+
+// POST /api/cells/:id/attendance
+// Request Body:
+{
+  memberId: string;
+  present: boolean;
+}
+// Response: { memberAttendance: number, cellOverallAttendance: number }
+```
 
 ---
 
-## 11. Known invariants & gotchas
+### 4.4 Giving & Financials API (`/api/giving`)
 
-1. **Never edit `src/routeTree.gen.ts`** — it is regenerated every build.
-2. **`createFileRoute("...")` string must match the filename** — mismatch crashes the build with a route-tree path error.
-3. **Layout routes must render `<Outlet />`** — `dashboard.tsx` does this. Removing it makes every child page blank.
-4. **Souls persistence is module-level**, not React state. Always call `getSouls()` / `addSoulToStore()` rather than rebuilding an array from seed.
-5. **Tailwind v4** uses `@theme inline` + native `@import` in `src/styles.css`. Don't add a legacy `tailwind.config.js`. Don't `@import` remote URLs from CSS — use a `<link>` in `__root.tsx`.
-6. **Brand colors are blue + gold** — keep that direction unless the user asks otherwise.
-7. **Hover-expand sidebar** depends on the `group/sidebar` class + `lg:hover:w-72`; don't replace the outer `<aside>` without preserving both.
+```typescript
+// GET /api/giving?branch={branchName}
+// Response: { records: GivingRecord[] }
 
----
-
-## 12. File-by-file quick index
-
-**Routes:** see §4.4. **Lib:**
-- `src/lib/data.ts` — branches, members, events, invitees, cells, notifications, growth/attendance series, leader requests, member journey, attendance-for-date
-- `src/lib/souls.ts` — Soul types + in-memory store
-- `src/lib/role.tsx` — `RoleProvider`, `useRole`, `ROLES`
-- `src/lib/current-church.tsx` — `CurrentChurchProvider`, `useCurrentChurch`
-- `src/lib/utils.ts` — `cn()` (clsx + tailwind-merge)
-- `src/lib/error-capture.ts` + `error-page.ts` — SSR error capture + branded 500 HTML
-
-**Components:**
-- `src/components/dashboard/DashboardShell.tsx` — sidebar + topbar
-- `src/components/dashboard/ui.tsx` — `PageHeader`, `StatCard`, `SectionCard`
-- `src/components/dashboard/ReportComparison.tsx` — branch comparison chart used in Reports
-- `src/components/auth/AuthShell.tsx` — auth pages frame
-- `src/components/brand/Logo.tsx` — logo (light/dark variants)
-- `src/components/ui/*` — shadcn primitives
+// POST /api/giving
+// Request Body:
+{
+  type: "Tithe" | "Offering" | "Partnership" | "Project";
+  amount: number;
+  source: string;
+  branch: string;
+  giver?: string;
+  date: string;
+}
+// Response: { record: GivingRecord }
+```
 
 ---
 
-## 13. Where to extend next
+### 4.5 Events API (`/api/events`)
 
-Likely near-term work (informed by the codebase's current shape):
-- Enable **Lovable Cloud** and move `souls` + `members` + `events` to Postgres, behind `requireSupabaseAuth` server functions
-- Real authentication on `/login` and `/register`
-- Implement **Convert Soul to User** action on the soul profile page
-- Persist task edits/deletes from `/dashboard/tasks` to the database
-- Wire the topbar **Search** to a real query across members / souls / events
-- Replace the in-memory role switcher with role rows in a `user_roles` table (per the project's user-roles rule)
+```typescript
+// GET /api/events?branch={branchName}
+// Response: { events: ChurchEvent[] }
+
+// POST /api/events
+// Request Body:
+{
+  name: string;
+  type: "Service" | "Midweek" | "Cell" | "Crusade" | "Training";
+  date: string;
+  time: string;
+  location: string;
+  branch: string;
+  capacity: number;
+  description: string;
+}
+// Response: { event: ChurchEvent }
+```
 
 ---
 
-*End of documentation.*
+### 4.6 Administrators & Notifications API
+
+```typescript
+// GET /api/notifications
+// Response: { notifications: NotificationItem[] }
+
+// POST /api/admins/invite
+// Request Body:
+{
+  name: string;
+  email: string;
+  scope: string;
+  invitedBy: string;
+}
+// Response: { admin: AdminItem, tempPasskey: string }
+```
+
+---
+
+## 5. Maintenance Directive
+
+> **Crucial Rule for Agents & Developers**:
+> Whenever a new feature, data store, route, or API schema is added or modified, **`DOCUMENTATION.md` must be updated immediately** in the same change so it remains the living, accurate source of truth for the Soul Tracer platform.

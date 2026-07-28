@@ -1,20 +1,34 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { ArrowLeft, Mail, Phone, MapPin, CheckCircle2, CalendarDays, Users, TrendingUp } from "lucide-react";
+import {
+  ArrowLeft,
+  Mail,
+  Phone,
+  MapPin,
+  CheckCircle2,
+  CalendarDays,
+  Users,
+  TrendingUp,
+} from "lucide-react";
 import { PageHeader, SectionCard, StatCard } from "@/components/dashboard/ui";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { members, memberJourney, invitees } from "@/lib/data";
+import { getMemberById } from "@/lib/members-store";
 
 export const Route = createFileRoute("/dashboard/members/$id")({
   loader: ({ params }) => {
-    const m = members.find((x) => x.id === params.id);
+    const m = getMemberById(params.id);
     if (!m) throw notFound();
     return m;
   },
-  notFoundComponent: () => <div className="p-10 text-center text-muted-foreground">Member not found.</div>,
-  errorComponent: ({ error }) => <div className="p-10 text-center text-destructive">{error.message}</div>,
+  notFoundComponent: () => (
+    <div className="p-10 text-center text-muted-foreground">Member not found.</div>
+  ),
+  errorComponent: ({ error }) => (
+    <div className="p-10 text-center text-destructive">{error.message}</div>
+  ),
   component: MemberDetail,
 });
 
@@ -28,13 +42,16 @@ function MemberDetail() {
     "Event Attended": "bg-primary/10 text-primary border-primary/20",
     "Role Held": "bg-gold-soft text-primary border-gold/30",
     "Group Joined": "bg-success/15 text-success border-success/30",
-    "Stage": "bg-gradient-gold text-gold-foreground border-transparent",
+    Stage: "bg-gradient-gold text-gold-foreground border-transparent",
   };
 
   return (
     <div className="space-y-6">
       <Button asChild variant="ghost" size="sm" className="-ml-2">
-        <Link to="/dashboard/members"><ArrowLeft className="mr-1 h-4 w-4" />Back to membership</Link>
+        <Link to="/dashboard/members">
+          <ArrowLeft className="mr-1 h-4 w-4" />
+          Back to membership
+        </Link>
       </Button>
 
       <PageHeader title={m.name} subtitle={`${m.branch} · ${m.cell}`} />
@@ -52,7 +69,8 @@ function MemberDetail() {
             <SectionCard>
               <div className="flex flex-col items-center text-center">
                 <Avatar className="h-28 w-28 ring-4 ring-gold/40">
-                  <AvatarImage src={m.avatar} /><AvatarFallback>{m.name[0]}</AvatarFallback>
+                  <AvatarImage src={m.avatar} />
+                  <AvatarFallback>{m.name[0]}</AvatarFallback>
                 </Avatar>
                 <h2 className="mt-4 font-display text-2xl font-bold">{m.name}</h2>
                 <Badge className="mt-2 bg-gradient-gold text-gold-foreground">{m.stage}</Badge>
@@ -61,20 +79,40 @@ function MemberDetail() {
                 <Row icon={Mail}>{m.email}</Row>
                 <Row icon={Phone}>{m.phone}</Row>
                 <Row icon={MapPin}>{m.branch}</Row>
-                <Row icon={CheckCircle2}>Mentor: <span className="font-semibold text-foreground">{m.mentor}</span></Row>
+                <Row icon={CheckCircle2}>
+                  Mentor: <span className="font-semibold text-foreground">{m.mentor}</span>
+                </Row>
                 <Row icon={CalendarDays}>Joined {new Date(m.joinedAt).toLocaleDateString()}</Row>
               </div>
             </SectionCard>
 
             <div className="space-y-6">
               <div className="grid gap-4 sm:grid-cols-3">
-                <StatCard label="Attendance" value={`${m.attendance}%`} icon={TrendingUp} change={3.2} accent="primary" />
-                <StatCard label="Events attended" value={attended} icon={CalendarDays} accent="gold" />
-                <StatCard label="Invitees" value={myInvitees.length} icon={Users} accent="success" />
+                <StatCard
+                  label="Attendance"
+                  value={`${m.attendance}%`}
+                  icon={TrendingUp}
+                  change={3.2}
+                  accent="primary"
+                />
+                <StatCard
+                  label="Events attended"
+                  value={attended}
+                  icon={CalendarDays}
+                  accent="gold"
+                />
+                <StatCard
+                  label="Invitees"
+                  value={myInvitees.length}
+                  icon={Users}
+                  accent="success"
+                />
               </div>
               <SectionCard title="Discipleship summary">
                 <p className="text-sm text-muted-foreground">
-                  {m.name} is currently a <strong className="text-foreground">{m.stage}</strong> serving in <strong className="text-foreground">{m.cell}</strong> at <strong className="text-foreground">{m.branch}</strong>. Mentored by {m.mentor}.
+                  {m.name} is currently a <strong className="text-foreground">{m.stage}</strong>{" "}
+                  serving in <strong className="text-foreground">{m.cell}</strong> at{" "}
+                  <strong className="text-foreground">{m.branch}</strong>. Mentored by {m.mentor}.
                 </p>
               </SectionCard>
             </div>
@@ -96,8 +134,14 @@ function MemberDetail() {
                 <tbody className="divide-y divide-border bg-card">
                   {journey.map((j, i) => (
                     <tr key={i} className="hover:bg-secondary/40">
-                      <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">{new Date(j.date).toLocaleDateString()}</td>
-                      <td className="px-4 py-3"><Badge variant="outline" className={kindColor[j.kind]}>{j.kind}</Badge></td>
+                      <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
+                        {new Date(j.date).toLocaleDateString()}
+                      </td>
+                      <td className="px-4 py-3">
+                        <Badge variant="outline" className={kindColor[j.kind]}>
+                          {j.kind}
+                        </Badge>
+                      </td>
                       <td className="px-4 py-3 font-semibold">{j.label}</td>
                       <td className="px-4 py-3 text-muted-foreground">{j.detail}</td>
                     </tr>
@@ -118,7 +162,9 @@ function MemberDetail() {
                   <li key={i.id} className="flex items-center justify-between py-3">
                     <div>
                       <p className="font-semibold">{i.name}</p>
-                      <p className="text-xs text-muted-foreground">{i.event} · {new Date(i.date).toLocaleDateString()}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {i.event} · {new Date(i.date).toLocaleDateString()}
+                      </p>
                     </div>
                     <Badge variant="outline">{i.status}</Badge>
                   </li>
@@ -137,15 +183,19 @@ function MemberDetail() {
               <span className="font-display text-lg font-bold">{m.attendance}%</span>
             </div>
             <ul className="divide-y divide-border">
-              {journey.filter((j) => j.kind === "Event Attended").map((j, i) => (
-                <li key={i} className="flex items-center justify-between py-3">
-                  <div>
-                    <p className="font-semibold">{j.label}</p>
-                    <p className="text-xs text-muted-foreground">{j.detail}</p>
-                  </div>
-                  <span className="text-xs text-muted-foreground">{new Date(j.date).toLocaleDateString()}</span>
-                </li>
-              ))}
+              {journey
+                .filter((j) => j.kind === "Event Attended")
+                .map((j, i) => (
+                  <li key={i} className="flex items-center justify-between py-3">
+                    <div>
+                      <p className="font-semibold">{j.label}</p>
+                      <p className="text-xs text-muted-foreground">{j.detail}</p>
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(j.date).toLocaleDateString()}
+                    </span>
+                  </li>
+                ))}
             </ul>
           </SectionCard>
         </TabsContent>

@@ -11,14 +11,23 @@ export const Route = createFileRoute("/dashboard/notifications")({ component: No
 function NotifPage() {
   return (
     <div className="space-y-6">
-      <PageHeader title="Notifications" subtitle="All ministry notifications"
-        action={<Button variant="outline" onClick={() => toast.success("All marked as read")}><Check className="mr-1 h-4 w-4"/>Mark all read</Button>}
+      <PageHeader
+        title="Notifications"
+        subtitle="All ministry notifications"
+        action={
+          <Button variant="outline" onClick={() => toast.success("All marked as read")}>
+            <Check className="mr-1 h-4 w-4" />
+            Mark all read
+          </Button>
+        }
       />
       <SectionCard>
         <ul className="divide-y divide-border">
           {notifications.concat(notifications).map((n, i) => (
             <li key={i} className="flex items-start gap-3 py-4">
-              <span className="grid h-9 w-9 place-items-center rounded-xl bg-gold-soft text-primary shrink-0"><BellRing className="h-4 w-4"/></span>
+              <span className="grid h-9 w-9 place-items-center rounded-xl bg-gold-soft text-primary shrink-0">
+                <BellRing className="h-4 w-4" />
+              </span>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-3">
                   <p className="font-semibold">{n.title}</p>

@@ -2,7 +2,15 @@ import { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { TrendingUp, TrendingDown, LucideIcon } from "lucide-react";
 
-export function PageHeader({ title, subtitle, action }: { title: string; subtitle?: string; action?: ReactNode }) {
+export function PageHeader({
+  title,
+  subtitle,
+  action,
+}: {
+  title: string;
+  subtitle?: string;
+  action?: ReactNode;
+}) {
   return (
     <div className="flex flex-wrap items-end justify-between gap-4 pb-6">
       <div>
@@ -15,7 +23,12 @@ export function PageHeader({ title, subtitle, action }: { title: string; subtitl
 }
 
 export function StatCard({
-  label, value, icon: Icon, change, accent = "primary", hint,
+  label,
+  value,
+  icon: Icon,
+  change,
+  accent = "primary",
+  hint,
 }: {
   label: string;
   value: string | number;
@@ -35,21 +48,35 @@ export function StatCard({
     <div className="group relative overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-soft transition hover:-translate-y-0.5 hover:shadow-elegant">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
+          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            {label}
+          </p>
           <p className="mt-2 font-display text-3xl font-bold tracking-tight">{value}</p>
         </div>
-        <span className={cn("grid h-11 w-11 place-items-center rounded-xl shadow-soft", accentMap[accent])}>
+        <span
+          className={cn(
+            "grid h-11 w-11 place-items-center rounded-xl shadow-soft",
+            accentMap[accent],
+          )}
+        >
           <Icon className="h-5 w-5" />
         </span>
       </div>
       <div className="mt-4 flex items-center justify-between text-xs">
         {change !== undefined ? (
-          <span className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-semibold",
-            up ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive")}>
+          <span
+            className={cn(
+              "inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-semibold",
+              up ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive",
+            )}
+          >
             {up ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-            {up ? "+" : ""}{change}%
+            {up ? "+" : ""}
+            {change}%
           </span>
-        ) : <span />}
+        ) : (
+          <span />
+        )}
         {hint && <span className="text-muted-foreground">{hint}</span>}
       </div>
       <div className="pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full bg-gold/10 opacity-0 blur-2xl transition group-hover:opacity-100" />
@@ -57,8 +84,16 @@ export function StatCard({
   );
 }
 
-export function SectionCard({ title, action, children, className }: {
-  title?: string; action?: ReactNode; children: ReactNode; className?: string;
+export function SectionCard({
+  title,
+  action,
+  children,
+  className,
+}: {
+  title?: string;
+  action?: ReactNode;
+  children: ReactNode;
+  className?: string;
 }) {
   return (
     <div className={cn("rounded-2xl border border-border bg-card shadow-soft", className)}>

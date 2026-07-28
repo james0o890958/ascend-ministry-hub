@@ -44,7 +44,12 @@ function FindAccountPage() {
       >
         <div className="space-y-2">
           <Label>Full name</Label>
-          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Daniel Okafor" disabled={step > 1} />
+          <Input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Daniel Okafor"
+            disabled={step > 1}
+          />
         </div>
 
         {step >= 2 && (
@@ -64,11 +69,19 @@ function FindAccountPage() {
         {step >= 3 && (
           <div className="space-y-2">
             <Label>Phone number</Label>
-            <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+234 800 000 0000" />
+            <Input
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="+234 800 000 0000"
+            />
           </div>
         )}
 
-        <Button type="submit" size="lg" className="w-full bg-gradient-royal text-primary-foreground shadow-elegant hover:opacity-90">
+        <Button
+          type="submit"
+          size="lg"
+          className="w-full bg-gradient-royal text-primary-foreground shadow-elegant hover:opacity-90"
+        >
           {step === 1 ? "Search" : step === 2 ? "Confirm account" : "Recover account"}
         </Button>
       </form>

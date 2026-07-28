@@ -27,20 +27,128 @@ export const STAGES = [
 export type Stage = (typeof STAGES)[number];
 
 export const branches = [
-  { id: "b1", name: "Lagos Central", country: "Nigeria", members: 2340, leaders: 86, pastor: "Pst. Daniel Okafor", growth: 12.4 },
-  { id: "b2", name: "Abuja Hub", country: "Nigeria", members: 1870, leaders: 64, pastor: "Pst. Grace Adeyemi", growth: 9.8 },
-  { id: "b3", name: "Accra Sanctuary", country: "Ghana", members: 1240, leaders: 42, pastor: "Pst. Kwame Mensah", growth: 14.2 },
-  { id: "b4", name: "London Bridge", country: "United Kingdom", members: 980, leaders: 38, pastor: "Pst. Ruth Akande", growth: 7.6 },
-  { id: "b5", name: "Houston Citadel", country: "United States", members: 1420, leaders: 51, pastor: "Pst. Michael Eze", growth: 11.1 },
-  { id: "b6", name: "Johannesburg", country: "South Africa", members: 860, leaders: 29, pastor: "Pst. Thando Dlamini", growth: 8.9 },
-  { id: "b7", name: "Nairobi Light", country: "Kenya", members: 1120, leaders: 36, pastor: "Pst. Faith Wanjiru", growth: 15.6 },
-  { id: "b8", name: "Toronto North", country: "Canada", members: 690, leaders: 22, pastor: "Pst. Samuel Idowu", growth: 6.3 },
+  {
+    id: "b1",
+    name: "Lagos Central",
+    country: "Nigeria",
+    members: 2340,
+    leaders: 86,
+    pastor: "Pst. Daniel Okafor",
+    growth: 12.4,
+  },
+  {
+    id: "b2",
+    name: "Abuja Hub",
+    country: "Nigeria",
+    members: 1870,
+    leaders: 64,
+    pastor: "Pst. Grace Adeyemi",
+    growth: 9.8,
+  },
+  {
+    id: "b3",
+    name: "Accra Sanctuary",
+    country: "Ghana",
+    members: 1240,
+    leaders: 42,
+    pastor: "Pst. Kwame Mensah",
+    growth: 14.2,
+  },
+  {
+    id: "b4",
+    name: "London Bridge",
+    country: "United Kingdom",
+    members: 980,
+    leaders: 38,
+    pastor: "Pst. Ruth Akande",
+    growth: 7.6,
+  },
+  {
+    id: "b5",
+    name: "Houston Citadel",
+    country: "United States",
+    members: 1420,
+    leaders: 51,
+    pastor: "Pst. Michael Eze",
+    growth: 11.1,
+  },
+  {
+    id: "b6",
+    name: "Johannesburg",
+    country: "South Africa",
+    members: 860,
+    leaders: 29,
+    pastor: "Pst. Thando Dlamini",
+    growth: 8.9,
+  },
+  {
+    id: "b7",
+    name: "Nairobi Light",
+    country: "Kenya",
+    members: 1120,
+    leaders: 36,
+    pastor: "Pst. Faith Wanjiru",
+    growth: 15.6,
+  },
+  {
+    id: "b8",
+    name: "Toronto North",
+    country: "Canada",
+    members: 690,
+    leaders: 22,
+    pastor: "Pst. Samuel Idowu",
+    growth: 6.3,
+  },
 ];
 
-const firstNames = ["Daniel","Grace","Michael","Esther","Joshua","Ruth","David","Sarah","Emmanuel","Mercy","Peter","Hannah","John","Deborah","Paul","Faith","Samuel","Joy","Caleb","Naomi"];
-const lastNames = ["Okafor","Adeyemi","Mensah","Akande","Eze","Dlamini","Wanjiru","Idowu","Adebayo","Nwosu","Bello","Olawale","Chukwu","Obi","Afolabi","Balogun","Ibrahim","Okonkwo","Lawal","Salami"];
+const firstNames = [
+  "Daniel",
+  "Grace",
+  "Michael",
+  "Esther",
+  "Joshua",
+  "Ruth",
+  "David",
+  "Sarah",
+  "Emmanuel",
+  "Mercy",
+  "Peter",
+  "Hannah",
+  "John",
+  "Deborah",
+  "Paul",
+  "Faith",
+  "Samuel",
+  "Joy",
+  "Caleb",
+  "Naomi",
+];
+const lastNames = [
+  "Okafor",
+  "Adeyemi",
+  "Mensah",
+  "Akande",
+  "Eze",
+  "Dlamini",
+  "Wanjiru",
+  "Idowu",
+  "Adebayo",
+  "Nwosu",
+  "Bello",
+  "Olawale",
+  "Chukwu",
+  "Obi",
+  "Afolabi",
+  "Balogun",
+  "Ibrahim",
+  "Okonkwo",
+  "Lawal",
+  "Salami",
+];
 
-function pick<T>(arr: readonly T[], i: number): T { return arr[i % arr.length]; }
+function pick<T>(arr: readonly T[], i: number): T {
+  return arr[i % arr.length];
+}
 
 export type Member = {
   id: string;
@@ -134,8 +242,18 @@ export const recentActivity = [
 ];
 
 export const notifications = [
-  { id: 1, title: "12 first-timers this Sunday", desc: "Lagos Central recorded a new high", time: "10m" },
-  { id: 2, title: "Foundation School graduation", desc: "84 students ready for cell placement", time: "1h" },
+  {
+    id: 1,
+    title: "12 first-timers this Sunday",
+    desc: "Lagos Central recorded a new high",
+    time: "10m",
+  },
+  {
+    id: 2,
+    title: "Foundation School graduation",
+    desc: "84 students ready for cell placement",
+    time: "1h",
+  },
   { id: 3, title: "Cell B-2 attendance dropped", desc: "Below 70% for 2 weeks", time: "3h" },
   { id: 4, title: "Ordination ceremony scheduled", desc: "Dec 14 — 6 candidates", time: "1d" },
 ];
@@ -152,13 +270,69 @@ export type ChurchEvent = {
 };
 
 export const events: ChurchEvent[] = [
-  { id: "e1", name: "Sunday Service", date: "2026-05-17", type: "Service", branch: "Lagos Central", attendees: 2120, capacity: 2500 },
-  { id: "e2", name: "Midweek Bible Study", date: "2026-05-14", type: "Midweek", branch: "Lagos Central", attendees: 980, capacity: 1500 },
-  { id: "e3", name: "Cell B-2 Meeting", date: "2026-05-16", type: "Cell", branch: "Abuja Hub", attendees: 22, capacity: 30 },
-  { id: "e4", name: "Healing Crusade", date: "2026-05-22", type: "Crusade", branch: "Accra Sanctuary", attendees: 0, capacity: 5000 },
-  { id: "e5", name: "Foundation Class — Module 3", date: "2026-05-19", type: "Training", branch: "Houston Citadel", attendees: 84, capacity: 120 },
-  { id: "e6", name: "Sunday Service", date: "2026-05-10", type: "Service", branch: "Abuja Hub", attendees: 1640, capacity: 1800 },
-  { id: "e7", name: "Cell A-1 Meeting", date: "2026-05-15", type: "Cell", branch: "Lagos Central", attendees: 18, capacity: 25 },
+  {
+    id: "e1",
+    name: "Sunday Service",
+    date: "2026-05-17",
+    type: "Service",
+    branch: "Lagos Central",
+    attendees: 2120,
+    capacity: 2500,
+  },
+  {
+    id: "e2",
+    name: "Midweek Bible Study",
+    date: "2026-05-14",
+    type: "Midweek",
+    branch: "Lagos Central",
+    attendees: 980,
+    capacity: 1500,
+  },
+  {
+    id: "e3",
+    name: "Cell B-2 Meeting",
+    date: "2026-05-16",
+    type: "Cell",
+    branch: "Abuja Hub",
+    attendees: 22,
+    capacity: 30,
+  },
+  {
+    id: "e4",
+    name: "Healing Crusade",
+    date: "2026-05-22",
+    type: "Crusade",
+    branch: "Accra Sanctuary",
+    attendees: 0,
+    capacity: 5000,
+  },
+  {
+    id: "e5",
+    name: "Foundation Class — Module 3",
+    date: "2026-05-19",
+    type: "Training",
+    branch: "Houston Citadel",
+    attendees: 84,
+    capacity: 120,
+  },
+  {
+    id: "e6",
+    name: "Sunday Service",
+    date: "2026-05-10",
+    type: "Service",
+    branch: "Abuja Hub",
+    attendees: 1640,
+    capacity: 1800,
+  },
+  {
+    id: "e7",
+    name: "Cell A-1 Meeting",
+    date: "2026-05-15",
+    type: "Cell",
+    branch: "Lagos Central",
+    attendees: 18,
+    capacity: 25,
+  },
 ];
 
 export type LeaderRequest = {
@@ -172,10 +346,42 @@ export type LeaderRequest = {
 };
 
 export const leaderRequests: LeaderRequest[] = [
-  { id: "lr1", candidate: "Esther Adebayo", proposedRole: "Cell Leader", scope: "Cell A-1 • Lagos Central", proposedBy: "Pst. D. Okafor", date: "2026-05-12", status: "pending" },
-  { id: "lr2", candidate: "Michael Bello", proposedRole: "Worker", scope: "Ushering • Abuja Hub", proposedBy: "Pst. G. Adeyemi", date: "2026-05-11", status: "pending" },
-  { id: "lr3", candidate: "Grace Mensah", proposedRole: "Department Head", scope: "Choir • Accra Sanctuary", proposedBy: "Pst. K. Mensah", date: "2026-05-09", status: "pending" },
-  { id: "lr4", candidate: "Samuel Idowu", proposedRole: "Pastor", scope: "Toronto North", proposedBy: "HQ Council", date: "2026-05-05", status: "pending" },
+  {
+    id: "lr1",
+    candidate: "Esther Adebayo",
+    proposedRole: "Cell Leader",
+    scope: "Cell A-1 • Lagos Central",
+    proposedBy: "Pst. D. Okafor",
+    date: "2026-05-12",
+    status: "pending",
+  },
+  {
+    id: "lr2",
+    candidate: "Michael Bello",
+    proposedRole: "Worker",
+    scope: "Ushering • Abuja Hub",
+    proposedBy: "Pst. G. Adeyemi",
+    date: "2026-05-11",
+    status: "pending",
+  },
+  {
+    id: "lr3",
+    candidate: "Grace Mensah",
+    proposedRole: "Department Head",
+    scope: "Choir • Accra Sanctuary",
+    proposedBy: "Pst. K. Mensah",
+    date: "2026-05-09",
+    status: "pending",
+  },
+  {
+    id: "lr4",
+    candidate: "Samuel Idowu",
+    proposedRole: "Pastor",
+    scope: "Toronto North",
+    proposedBy: "HQ Council",
+    date: "2026-05-05",
+    status: "pending",
+  },
 ];
 
 export type Invitee = {
@@ -188,10 +394,38 @@ export type Invitee = {
 };
 
 export const invitees: Invitee[] = [
-  { id: "i1", name: "Joy Salami", event: "Sunday Service", invitedBy: "m1000", status: "Attended", date: "2026-05-10" },
-  { id: "i2", name: "Caleb Obi", event: "Healing Crusade", invitedBy: "m1000", status: "Pending", date: "2026-05-22" },
-  { id: "i3", name: "Naomi Lawal", event: "Cell A-1 Meeting", invitedBy: "m1000", status: "Pending", date: "2026-05-15" },
-  { id: "i4", name: "Peter Bello", event: "Sunday Service", invitedBy: "m1000", status: "Declined", date: "2026-05-03" },
+  {
+    id: "i1",
+    name: "Joy Salami",
+    event: "Sunday Service",
+    invitedBy: "m1000",
+    status: "Attended",
+    date: "2026-05-10",
+  },
+  {
+    id: "i2",
+    name: "Caleb Obi",
+    event: "Healing Crusade",
+    invitedBy: "m1000",
+    status: "Pending",
+    date: "2026-05-22",
+  },
+  {
+    id: "i3",
+    name: "Naomi Lawal",
+    event: "Cell A-1 Meeting",
+    invitedBy: "m1000",
+    status: "Pending",
+    date: "2026-05-15",
+  },
+  {
+    id: "i4",
+    name: "Peter Bello",
+    event: "Sunday Service",
+    invitedBy: "m1000",
+    status: "Declined",
+    date: "2026-05-03",
+  },
 ];
 
 export type JourneyEvent = {
@@ -204,13 +438,38 @@ export type JourneyEvent = {
 export function memberJourney(memberId: string): JourneyEvent[] {
   const seed = memberId.charCodeAt(memberId.length - 1);
   return [
-    { date: "2024-02-04", kind: "Event Attended", label: "First Timers' Sunday", detail: "Lagos Central" },
-    { date: "2024-03-10", kind: "Group Joined", label: "Cell A-1", detail: "Leader: Esther Adebayo" },
+    {
+      date: "2024-02-04",
+      kind: "Event Attended",
+      label: "First Timers' Sunday",
+      detail: "Lagos Central",
+    },
+    {
+      date: "2024-03-10",
+      kind: "Group Joined",
+      label: "Cell A-1",
+      detail: "Leader: Esther Adebayo",
+    },
     { date: "2024-05-12", kind: "Stage", label: "Baptized Member", detail: "Pastor: D. Okafor" },
-    { date: "2024-08-20", kind: "Event Attended", label: "Foundation Module 1", detail: "Completed" },
-    { date: "2024-11-02", kind: "Role Held", label: "Ushering Volunteer", detail: "Department: Ushering" },
+    {
+      date: "2024-08-20",
+      kind: "Event Attended",
+      label: "Foundation Module 1",
+      detail: "Completed",
+    },
+    {
+      date: "2024-11-02",
+      kind: "Role Held",
+      label: "Ushering Volunteer",
+      detail: "Department: Ushering",
+    },
     { date: "2025-03-15", kind: "Stage", label: "Foundation Graduate", detail: "Cohort: Spring" },
-    { date: "2025-09-07", kind: "Role Held", label: seed % 2 ? "Cell Assistant" : "Worker", detail: "Promoted" },
+    {
+      date: "2025-09-07",
+      kind: "Role Held",
+      label: seed % 2 ? "Cell Assistant" : "Worker",
+      detail: "Promoted",
+    },
   ];
 }
 

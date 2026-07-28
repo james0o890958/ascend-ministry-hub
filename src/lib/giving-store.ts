@@ -11,12 +11,55 @@ export type GivingRecord = {
 };
 
 let store: GivingRecord[] = [
-  { id: "g1", date: "2026-05-17", type: "Tithe", source: "Sunday Service", amount: 18420, branch: "Lagos Central" },
-  { id: "g2", date: "2026-05-17", type: "Offering", source: "Sunday Service", amount: 6240, branch: "Lagos Central" },
-  { id: "g3", date: "2026-05-14", type: "Project", source: "Building Fund", amount: 12300, branch: "Abuja Hub" },
-  { id: "g4", date: "2026-05-10", type: "Tithe", source: "Sunday Service", amount: 14820, branch: "Accra Sanctuary" },
-  { id: "g5", date: "2026-05-10", type: "Offering", source: "Sunday Service", amount: 4720, branch: "Houston Citadel" },
-  { id: "g6", date: "2026-05-08", type: "Partnership", source: "Monthly Partner", amount: 8500, branch: "Lagos Central", giver: "Anonymous" },
+  {
+    id: "g1",
+    date: "2026-05-17",
+    type: "Tithe",
+    source: "Sunday Service",
+    amount: 18420,
+    branch: "Lagos Central",
+  },
+  {
+    id: "g2",
+    date: "2026-05-17",
+    type: "Offering",
+    source: "Sunday Service",
+    amount: 6240,
+    branch: "Lagos Central",
+  },
+  {
+    id: "g3",
+    date: "2026-05-14",
+    type: "Project",
+    source: "Building Fund",
+    amount: 12300,
+    branch: "Abuja Hub",
+  },
+  {
+    id: "g4",
+    date: "2026-05-10",
+    type: "Tithe",
+    source: "Sunday Service",
+    amount: 14820,
+    branch: "Accra Sanctuary",
+  },
+  {
+    id: "g5",
+    date: "2026-05-10",
+    type: "Offering",
+    source: "Sunday Service",
+    amount: 4720,
+    branch: "Houston Citadel",
+  },
+  {
+    id: "g6",
+    date: "2026-05-08",
+    type: "Partnership",
+    source: "Monthly Partner",
+    amount: 8500,
+    branch: "Lagos Central",
+    giver: "Anonymous",
+  },
 ];
 
 const listeners = new Set<() => void>();

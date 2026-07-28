@@ -4,7 +4,13 @@ import { PageHeader, SectionCard } from "@/components/dashboard/ui";
 import { Plus, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { getEvents, subscribeEvents } from "@/lib/events-store";
 import { useRole } from "@/lib/role";
 
@@ -16,7 +22,10 @@ function EventsPage() {
   const [filter, setFilter] = useState<string>("all");
   const events = useSyncExternalStore(subscribeEvents, getEvents, getEvents);
 
-  const filtered = useMemo(() => filter === "all" ? events : events.filter((e) => e.id === filter), [filter, events]);
+  const filtered = useMemo(
+    () => (filter === "all" ? events : events.filter((e) => e.id === filter)),
+    [filter, events],
+  );
 
   return (
     <div className="space-y-6">
@@ -26,15 +35,24 @@ function EventsPage() {
         action={
           <>
             <Select value={filter} onValueChange={setFilter}>
-              <SelectTrigger className="w-56"><SelectValue placeholder="Filter event" /></SelectTrigger>
+              <SelectTrigger className="w-56">
+                <SelectValue placeholder="Filter event" />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All events</SelectItem>
-                {events.map((e) => <SelectItem key={e.id} value={e.id}>{e.name} · {new Date(e.date).toLocaleDateString()}</SelectItem>)}
+                {events.map((e) => (
+                  <SelectItem key={e.id} value={e.id}>
+                    {e.name} · {new Date(e.date).toLocaleDateString()}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
             {canModify && (
               <Button asChild className="bg-gradient-royal text-primary-foreground">
-                <Link to="/dashboard/events/new"><Plus className="mr-1 h-4 w-4"/>New event</Link>
+                <Link to="/dashboard/events/new">
+                  <Plus className="mr-1 h-4 w-4" />
+                  New event
+                </Link>
               </Button>
             )}
           </>
@@ -57,7 +75,9 @@ function EventsPage() {
                   <span className="text-[10px] font-semibold uppercase tracking-widest text-gold">
                     {d.toLocaleString("en", { month: "short" })}
                   </span>
-                  <span className="font-display text-2xl font-bold leading-none">{d.getDate()}</span>
+                  <span className="font-display text-2xl font-bold leading-none">
+                    {d.getDate()}
+                  </span>
                   <span className="mt-0.5 text-[10px] text-white/70">{d.getFullYear()}</span>
                 </div>
 
@@ -70,7 +90,9 @@ function EventsPage() {
                   <div className="mt-3 max-w-md">
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-muted-foreground">Attendance</span>
-                      <span className="font-semibold">{e.attendees.toLocaleString()} / {e.capacity.toLocaleString()}</span>
+                      <span className="font-semibold">
+                        {e.attendees.toLocaleString()} / {e.capacity.toLocaleString()}
+                      </span>
                     </div>
                     <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-secondary">
                       <div className="h-full bg-gradient-gold" style={{ width: `${pct}%` }} />

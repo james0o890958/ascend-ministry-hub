@@ -6,12 +6,26 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { UserPlus } from "lucide-react";
 import {
-  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { invitees as seed, events, Invitee } from "@/lib/data";
@@ -26,9 +40,20 @@ function InviteesPage() {
 
   const add = () => {
     if (!name.trim()) return;
-    setList((prev) => [{ id: `i${Date.now()}`, name, event, invitedBy: "m1000", status: "Pending", date: new Date().toISOString().slice(0, 10) }, ...prev]);
+    setList((prev) => [
+      {
+        id: `i${Date.now()}`,
+        name,
+        event,
+        invitedBy: "m1000",
+        status: "Pending",
+        date: new Date().toISOString().slice(0, 10),
+      },
+      ...prev,
+    ]);
     toast.success(`Invited ${name} to ${event}`);
-    setName(""); setOpen(false);
+    setName("");
+    setOpen(false);
   };
 
   const setStatus = (id: string, status: Invitee["status"]) => {
@@ -50,21 +75,45 @@ function InviteesPage() {
         action={
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-gradient-royal text-primary-foreground"><UserPlus className="mr-1 h-4 w-4"/>New invitee</Button>
+              <Button className="bg-gradient-royal text-primary-foreground">
+                <UserPlus className="mr-1 h-4 w-4" />
+                New invitee
+              </Button>
             </DialogTrigger>
             <DialogContent>
-              <DialogHeader><DialogTitle>Invite someone</DialogTitle></DialogHeader>
+              <DialogHeader>
+                <DialogTitle>Invite someone</DialogTitle>
+              </DialogHeader>
               <div className="space-y-3 py-2">
-                <div className="space-y-1.5"><Label>Name</Label><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Friend's name" /></div>
+                <div className="space-y-1.5">
+                  <Label>Name</Label>
+                  <Input
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Friend's name"
+                  />
+                </div>
                 <div className="space-y-1.5">
                   <Label>Event</Label>
                   <Select value={event} onValueChange={setEvent}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>{events.map((e) => <SelectItem key={e.id} value={e.name}>{e.name}</SelectItem>)}</SelectContent>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {events.map((e) => (
+                        <SelectItem key={e.id} value={e.name}>
+                          {e.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
                   </Select>
                 </div>
               </div>
-              <DialogFooter><Button onClick={add} className="bg-gradient-royal text-primary-foreground">Add</Button></DialogFooter>
+              <DialogFooter>
+                <Button onClick={add} className="bg-gradient-royal text-primary-foreground">
+                  Add
+                </Button>
+              </DialogFooter>
             </DialogContent>
           </Dialog>
         }
@@ -87,14 +136,26 @@ function InviteesPage() {
                 <tr key={i.id} className="hover:bg-secondary/40">
                   <td className="px-4 py-3 font-semibold">{i.name}</td>
                   <td className="px-4 py-3 text-muted-foreground">{i.event}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{new Date(i.date).toLocaleDateString()}</td>
-                  <td className="px-4 py-3"><Badge variant="outline" className={statusColor[i.status]}>{i.status}</Badge></td>
+                  <td className="px-4 py-3 text-muted-foreground">
+                    {new Date(i.date).toLocaleDateString()}
+                  </td>
+                  <td className="px-4 py-3">
+                    <Badge variant="outline" className={statusColor[i.status]}>
+                      {i.status}
+                    </Badge>
+                  </td>
                   <td className="px-4 py-3 text-right">
                     <DropdownMenu>
-                      <DropdownMenuTrigger asChild><Button size="sm" variant="outline">Change</Button></DropdownMenuTrigger>
+                      <DropdownMenuTrigger asChild>
+                        <Button size="sm" variant="outline">
+                          Change
+                        </Button>
+                      </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         {(["Pending", "Attended", "Declined"] as const).map((s) => (
-                          <DropdownMenuItem key={s} onClick={() => setStatus(i.id, s)}>{s}</DropdownMenuItem>
+                          <DropdownMenuItem key={s} onClick={() => setStatus(i.id, s)}>
+                            {s}
+                          </DropdownMenuItem>
                         ))}
                       </DropdownMenuContent>
                     </DropdownMenu>

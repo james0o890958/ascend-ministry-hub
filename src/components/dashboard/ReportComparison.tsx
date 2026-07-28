@@ -2,8 +2,19 @@ import { useMemo, useState } from "react";
 import { SectionCard } from "@/components/dashboard/ui";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Plus, X, BarChart3 } from "lucide-react";
 
 type Entity = { id: string; name: string };
@@ -24,10 +35,20 @@ const TIMEFRAMES = ["Last 7 days", "Last 30 days", "Last quarter", "YTD", "Last 
 function score(id: string, metric: Metric, timeframe: string) {
   const seed = (id + metric + timeframe).split("").reduce((s, c) => s + c.charCodeAt(0), 0);
   const base: Record<Metric, number> = {
-    attendance: 60, giving: 5000, growth: 2, engagement: 50, events: 4, tasks: 10,
+    attendance: 60,
+    giving: 5000,
+    growth: 2,
+    engagement: 50,
+    events: 4,
+    tasks: 10,
   };
   const span: Record<Metric, number> = {
-    attendance: 40, giving: 40000, growth: 18, engagement: 50, events: 20, tasks: 40,
+    attendance: 40,
+    giving: 40000,
+    growth: 18,
+    engagement: 50,
+    events: 20,
+    tasks: 40,
   };
   return base[metric] + (seed % span[metric]);
 }
@@ -43,12 +64,14 @@ export function ReportComparison({ label, entities }: { label: string; entities:
     setMetrics((cur) => (cur.includes(m) ? cur.filter((x) => x !== m) : [...cur, m]));
   }
 
-  const rows = useMemo(() =>
-    selected.map((id) => {
-      const e = entities.find((x) => x.id === id)!;
-      return { entity: e, values: metrics.map((m) => ({ m, v: score(id, m, timeframe) })) };
-    }),
-  [selected, metrics, timeframe, entities]);
+  const rows = useMemo(
+    () =>
+      selected.map((id) => {
+        const e = entities.find((x) => x.id === id)!;
+        return { entity: e, values: metrics.map((m) => ({ m, v: score(id, m, timeframe) })) };
+      }),
+    [selected, metrics, timeframe, entities],
+  );
 
   // Compute max per metric for relative bar
   const maxes: Record<string, number> = {};
@@ -58,15 +81,28 @@ export function ReportComparison({ label, entities }: { label: string; entities:
 
   return (
     <div className="space-y-4">
-      <SectionCard title={`Comparative report · ${label}`} action={
-        <Select value={timeframe} onValueChange={setTimeframe}>
-          <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
-          <SelectContent>{TIMEFRAMES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
-        </Select>
-      }>
+      <SectionCard
+        title={`Comparative report · ${label}`}
+        action={
+          <Select value={timeframe} onValueChange={setTimeframe}>
+            <SelectTrigger className="w-44">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {TIMEFRAMES.map((t) => (
+                <SelectItem key={t} value={t}>
+                  {t}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        }
+      >
         <div className="space-y-4">
           <div>
-            <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{label} in comparison</p>
+            <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+              {label} in comparison
+            </p>
             <div className="flex flex-wrap items-center gap-2">
               {selected.map((id) => {
                 const e = entities.find((x) => x.id === id);
@@ -74,18 +110,31 @@ export function ReportComparison({ label, entities }: { label: string; entities:
                 return (
                   <Badge key={id} className="gap-1 bg-gradient-royal text-primary-foreground pr-1">
                     {e.name}
-                    <button onClick={() => setSelected((s) => s.filter((x) => x !== id))} className="ml-1 rounded-full p-0.5 hover:bg-white/20"><X className="h-3 w-3"/></button>
+                    <button
+                      onClick={() => setSelected((s) => s.filter((x) => x !== id))}
+                      className="ml-1 rounded-full p-0.5 hover:bg-white/20"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
                   </Badge>
                 );
               })}
               {remaining.length > 0 && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-7 gap-1 text-xs"><Plus className="h-3 w-3"/>Add to compare</Button>
+                    <Button variant="outline" size="sm" className="h-7 gap-1 text-xs">
+                      <Plus className="h-3 w-3" />
+                      Add to compare
+                    </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start" className="max-h-72 overflow-y-auto">
                     {remaining.map((e) => (
-                      <DropdownMenuItem key={e.id} onSelect={() => setSelected((s) => [...s, e.id])}>{e.name}</DropdownMenuItem>
+                      <DropdownMenuItem
+                        key={e.id}
+                        onSelect={() => setSelected((s) => [...s, e.id])}
+                      >
+                        {e.name}
+                      </DropdownMenuItem>
                     ))}
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -94,12 +143,22 @@ export function ReportComparison({ label, entities }: { label: string; entities:
           </div>
 
           <div>
-            <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Metrics</p>
+            <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+              Metrics
+            </p>
             <div className="flex flex-wrap gap-2">
               {METRICS.map((m) => (
-                <Button key={m.key} size="sm" variant={metrics.includes(m.key) ? "default" : "outline"}
-                  className={metrics.includes(m.key) ? "bg-gradient-royal text-primary-foreground" : ""}
-                  onClick={() => toggleMetric(m.key)}>{m.label}</Button>
+                <Button
+                  key={m.key}
+                  size="sm"
+                  variant={metrics.includes(m.key) ? "default" : "outline"}
+                  className={
+                    metrics.includes(m.key) ? "bg-gradient-royal text-primary-foreground" : ""
+                  }
+                  onClick={() => toggleMetric(m.key)}
+                >
+                  {m.label}
+                </Button>
               ))}
             </div>
           </div>
@@ -107,25 +166,44 @@ export function ReportComparison({ label, entities }: { label: string; entities:
       </SectionCard>
 
       {selected.length === 0 || metrics.length === 0 ? (
-        <SectionCard><p className="text-sm text-muted-foreground">Select at least one entity and one metric to view a report.</p></SectionCard>
+        <SectionCard>
+          <p className="text-sm text-muted-foreground">
+            Select at least one entity and one metric to view a report.
+          </p>
+        </SectionCard>
       ) : (
         <SectionCard title="Results">
           <div className="space-y-6">
             {metrics.map((m) => (
               <div key={m}>
                 <div className="mb-2 flex items-center justify-between">
-                  <p className="font-semibold flex items-center gap-2"><BarChart3 className="h-4 w-4 text-primary"/>{METRICS.find((x) => x.key === m)!.label}</p>
+                  <p className="font-semibold flex items-center gap-2">
+                    <BarChart3 className="h-4 w-4 text-primary" />
+                    {METRICS.find((x) => x.key === m)!.label}
+                  </p>
                   <span className="text-xs text-muted-foreground">{timeframe}</span>
                 </div>
                 <div className="space-y-2">
                   {rows.map((r) => {
                     const v = r.values.find((x) => x.m === m)!.v;
                     const pct = Math.round((v / maxes[m]) * 100);
-                    const display = m === "giving" ? `$${v.toLocaleString()}` : m === "growth" ? `${v}%` : m === "attendance" || m === "engagement" ? `${v}%` : v.toLocaleString();
+                    const display =
+                      m === "giving"
+                        ? `$${v.toLocaleString()}`
+                        : m === "growth"
+                          ? `${v}%`
+                          : m === "attendance" || m === "engagement"
+                            ? `${v}%`
+                            : v.toLocaleString();
                     return (
-                      <div key={r.entity.id} className="grid grid-cols-[10rem_1fr_4rem] items-center gap-3">
+                      <div
+                        key={r.entity.id}
+                        className="grid grid-cols-[10rem_1fr_4rem] items-center gap-3"
+                      >
                         <span className="truncate text-sm font-medium">{r.entity.name}</span>
-                        <div className="h-2.5 overflow-hidden rounded-full bg-secondary"><div className="h-full bg-gradient-gold" style={{ width: `${pct}%` }}/></div>
+                        <div className="h-2.5 overflow-hidden rounded-full bg-secondary">
+                          <div className="h-full bg-gradient-gold" style={{ width: `${pct}%` }} />
+                        </div>
                         <span className="text-right text-sm font-semibold">{display}</span>
                       </div>
                     );

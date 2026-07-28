@@ -74,9 +74,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Soul Tracer — Church Membership & Discipleship Tracking" },
-      { name: "description", content: "Track members from their first visit through every stage of spiritual growth — across every branch of your ministry." },
+      {
+        name: "description",
+        content:
+          "Track members from their first visit through every stage of spiritual growth — across every branch of your ministry.",
+      },
       { property: "og:title", content: "Soul Tracer — Ministry Tracking Platform" },
-      { property: "og:description", content: "From first-timer to pastor — track every step of the discipleship journey." },
+      {
+        property: "og:description",
+        content: "From first-timer to pastor — track every step of the discipleship journey.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],

@@ -9,8 +9,24 @@ export type AdminRecord = {
 };
 
 let store: AdminRecord[] = [
-  { id: "a1", name: "Pst. Daniel Okafor", email: "daniel@ministry.org", scope: "Global", invitedBy: "System", status: "Active", date: "2024-01-15" },
-  { id: "a2", name: "Pst. Grace Adeyemi", email: "grace@ministry.org", scope: "West Africa", invitedBy: "Pst. Daniel Okafor", status: "Active", date: "2024-06-02" },
+  {
+    id: "a1",
+    name: "Pst. Daniel Okafor",
+    email: "daniel@ministry.org",
+    scope: "Global",
+    invitedBy: "System",
+    status: "Active",
+    date: "2024-01-15",
+  },
+  {
+    id: "a2",
+    name: "Pst. Grace Adeyemi",
+    email: "grace@ministry.org",
+    scope: "West Africa",
+    invitedBy: "Pst. Daniel Okafor",
+    status: "Active",
+    date: "2024-06-02",
+  },
 ];
 
 const listeners = new Set<() => void>();

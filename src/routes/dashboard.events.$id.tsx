@@ -13,8 +13,12 @@ export const Route = createFileRoute("/dashboard/events/$id")({
     if (!e) throw notFound();
     return e;
   },
-  notFoundComponent: () => <div className="p-10 text-center text-muted-foreground">Event not found.</div>,
-  errorComponent: ({ error }) => <div className="p-10 text-center text-destructive">{error.message}</div>,
+  notFoundComponent: () => (
+    <div className="p-10 text-center text-muted-foreground">Event not found.</div>
+  ),
+  errorComponent: ({ error }) => (
+    <div className="p-10 text-center text-destructive">{error.message}</div>
+  ),
   component: EventDetail,
 });
 
@@ -29,13 +33,20 @@ function EventDetail() {
   return (
     <div className="space-y-6">
       <Button asChild variant="ghost" size="sm" className="-ml-2">
-        <Link to="/dashboard/events"><ArrowLeft className="mr-1 h-4 w-4" />Back to Events</Link>
+        <Link to="/dashboard/events">
+          <ArrowLeft className="mr-1 h-4 w-4" />
+          Back to Events
+        </Link>
       </Button>
 
       <PageHeader
         title={e.name}
         subtitle={`${d.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric", year: "numeric" })} · ${e.branch}`}
-        action={<Badge className="bg-gradient-gold text-gold-foreground border-transparent">{e.type}</Badge>}
+        action={
+          <Badge className="bg-gradient-gold text-gold-foreground border-transparent">
+            {e.type}
+          </Badge>
+        }
       />
 
       <Tabs defaultValue="overview">
@@ -47,10 +58,32 @@ function EventDetail() {
 
         <TabsContent value="overview" className="mt-4 space-y-6">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <StatCard label="Attendees" value={e.attendees.toLocaleString()} icon={Users} change={4.2} accent="primary" />
-            <StatCard label="Capacity" value={e.capacity.toLocaleString()} icon={CalendarDays} accent="gold" />
-            <StatCard label="Invitations" value={eventInvitees.length} icon={UserPlus} accent="blue" />
-            <StatCard label="Fill rate" value={`${pct}%`} icon={CheckCircle2} change={1.6} accent="success" />
+            <StatCard
+              label="Attendees"
+              value={e.attendees.toLocaleString()}
+              icon={Users}
+              change={4.2}
+              accent="primary"
+            />
+            <StatCard
+              label="Capacity"
+              value={e.capacity.toLocaleString()}
+              icon={CalendarDays}
+              accent="gold"
+            />
+            <StatCard
+              label="Invitations"
+              value={eventInvitees.length}
+              icon={UserPlus}
+              accent="blue"
+            />
+            <StatCard
+              label="Fill rate"
+              value={`${pct}%`}
+              icon={CheckCircle2}
+              change={1.6}
+              accent="success"
+            />
           </div>
 
           <SectionCard title="Event details">
@@ -81,8 +114,12 @@ function EventDetail() {
                     {eventInvitees.map((i) => (
                       <tr key={i.id} className="hover:bg-secondary/40">
                         <td className="px-4 py-3 font-semibold">{i.name}</td>
-                        <td className="px-4 py-3 text-muted-foreground">{new Date(i.date).toLocaleDateString()}</td>
-                        <td className="px-4 py-3"><Badge variant="outline">{i.status}</Badge></td>
+                        <td className="px-4 py-3 text-muted-foreground">
+                          {new Date(i.date).toLocaleDateString()}
+                        </td>
+                        <td className="px-4 py-3">
+                          <Badge variant="outline">{i.status}</Badge>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -97,14 +134,32 @@ function EventDetail() {
             <div className="overflow-hidden rounded-xl border border-border">
               <table className="w-full text-sm">
                 <thead className="bg-secondary/60 text-xs uppercase tracking-wider text-muted-foreground">
-                  <tr><th className="px-4 py-3 text-left">Member</th><th className="px-4 py-3 text-left">Church</th><th className="px-4 py-3 text-left">Position</th></tr>
+                  <tr>
+                    <th className="px-4 py-3 text-left">Member</th>
+                    <th className="px-4 py-3 text-left">Church</th>
+                    <th className="px-4 py-3 text-left">Position</th>
+                  </tr>
                 </thead>
                 <tbody className="divide-y divide-border bg-card">
                   {attendees.map((m) => (
                     <tr key={m.id} className="hover:bg-secondary/40">
-                      <td className="px-4 py-3"><div className="flex items-center gap-3"><Avatar className="h-8 w-8"><AvatarImage src={m.avatar}/><AvatarFallback>{m.name[0]}</AvatarFallback></Avatar><span className="font-semibold">{m.name}</span></div></td>
+                      <td className="px-4 py-3">
+                        <Link
+                          to="/dashboard/members/$id"
+                          params={{ id: m.id }}
+                          className="flex items-center gap-3 group hover:opacity-80 transition"
+                        >
+                          <Avatar className="h-8 w-8 ring-1 ring-gold/30">
+                            <AvatarImage src={m.avatar} />
+                            <AvatarFallback className="bg-primary/10 text-primary font-medium">{m.name[0]}</AvatarFallback>
+                          </Avatar>
+                          <span className="font-semibold group-hover:text-primary group-hover:underline transition">{m.name}</span>
+                        </Link>
+                      </td>
                       <td className="px-4 py-3 text-muted-foreground">{m.branch}</td>
-                      <td className="px-4 py-3"><Badge variant="outline">{m.stage}</Badge></td>
+                      <td className="px-4 py-3">
+                        <Badge variant="outline">{m.stage}</Badge>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -117,10 +172,20 @@ function EventDetail() {
   );
 }
 
-function Info({ icon: Icon, label, value }: { icon: typeof CalendarDays; label: string; value: string }) {
+function Info({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: typeof CalendarDays;
+  label: string;
+  value: string;
+}) {
   return (
     <div className="flex items-center gap-3 rounded-xl bg-secondary/40 p-4">
-      <span className="grid h-10 w-10 place-items-center rounded-lg bg-gradient-royal text-primary-foreground"><Icon className="h-5 w-5"/></span>
+      <span className="grid h-10 w-10 place-items-center rounded-lg bg-gradient-royal text-primary-foreground">
+        <Icon className="h-5 w-5" />
+      </span>
       <div>
         <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</p>
         <p className="font-display text-base font-bold">{value}</p>

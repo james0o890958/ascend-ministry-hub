@@ -9,7 +9,10 @@ export const Route = createFileRoute("/dashboard/reports")({ component: ReportsP
 function ReportsPage() {
   return (
     <div className="space-y-6">
-      <PageHeader title="Reports" subtitle="Compare churches and cells across metrics and timeframes" />
+      <PageHeader
+        title="Reports"
+        subtitle="Compare churches and cells across metrics and timeframes"
+      />
 
       <Tabs defaultValue="churches">
         <TabsList>
@@ -17,10 +20,16 @@ function ReportsPage() {
           <TabsTrigger value="cells">Compare cells</TabsTrigger>
         </TabsList>
         <TabsContent value="churches" className="mt-4">
-          <ReportComparison label="Churches" entities={branches.map((b) => ({ id: b.id, name: b.name }))} />
+          <ReportComparison
+            label="Churches"
+            entities={branches.map((b) => ({ id: b.id, name: b.name }))}
+          />
         </TabsContent>
         <TabsContent value="cells" className="mt-4">
-          <ReportComparison label="Cells" entities={cellGroups.map((c) => ({ id: c.id, name: `${c.name} · ${c.branch}` }))} />
+          <ReportComparison
+            label="Cells"
+            entities={cellGroups.map((c) => ({ id: c.id, name: `${c.name} · ${c.branch}` }))}
+          />
         </TabsContent>
       </Tabs>
     </div>

@@ -6,8 +6,20 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { CheckSquare, Plus, Clock, CheckCircle2, Feather, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -27,10 +39,42 @@ type Task = {
 };
 
 const initial: Task[] = [
-  { id: "t1", title: "Approve 3 new cell leaders", due: "2026-05-26", assignee: "Pst. D. Okafor", priority: "High", done: false, tag: "Leadership" },
-  { id: "t2", title: "Confirm Sunday service rota", due: "2026-05-25", assignee: "Worship Team", priority: "Medium", done: false, tag: "Worship" },
-  { id: "t3", title: "Review weekly giving report", due: "2026-05-24", assignee: "Finance", priority: "Medium", done: true, tag: "Finance" },
-  { id: "t4", title: "Plan Foundation Module 4", due: "2026-06-01", assignee: "Discipleship", priority: "Low", done: false, tag: "Discipleship" },
+  {
+    id: "t1",
+    title: "Approve 3 new cell leaders",
+    due: "2026-05-26",
+    assignee: "Pst. D. Okafor",
+    priority: "High",
+    done: false,
+    tag: "Leadership",
+  },
+  {
+    id: "t2",
+    title: "Confirm Sunday service rota",
+    due: "2026-05-25",
+    assignee: "Worship Team",
+    priority: "Medium",
+    done: false,
+    tag: "Worship",
+  },
+  {
+    id: "t3",
+    title: "Review weekly giving report",
+    due: "2026-05-24",
+    assignee: "Finance",
+    priority: "Medium",
+    done: true,
+    tag: "Finance",
+  },
+  {
+    id: "t4",
+    title: "Plan Foundation Module 4",
+    due: "2026-06-01",
+    assignee: "Discipleship",
+    priority: "Low",
+    done: false,
+    tag: "Discipleship",
+  },
 ];
 
 type Filter = "all" | "open" | "done" | "high";
@@ -64,7 +108,10 @@ function TasksPage() {
 
   function add() {
     const t = title.trim();
-    if (!t) { toast.error("Enter a task title"); return; }
+    if (!t) {
+      toast.error("Enter a task title");
+      return;
+    }
     const newTask: Task = {
       id: `t${Date.now()}`,
       title: t,
@@ -76,7 +123,11 @@ function TasksPage() {
       done: false,
     };
     setTasks((prev) => [newTask, ...prev]);
-    setTitle(""); setDescription(""); setTag(""); setPriority("High"); setDue("");
+    setTitle("");
+    setDescription("");
+    setTag("");
+    setPriority("High");
+    setDue("");
     toast.success("Task added");
   }
 
@@ -110,8 +161,8 @@ function TasksPage() {
               priority: editPriority,
               due: editDue || x.due,
             }
-          : x
-      )
+          : x,
+      ),
     );
     setEditingId(null);
     toast.success("Task updated");
@@ -127,10 +178,14 @@ function TasksPage() {
 
   const visible = useMemo(() => {
     switch (filter) {
-      case "open": return open;
-      case "done": return done;
-      case "high": return tasks.filter((t) => t.priority === "High");
-      default: return tasks;
+      case "open":
+        return open;
+      case "done":
+        return done;
+      case "high":
+        return tasks.filter((t) => t.priority === "High");
+      default:
+        return tasks;
     }
   }, [filter, tasks, open, done]);
 
@@ -139,21 +194,51 @@ function TasksPage() {
       <PageHeader title="Tasks" subtitle="Coordinate ministry tasks across teams" />
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <FilterStat active={filter === "open"} onClick={() => setFilter(filter === "open" ? "all" : "open")}>
-          <StatCard label="Open" value={open.length} icon={Clock} accent="primary" hint={filter === "open" ? "Filtering" : "Click to filter"} />
+        <FilterStat
+          active={filter === "open"}
+          onClick={() => setFilter(filter === "open" ? "all" : "open")}
+        >
+          <StatCard
+            label="Open"
+            value={open.length}
+            icon={Clock}
+            accent="primary"
+            hint={filter === "open" ? "Filtering" : "Click to filter"}
+          />
         </FilterStat>
-        <FilterStat active={filter === "done"} onClick={() => setFilter(filter === "done" ? "all" : "done")}>
-          <StatCard label="Done" value={done.length} icon={CheckCircle2} accent="success" hint={filter === "done" ? "Filtering" : "Click to filter"} />
+        <FilterStat
+          active={filter === "done"}
+          onClick={() => setFilter(filter === "done" ? "all" : "done")}
+        >
+          <StatCard
+            label="Done"
+            value={done.length}
+            icon={CheckCircle2}
+            accent="success"
+            hint={filter === "done" ? "Filtering" : "Click to filter"}
+          />
         </FilterStat>
-        <FilterStat active={filter === "high"} onClick={() => setFilter(filter === "high" ? "all" : "high")}>
-          <StatCard label="High priority" value={high.length} icon={CheckSquare} accent="gold" hint={filter === "high" ? "Filtering" : "Click to filter"} />
+        <FilterStat
+          active={filter === "high"}
+          onClick={() => setFilter(filter === "high" ? "all" : "high")}
+        >
+          <StatCard
+            label="High priority"
+            value={high.length}
+            icon={CheckSquare}
+            accent="gold"
+            hint={filter === "high" ? "Filtering" : "Click to filter"}
+          />
         </FilterStat>
       </div>
 
       <SectionCard title="Add task">
         <form
           className="space-y-3"
-          onSubmit={(e) => { e.preventDefault(); add(); }}
+          onSubmit={(e) => {
+            e.preventDefault();
+            add();
+          }}
         >
           <Input
             placeholder="Task title *"
@@ -181,9 +266,24 @@ function TasksPage() {
               </span>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="High"><span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-destructive" />High priority</span></SelectItem>
-              <SelectItem value="Medium"><span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-gold" />Medium priority</span></SelectItem>
-              <SelectItem value="Low"><span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-success" />Low priority</span></SelectItem>
+              <SelectItem value="High">
+                <span className="flex items-center gap-2">
+                  <span className="h-2.5 w-2.5 rounded-full bg-destructive" />
+                  High priority
+                </span>
+              </SelectItem>
+              <SelectItem value="Medium">
+                <span className="flex items-center gap-2">
+                  <span className="h-2.5 w-2.5 rounded-full bg-gold" />
+                  Medium priority
+                </span>
+              </SelectItem>
+              <SelectItem value="Low">
+                <span className="flex items-center gap-2">
+                  <span className="h-2.5 w-2.5 rounded-full bg-success" />
+                  Low priority
+                </span>
+              </SelectItem>
             </SelectContent>
           </Select>
           <Input
@@ -206,13 +306,21 @@ function TasksPage() {
 
       <SectionCard
         title={
-          filter === "all" ? "All tasks" :
-          filter === "open" ? "Open tasks" :
-          filter === "done" ? "Completed tasks" : "High priority tasks"
+          filter === "all"
+            ? "All tasks"
+            : filter === "open"
+              ? "Open tasks"
+              : filter === "done"
+                ? "Completed tasks"
+                : "High priority tasks"
         }
-        action={filter !== "all" ? (
-          <Button variant="ghost" size="sm" onClick={() => setFilter("all")}>Clear filter</Button>
-        ) : undefined}
+        action={
+          filter !== "all" ? (
+            <Button variant="ghost" size="sm" onClick={() => setFilter("all")}>
+              Clear filter
+            </Button>
+          ) : undefined
+        }
       >
         {visible.length === 0 ? (
           <div className="rounded-2xl bg-muted/40 py-10 text-center">
@@ -222,13 +330,21 @@ function TasksPage() {
         ) : (
           <ul className="divide-y divide-border">
             {visible.map((t) => (
-              <li key={t.id} className="flex items-center gap-3 py-3 transition hover:bg-muted/40 -mx-2 px-2 rounded-lg group">
+              <li
+                key={t.id}
+                className="flex items-center gap-3 py-3 transition hover:bg-muted/40 -mx-2 px-2 rounded-lg group"
+              >
                 <Checkbox checked={t.done} onCheckedChange={() => toggle(t.id)} />
                 <div className="min-w-0 flex-1">
-                  <p className={t.done ? "line-through text-muted-foreground" : "font-semibold"}>{t.title}</p>
-                  {t.description && <p className="text-xs text-muted-foreground line-clamp-1">{t.description}</p>}
+                  <p className={t.done ? "line-through text-muted-foreground" : "font-semibold"}>
+                    {t.title}
+                  </p>
+                  {t.description && (
+                    <p className="text-xs text-muted-foreground line-clamp-1">{t.description}</p>
+                  )}
                   <p className="text-xs text-muted-foreground">
-                    {t.tag ? `${t.tag} · ` : ""}{t.assignee} · due {new Date(t.due).toLocaleDateString()}
+                    {t.tag ? `${t.tag} · ` : ""}
+                    {t.assignee} · due {new Date(t.due).toLocaleDateString()}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -271,7 +387,10 @@ function TasksPage() {
           </DialogHeader>
           <form
             className="space-y-3"
-            onSubmit={(e) => { e.preventDefault(); saveEdit(); }}
+            onSubmit={(e) => {
+              e.preventDefault();
+              saveEdit();
+            }}
           >
             <Input
               placeholder="Task title *"
@@ -299,9 +418,24 @@ function TasksPage() {
                 </span>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="High"><span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-destructive" />High priority</span></SelectItem>
-                <SelectItem value="Medium"><span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-gold" />Medium priority</span></SelectItem>
-                <SelectItem value="Low"><span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-success" />Low priority</span></SelectItem>
+                <SelectItem value="High">
+                  <span className="flex items-center gap-2">
+                    <span className="h-2.5 w-2.5 rounded-full bg-destructive" />
+                    High priority
+                  </span>
+                </SelectItem>
+                <SelectItem value="Medium">
+                  <span className="flex items-center gap-2">
+                    <span className="h-2.5 w-2.5 rounded-full bg-gold" />
+                    Medium priority
+                  </span>
+                </SelectItem>
+                <SelectItem value="Low">
+                  <span className="flex items-center gap-2">
+                    <span className="h-2.5 w-2.5 rounded-full bg-success" />
+                    Low priority
+                  </span>
+                </SelectItem>
               </SelectContent>
             </Select>
             <Input
@@ -311,8 +445,15 @@ function TasksPage() {
               className="rounded-full h-11 px-5"
             />
             <DialogFooter className="gap-2 pt-2">
-              <Button type="button" variant="outline" onClick={cancelEdit}>Cancel</Button>
-              <Button type="submit" className="bg-gradient-royal text-primary-foreground shadow-elegant hover:opacity-95">Save changes</Button>
+              <Button type="button" variant="outline" onClick={cancelEdit}>
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="bg-gradient-royal text-primary-foreground shadow-elegant hover:opacity-95"
+              >
+                Save changes
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -321,14 +462,22 @@ function TasksPage() {
   );
 }
 
-function FilterStat({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+function FilterStat({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
   return (
     <button
       type="button"
       onClick={onClick}
       className={cn(
         "text-left rounded-2xl transition focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-        active && "ring-2 ring-gold shadow-elegant"
+        active && "ring-2 ring-gold shadow-elegant",
       )}
     >
       {children}

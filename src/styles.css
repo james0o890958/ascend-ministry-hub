@@ -100,17 +100,22 @@
   --chart-4: oklch(0.62 0.14 155);
   --chart-5: oklch(0.6 0.18 320);
 
-  --sidebar: oklch(0.22 0.10 264);
+  --sidebar: oklch(0.22 0.1 264);
   --sidebar-foreground: oklch(0.96 0.02 250);
   --sidebar-primary: oklch(0.74 0.13 85);
   --sidebar-primary-foreground: oklch(0.2 0.06 264);
-  --sidebar-accent: oklch(0.30 0.13 264);
+  --sidebar-accent: oklch(0.3 0.13 264);
   --sidebar-accent-foreground: oklch(0.99 0.01 250);
   --sidebar-border: oklch(0.32 0.12 264);
   --sidebar-ring: oklch(0.74 0.13 85);
 
   --gradient-royal: linear-gradient(135deg, oklch(0.32 0.16 264), oklch(0.46 0.18 264));
-  --gradient-hero: linear-gradient(135deg, oklch(0.22 0.1 264) 0%, oklch(0.32 0.16 264) 50%, oklch(0.4 0.18 264) 100%);
+  --gradient-hero: linear-gradient(
+    135deg,
+    oklch(0.22 0.1 264) 0%,
+    oklch(0.32 0.16 264) 50%,
+    oklch(0.4 0.18 264) 100%
+  );
   --gradient-gold: linear-gradient(135deg, oklch(0.78 0.14 85), oklch(0.68 0.13 78));
   --shadow-soft: 0 4px 20px -4px oklch(0.32 0.16 264 / 0.08);
   --shadow-elegant: 0 20px 50px -20px oklch(0.32 0.16 264 / 0.25);
@@ -142,23 +147,47 @@
 }
 
 @layer base {
-  * { border-color: var(--color-border); }
-  html { font-family: var(--font-sans); }
+  * {
+    border-color: var(--color-border);
+  }
+  html {
+    font-family: var(--font-sans);
+  }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
   }
-  h1, h2, h3, .font-display { font-family: var(--font-display); letter-spacing: -0.02em; }
+  h1,
+  h2,
+  h3,
+  .font-display {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
 }
 
 @layer utilities {
-  .bg-gradient-royal { background-image: var(--gradient-royal); }
-  .bg-gradient-hero { background-image: var(--gradient-hero); }
-  .bg-gradient-gold { background-image: var(--gradient-gold); }
-  .shadow-soft { box-shadow: var(--shadow-soft); }
-  .shadow-elegant { box-shadow: var(--shadow-elegant); }
-  .shadow-gold { box-shadow: var(--shadow-gold); }
-  .text-balance { text-wrap: balance; }
+  .bg-gradient-royal {
+    background-image: var(--gradient-royal);
+  }
+  .bg-gradient-hero {
+    background-image: var(--gradient-hero);
+  }
+  .bg-gradient-gold {
+    background-image: var(--gradient-gold);
+  }
+  .shadow-soft {
+    box-shadow: var(--shadow-soft);
+  }
+  .shadow-elegant {
+    box-shadow: var(--shadow-elegant);
+  }
+  .shadow-gold {
+    box-shadow: var(--shadow-gold);
+  }
+  .text-balance {
+    text-wrap: balance;
+  }
 }

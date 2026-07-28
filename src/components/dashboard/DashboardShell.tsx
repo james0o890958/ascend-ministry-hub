@@ -1,9 +1,27 @@
 import { ReactNode, useState } from "react";
-import { Link, Outlet, useRouterState } from "@tanstack/react-router";
+import { Link, Outlet, useRouterState, useNavigate } from "@tanstack/react-router";
 import {
-  Bell, ChevronDown, LayoutDashboard, Church, HeartHandshake, Sparkles,
-  CalendarDays, CheckSquare, HandCoins, MessageSquare, BellRing, BarChart3,
-  Settings, LifeBuoy, Search, Menu, X, LogOut, ChevronsLeft, ChevronsRight, Shield,
+  Bell,
+  ChevronDown,
+  LayoutDashboard,
+  Church,
+  HeartHandshake,
+  Sparkles,
+  CalendarDays,
+  CheckSquare,
+  HandCoins,
+  MessageSquare,
+  BellRing,
+  BarChart3,
+  Settings,
+  LifeBuoy,
+  Search,
+  Menu,
+  X,
+  LogOut,
+  ChevronsLeft,
+  ChevronsRight,
+  Shield,
 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { Input } from "@/components/ui/input";
@@ -11,40 +29,102 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
-  DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuRadioGroup, DropdownMenuRadioItem,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { notifications } from "@/lib/data";
+import { useSyncExternalStore } from "react";
+import { getNotifications, subscribeNotifications } from "@/lib/notifications-store";
+import { getMembers, subscribeMembers } from "@/lib/members-store";
+import { getSouls } from "@/lib/souls";
 import { useRole, ROLES, Role } from "@/lib/role";
 import { cn } from "@/lib/utils";
 
-type NavItem = { to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean; roles?: Role[] };
+type NavItem = {
+  to: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  exact?: boolean;
+  roles?: Role[];
+};
 
 const nav: NavItem[] = [
   { to: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true },
   { to: "/dashboard/church", label: "Church Ministry", icon: Church, roles: ["Admin", "Pastor"] },
-  { to: "/dashboard/cells", label: "Cell Ministry", icon: HeartHandshake, roles: ["Admin", "Pastor", "Cell Leader"] },
+  {
+    to: "/dashboard/cells",
+    label: "Cell Ministry",
+    icon: HeartHandshake,
+    roles: ["Admin", "Pastor", "Cell Leader"],
+  },
   { to: "/dashboard/groups", label: "Souls", icon: Sparkles },
   { to: "/dashboard/events", label: "Events", icon: CalendarDays },
   { to: "/dashboard/tasks", label: "Tasks", icon: CheckSquare },
   { to: "/dashboard/giving", label: "Giving", icon: HandCoins },
   { to: "/dashboard/messages", label: "Messages", icon: MessageSquare },
   { to: "/dashboard/notifications", label: "Notifications", icon: BellRing },
-  { to: "/dashboard/reports", label: "Reports", icon: BarChart3, roles: ["Admin", "Pastor", "Cell Leader"] },
+  {
+    to: "/dashboard/reports",
+    label: "Reports",
+    icon: BarChart3,
+    roles: ["Admin", "Pastor", "Cell Leader"],
+  },
   { to: "/dashboard/admins", label: "Administrators", icon: Shield, roles: ["Admin"] },
 ];
 
 export function DashboardShell({ children }: { children?: ReactNode }) {
   const path = useRouterState({ select: (r) => r.location.pathname });
+  const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
   const { role, setRole } = useRole();
+
+  const notifications = useSyncExternalStore(
+    subscribeNotifications,
+    getNotifications,
+    getNotifications,
+  );
+  const membersList = useSyncExternalStore(subscribeMembers, getMembers, getMembers);
 
   const isActive = (to: string, exact?: boolean) =>
     exact ? path === to : path === to || path.startsWith(to + "/");
 
   const visible = nav.filter((n) => !n.roles || n.roles.includes(role));
+
+  const searchResults = (() => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return [];
+    const navHits = visible
+      .filter((n) => n.label.toLowerCase().includes(q))
+      .map((n) => ({ title: n.label, subtitle: "Page navigation", to: n.to, type: "Page" }));
+    const soulHits = getSouls()
+      .filter((s) => s.name.toLowerCase().includes(q))
+      .slice(0, 4)
+      .map((s) => ({
+        title: s.name,
+        subtitle: `${s.stage} · ${s.mentor}`,
+        to: `/dashboard/groups/${s.id}`,
+        type: "Soul",
+      }));
+    const memberHits = membersList
+      .filter((m) => m.name.toLowerCase().includes(q) || m.email.toLowerCase().includes(q))
+      .slice(0, 4)
+      .map((m) => ({
+        title: m.name,
+        subtitle: `${m.stage} · ${m.branch}`,
+        to: `/dashboard/members/${m.id}`,
+        type: "Member",
+      }));
+    return [...navHits, ...soulHits, ...memberHits];
+  })();
 
   return (
     <div className="min-h-screen bg-secondary/30">
@@ -56,10 +136,12 @@ export function DashboardShell({ children }: { children?: ReactNode }) {
         )}
       >
         <div className="flex h-16 items-center justify-between gap-2 px-3 border-b border-sidebar-border">
-          <div className={cn(
-            "flex-1 overflow-hidden pl-2 transition-opacity",
-            collapsed ? "opacity-0 group-hover/sidebar:opacity-100" : "opacity-100"
-          )}>
+          <div
+            className={cn(
+              "flex-1 overflow-hidden pl-2 transition-opacity",
+              collapsed ? "opacity-0 group-hover/sidebar:opacity-100" : "opacity-100",
+            )}
+          >
             <Logo variant="light" />
           </div>
           <button
@@ -67,44 +149,68 @@ export function DashboardShell({ children }: { children?: ReactNode }) {
             onClick={() => setCollapsed((v) => !v)}
             aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
-            {collapsed ? <ChevronsRight className="h-5 w-5" /> : <ChevronsLeft className="h-5 w-5" />}
+            {collapsed ? (
+              <ChevronsRight className="h-5 w-5" />
+            ) : (
+              <ChevronsLeft className="h-5 w-5" />
+            )}
           </button>
-          <button className="rounded-md p-1.5 text-white/70 hover:bg-white/10 lg:hidden" onClick={() => setMobileOpen(false)}>
+          <button
+            className="rounded-md p-1.5 text-white/70 hover:bg-white/10 lg:hidden"
+            onClick={() => setMobileOpen(false)}
+          >
             <X className="h-5 w-5" />
           </button>
         </div>
         <nav className="flex flex-col gap-1 p-3 overflow-y-auto h-[calc(100vh-4rem)] pb-32">
-          <p className={cn(
-            "px-3 py-2 text-[10px] font-semibold uppercase tracking-widest text-white/40 transition-opacity",
-            collapsed ? "opacity-0 group-hover/sidebar:opacity-100" : "opacity-100"
-          )}>Ministry</p>
+          <p
+            className={cn(
+              "px-3 py-2 text-[10px] font-semibold uppercase tracking-widest text-white/40 transition-opacity",
+              collapsed ? "opacity-0 group-hover/sidebar:opacity-100" : "opacity-100",
+            )}
+          >
+            Ministry
+          </p>
           {visible.map((item) => {
             const active = isActive(item.to, item.exact);
             return (
-              <Link key={item.to} to={item.to as "/dashboard"} onClick={() => setMobileOpen(false)}
+              <Link
+                key={item.to}
+                to={item.to as "/dashboard"}
+                onClick={() => setMobileOpen(false)}
                 title={collapsed ? item.label : undefined}
                 className={cn(
                   "group/item flex items-center gap-3 rounded-xl px-2 py-2.5 text-sm font-medium transition",
                   active
                     ? "bg-gradient-to-r from-sidebar-accent to-sidebar-accent/40 text-white shadow-soft ring-1 ring-gold/30"
-                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-white"
+                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-white",
                 )}
               >
-                <span className={cn(
-                  "grid h-9 w-9 shrink-0 place-items-center rounded-lg transition",
-                  active ? "bg-gold text-gold-foreground" : "bg-white/5 text-sidebar-foreground/70 group-hover/item:bg-white/10"
-                )}>
+                <span
+                  className={cn(
+                    "grid h-9 w-9 shrink-0 place-items-center rounded-lg transition",
+                    active
+                      ? "bg-gold text-gold-foreground"
+                      : "bg-white/5 text-sidebar-foreground/70 group-hover/item:bg-white/10",
+                  )}
+                >
                   <item.icon className="h-4 w-4" />
                 </span>
-                <span className={cn(
-                  "truncate transition-opacity",
-                  collapsed ? "opacity-0 group-hover/sidebar:opacity-100" : "opacity-100"
-                )}>{item.label}</span>
+                <span
+                  className={cn(
+                    "truncate transition-opacity",
+                    collapsed ? "opacity-0 group-hover/sidebar:opacity-100" : "opacity-100",
+                  )}
+                >
+                  {item.label}
+                </span>
                 {active && (
-                  <span className={cn(
-                    "ml-auto h-1.5 w-1.5 rounded-full bg-gold transition-opacity",
-                    collapsed ? "opacity-0 group-hover/sidebar:opacity-100" : "opacity-100"
-                  )} />
+                  <span
+                    className={cn(
+                      "ml-auto h-1.5 w-1.5 rounded-full bg-gold transition-opacity",
+                      collapsed ? "opacity-0 group-hover/sidebar:opacity-100" : "opacity-100",
+                    )}
+                  />
                 )}
               </Link>
             );
@@ -112,23 +218,72 @@ export function DashboardShell({ children }: { children?: ReactNode }) {
         </nav>
       </aside>
 
-      {mobileOpen && <div className="fixed inset-0 z-30 bg-black/40 lg:hidden" onClick={() => setMobileOpen(false)} />}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/40 lg:hidden"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
 
-      <div className={cn("transition-[padding] duration-200", collapsed ? "lg:pl-[72px]" : "lg:pl-72")}>
-
+      <div
+        className={cn("transition-[padding] duration-200", collapsed ? "lg:pl-[72px]" : "lg:pl-72")}
+      >
         <header className="sticky top-0 z-20 border-b border-sidebar-border bg-sidebar text-sidebar-foreground shadow-elegant backdrop-blur">
           <div className="flex h-16 items-center gap-3 px-4 sm:px-6">
-            <button className="rounded-md p-2 text-white hover:bg-white/10 lg:hidden" onClick={() => setMobileOpen(true)}>
+            <button
+              className="rounded-md p-2 text-white hover:bg-white/10 lg:hidden"
+              onClick={() => setMobileOpen(true)}
+            >
               <Menu className="h-5 w-5" />
             </button>
             <div className="relative hidden max-w-md flex-1 sm:block">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/60" />
-              <Input placeholder="Search…" className="pl-9 bg-white/10 border-white/15 text-white placeholder:text-white/60 focus-visible:bg-white/15 focus-visible:ring-gold/40" />
+              <Input
+                placeholder="Search souls, members, pages…"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => setSearchOpen(true)}
+                onBlur={() => setTimeout(() => setSearchOpen(false), 200)}
+                className="pl-9 bg-white/10 border-white/15 text-white placeholder:text-white/60 focus-visible:bg-white/15 focus-visible:ring-gold/40"
+              />
+              {searchOpen && searchQuery.trim() && (
+                <div className="absolute top-full left-0 right-0 mt-2 z-50 rounded-xl border border-border bg-popover p-2 shadow-elegant text-popover-foreground max-h-80 overflow-y-auto">
+                  {searchResults.length === 0 ? (
+                    <p className="p-3 text-xs text-muted-foreground text-center">
+                      No results found for "{searchQuery}"
+                    </p>
+                  ) : (
+                    searchResults.map((res, i) => (
+                      <button
+                        key={i}
+                        className="w-full text-left p-2 hover:bg-secondary rounded-lg transition flex items-center justify-between text-xs"
+                        onMouseDown={() => {
+                          navigate({ to: res.to as "/dashboard" });
+                          setSearchQuery("");
+                          setSearchOpen(false);
+                        }}
+                      >
+                        <div>
+                          <p className="font-semibold text-foreground">{res.title}</p>
+                          <p className="text-[11px] text-muted-foreground">{res.subtitle}</p>
+                        </div>
+                        <Badge variant="outline" className="text-[10px] uppercase">
+                          {res.type}
+                        </Badge>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
             <div className="ml-auto flex items-center gap-2">
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="ghost" size="icon" className="relative text-white hover:bg-white/15 hover:text-white">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="relative text-white hover:bg-white/15 hover:text-white"
+                  >
                     <Bell className="h-5 w-5" />
                     <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-gold ring-2 ring-sidebar" />
                   </Button>
@@ -136,11 +291,17 @@ export function DashboardShell({ children }: { children?: ReactNode }) {
                 <PopoverContent align="end" className="w-80 p-0">
                   <div className="flex items-center justify-between border-b border-border p-4">
                     <p className="font-semibold">Notifications</p>
-                    <Badge variant="secondary" className="bg-gold-soft text-primary">{notifications.length} new</Badge>
+                    <Badge variant="secondary" className="bg-gold-soft text-primary">
+                      {notifications.length} new
+                    </Badge>
                   </div>
                   <ul className="divide-y divide-border max-h-80 overflow-y-auto">
                     {notifications.map((n) => (
-                      <li key={n.id} className="p-4 hover:bg-secondary/60 transition">
+                      <li
+                        key={n.id}
+                        className="p-4 hover:bg-secondary/60 transition cursor-pointer"
+                        onClick={() => navigate({ to: "/dashboard/notifications" })}
+                      >
                         <div className="flex justify-between gap-3">
                           <p className="text-sm font-medium">{n.title}</p>
                           <span className="text-xs text-muted-foreground">{n.time}</span>
@@ -150,7 +311,9 @@ export function DashboardShell({ children }: { children?: ReactNode }) {
                     ))}
                   </ul>
                   <div className="border-t border-border p-2">
-                    <Button asChild variant="ghost" size="sm" className="w-full"><Link to="/dashboard/notifications">View all</Link></Button>
+                    <Button asChild variant="ghost" size="sm" className="w-full">
+                      <Link to="/dashboard/notifications">View all</Link>
+                    </Button>
                   </div>
                 </PopoverContent>
               </Popover>
@@ -172,19 +335,43 @@ export function DashboardShell({ children }: { children?: ReactNode }) {
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel>My account</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild><Link to="/dashboard/profile"><Avatar className="mr-2 h-4 w-4"><AvatarFallback>P</AvatarFallback></Avatar>Profile</Link></DropdownMenuItem>
-                  <DropdownMenuItem asChild><Link to="/dashboard/settings"><Settings className="mr-2 h-4 w-4"/>Settings</Link></DropdownMenuItem>
-                  <DropdownMenuItem asChild><Link to="/dashboard/help"><LifeBuoy className="mr-2 h-4 w-4"/>Help &amp; Support</Link></DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/dashboard/profile">
+                      <Avatar className="mr-2 h-4 w-4">
+                        <AvatarFallback>P</AvatarFallback>
+                      </Avatar>
+                      Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/dashboard/settings">
+                      <Settings className="mr-2 h-4 w-4" />
+                      Settings
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/dashboard/help">
+                      <LifeBuoy className="mr-2 h-4 w-4" />
+                      Help &amp; Support
+                    </Link>
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">View as</DropdownMenuLabel>
+                  <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                    View as
+                  </DropdownMenuLabel>
                   <DropdownMenuRadioGroup value={role} onValueChange={(v) => setRole(v as Role)}>
                     {ROLES.map((r) => (
-                      <DropdownMenuRadioItem key={r} value={r}>{r}</DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem key={r} value={r}>
+                        {r}
+                      </DropdownMenuRadioItem>
                     ))}
                   </DropdownMenuRadioGroup>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link to="/login" className="text-destructive"><LogOut className="mr-2 h-4 w-4" />Logout</Link>
+                    <Link to="/login" className="text-destructive">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Logout
+                    </Link>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
