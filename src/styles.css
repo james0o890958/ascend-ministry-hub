@@ -5,8 +5,9 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-display: "Playfair Display", Georgia, serif;
-  --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-display: "Merriweather", Georgia, serif;
+  --font-serif: "Merriweather", Georgia, serif;
+  --font-sans: "Merriweather", Georgia, serif;
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);

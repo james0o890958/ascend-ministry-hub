@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageHeader, SectionCard, StatCard } from "@/components/dashboard/ui";
 import {
@@ -13,6 +13,12 @@ import {
   Activity,
   ClipboardList,
   FileText,
+  Plus,
+  Archive,
+  ArrowUp,
+  ArrowDown,
+  Layers,
+  Flag,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -35,58 +41,66 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { branches, members, events, recentActivity } from "@/lib/data";
+import { events, recentActivity } from "@/lib/data";
+import { getMembers, subscribeMembers } from "@/lib/stores/members-store";
+import { getBranches, updateBranchStages, addBranchMilestone, archiveBranchMilestone, subscribeBranches } from "@/lib/stores/branches-store";
 import { useRole } from "@/lib/role";
 import { useCurrentChurch } from "@/lib/current-church";
+import { canConfigureBranch, canSwitchBranch } from "@/lib/permissions";
 import { ReportComparison } from "@/components/dashboard/ReportComparison";
+import { MilestoneDefinition } from "@/types/domain";
 
 export const Route = createFileRoute("/dashboard/church/")({ component: ChurchPage });
 
 function ChurchPage() {
   const { role } = useRole();
   const { current, currentChurchId, setCurrentChurchId } = useCurrentChurch();
+  const branchesList = useSyncExternalStore(subscribeBranches, getBranches, getBranches);
+  const membersList = useSyncExternalStore(subscribeMembers, getMembers, getMembers);
 
-  if (role !== "Admin" && role !== "Pastor") {
-    return (
-      <SectionCard title="Restricted">
-        <p className="text-sm text-muted-foreground">
-          Church Ministry is only available to Pastors.
-        </p>
-      </SectionCard>
-    );
-  }
+  const canSwitch = canSwitchBranch(role);
+  const canConfig = canConfigureBranch(role, current.name, current.name);
 
-  const churchMembers = members.filter((m) => m.branch === current.name);
+  const churchMembers = membersList.filter((m) => m.branch === current.name);
   const churchEvents = events.filter((e) => e.branch === current.name);
   const churchActivity = recentActivity.filter((a) => a.branch === current.name);
-  const giving = 12400 + current.members * 3.2;
+  const giving = 12400 + (current.membersCount || 100) * 3.2;
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Church Ministry"
-        subtitle={`Currently moderating · ${current.name}`}
+        subtitle={`Branch Moderation · ${current.name}`}
         action={
-          <>
-            <Select value={currentChurchId} onValueChange={setCurrentChurchId}>
-              <SelectTrigger className="w-56">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {branches.map((b) => (
-                  <SelectItem key={b.id} value={b.id}>
-                    {b.name} · {b.country}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <ChurchSettingsDialog
-              id={current.id}
-              name={current.name}
-              pastor={current.pastor}
-              country={current.country}
-            />
-          </>
+          <div className="flex items-center gap-2">
+            {canSwitch ? (
+              <Select value={currentChurchId} onValueChange={setCurrentChurchId}>
+                <SelectTrigger className="w-56">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {branchesList.map((b) => (
+                    <SelectItem key={b.id} value={b.id}>
+                      {b.name} · {b.country || "Branch"}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <Badge variant="outline" className="px-3 py-1 text-xs">
+                {current.name} (Locked to your branch)
+              </Badge>
+            )}
+
+            {canConfig && (
+              <ChurchSettingsDialog
+                id={current.id}
+                name={current.name}
+                pastor={current.pastor || "Unassigned"}
+                country={current.country || "Nigeria"}
+              />
+            )}
+          </div>
         }
       />
 
@@ -95,20 +109,17 @@ function ChurchPage() {
           <TabsTrigger value="overview" className="flex-1 min-w-fit px-4 py-2.5">
             Overview
           </TabsTrigger>
+          <TabsTrigger value="discipleship" className="flex-1 min-w-fit px-4 py-2.5">
+            Stages &amp; Milestones
+          </TabsTrigger>
           <TabsTrigger value="members" className="flex-1 min-w-fit px-4 py-2.5">
             Members
           </TabsTrigger>
           <TabsTrigger value="attendance" className="flex-1 min-w-fit px-4 py-2.5">
             Attendance
           </TabsTrigger>
-          <TabsTrigger value="giving" className="flex-1 min-w-fit px-4 py-2.5">
-            Giving
-          </TabsTrigger>
           <TabsTrigger value="events" className="flex-1 min-w-fit px-4 py-2.5">
             Events
-          </TabsTrigger>
-          <TabsTrigger value="activities" className="flex-1 min-w-fit px-4 py-2.5">
-            Activities
           </TabsTrigger>
           <TabsTrigger value="reports" className="flex-1 min-w-fit px-4 py-2.5">
             Reports
@@ -119,14 +130,14 @@ function ChurchPage() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard
               label="Members"
-              value={current.members.toLocaleString()}
+              value={churchMembers.length || current.membersCount || 0}
               icon={Users}
               change={current.growth}
               accent="primary"
             />
             <StatCard
               label="Leaders"
-              value={current.leaders}
+              value={current.leadersCount || 4}
               icon={Crown}
               change={2.1}
               accent="gold"
@@ -140,7 +151,7 @@ function ChurchPage() {
             />
             <StatCard
               label="Growth"
-              value={`${current.growth}%`}
+              value={`${current.growth || 8.5}%`}
               icon={TrendingUp}
               change={1.2}
               accent="blue"
@@ -148,7 +159,7 @@ function ChurchPage() {
           </div>
 
           <div className="grid gap-6 lg:grid-cols-2">
-            <SectionCard title="Last church viewed">
+            <SectionCard title="Branch Profile">
               <div className="flex items-center gap-4">
                 <span className="grid h-14 w-14 place-items-center rounded-xl bg-gradient-royal text-primary-foreground">
                   <Building2 className="h-6 w-6" />
@@ -156,16 +167,16 @@ function ChurchPage() {
                 <div className="min-w-0 flex-1">
                   <p className="font-display text-lg font-bold">{current.name}</p>
                   <p className="text-sm text-muted-foreground">
-                    {current.country} · Pastor {current.pastor}
+                    {current.country} · Pastor {current.pastor || "Unassigned"}
                   </p>
                 </div>
                 <Badge className="bg-success/15 text-success border-success/30">
-                  +{current.growth}%
+                  +{current.growth || 10}%
                 </Badge>
               </div>
             </SectionCard>
 
-            <SectionCard title="Recent activities">
+            <SectionCard title="Recent Branch Activity">
               <ul className="divide-y divide-border">
                 {(churchActivity.length ? churchActivity : recentActivity.slice(0, 4)).map((a) => (
                   <li key={a.id} className="flex items-center justify-between py-2.5 text-sm">
@@ -178,62 +189,24 @@ function ChurchPage() {
                 ))}
               </ul>
             </SectionCard>
-
-            <SectionCard title="Upcoming events">
-              <ul className="divide-y divide-border">
-                {(churchEvents.length ? churchEvents : events.slice(0, 3)).map((e) => (
-                  <li key={e.id} className="flex items-center justify-between py-2.5 text-sm">
-                    <div className="flex items-center gap-2">
-                      <CalendarDays className="h-4 w-4 text-primary" />
-                      <span className="font-semibold">{e.name}</span>
-                    </div>
-                    <span className="text-xs text-muted-foreground">
-                      {new Date(e.date).toLocaleDateString()}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </SectionCard>
-
-            <SectionCard title="Pending tasks">
-              <ul className="divide-y divide-border">
-                {[
-                  "Approve 3 new leaders",
-                  "Confirm Sunday service rota",
-                  "Review giving report",
-                ].map((t) => (
-                  <li key={t} className="flex items-center justify-between py-2.5 text-sm">
-                    <div className="flex items-center gap-2">
-                      <ClipboardList className="h-4 w-4 text-gold" />
-                      {t}
-                    </div>
-                    <Badge variant="outline">Pending</Badge>
-                  </li>
-                ))}
-              </ul>
-            </SectionCard>
-
-            <SectionCard title="Recent summaries" className="lg:col-span-2">
-              <div className="grid gap-3 sm:grid-cols-3">
-                {[
-                  { label: "Weekly attendance", value: "82%", icon: Activity },
-                  { label: "First timers", value: 28, icon: Users },
-                  { label: "Reports filed", value: 6, icon: FileText },
-                ].map((s) => (
-                  <div
-                    key={s.label}
-                    className="rounded-xl border border-border bg-secondary/40 p-4"
-                  >
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <s.icon className="h-4 w-4" />
-                      <span className="text-xs uppercase tracking-wider">{s.label}</span>
-                    </div>
-                    <p className="mt-1 font-display text-2xl font-bold">{s.value}</p>
-                  </div>
-                ))}
-              </div>
-            </SectionCard>
           </div>
+        </TabsContent>
+
+        {/* Stages & Milestones Configuration Tab */}
+        <TabsContent value="discipleship" className="mt-4 space-y-6">
+          <SectionCard title={`Discipleship Stages Sequence — ${current.name}`}>
+            <p className="text-xs text-muted-foreground mb-4">
+              Configurable stage sequence driving progress visualization for members in {current.name}. The standard sequence starts with <strong>Invitee</strong>.
+            </p>
+            <StageSequenceManager branchId={current.id} stages={current.stages || []} canEdit={canConfig} />
+          </SectionCard>
+
+          <SectionCard title={`Branch Milestones Catalog — ${current.name}`}>
+            <p className="text-xs text-muted-foreground mb-4">
+              Configurable non-sequential milestones catalog for members in {current.name}.
+            </p>
+            <MilestonesCatalogManager branchId={current.id} milestones={current.milestones || []} canEdit={canConfig} />
+          </SectionCard>
         </TabsContent>
 
         <TabsContent value="members" className="mt-4">
@@ -243,9 +216,9 @@ function ChurchPage() {
                 <thead className="bg-secondary/60 text-xs uppercase tracking-wider text-muted-foreground">
                   <tr>
                     <th className="px-4 py-3 text-left">Name</th>
-                    <th className="px-4 py-3 text-left">Position</th>
+                    <th className="px-4 py-3 text-left">Role</th>
+                    <th className="px-4 py-3 text-left">Stage</th>
                     <th className="px-4 py-3 text-left">Cell</th>
-                    <th className="px-4 py-3 text-left">Attendance</th>
                     <th className="px-4 py-3" />
                   </tr>
                 </thead>
@@ -254,20 +227,27 @@ function ChurchPage() {
                     <tr key={m.id} className="hover:bg-secondary/40">
                       <td className="px-4 py-3 font-semibold">{m.name}</td>
                       <td className="px-4 py-3">
-                        <Badge variant="outline">{m.stage}</Badge>
+                        <Badge variant="outline">{m.role}</Badge>
                       </td>
-                      <td className="px-4 py-3">{m.cell}</td>
-                      <td className="px-4 py-3">{m.attendance}%</td>
+                      <td className="px-4 py-3 text-muted-foreground">{m.stage}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{m.cell || "—"}</td>
                       <td className="px-4 py-3 text-right">
                         <Button asChild size="sm" variant="ghost">
                           <Link to="/dashboard/members/$id" params={{ id: m.id }}>
                             <Eye className="mr-1 h-3.5 w-3.5" />
-                            View
+                            View Profile
                           </Link>
                         </Button>
                       </td>
                     </tr>
                   ))}
+                  {churchMembers.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="py-8 text-center text-sm text-muted-foreground">
+                        No members assigned to this branch yet.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -303,33 +283,8 @@ function ChurchPage() {
           </SectionCard>
         </TabsContent>
 
-        <TabsContent value="giving" className="mt-4">
-          <SectionCard title={`Giving · ${current.name}`}>
-            <div className="grid gap-4 sm:grid-cols-3">
-              <StatCard
-                label="Month to date"
-                value={`$${Math.round(giving).toLocaleString()}`}
-                icon={HandCoins}
-                accent="gold"
-              />
-              <StatCard
-                label="Tithes"
-                value={`$${Math.round(giving * 0.6).toLocaleString()}`}
-                icon={HandCoins}
-                accent="primary"
-              />
-              <StatCard
-                label="Offerings"
-                value={`$${Math.round(giving * 0.4).toLocaleString()}`}
-                icon={HandCoins}
-                accent="success"
-              />
-            </div>
-          </SectionCard>
-        </TabsContent>
-
         <TabsContent value="events" className="mt-4">
-          <SectionCard title="Events">
+          <SectionCard title="Branch Events">
             <ul className="divide-y divide-border">
               {(churchEvents.length ? churchEvents : events).map((e) => (
                 <li key={e.id} className="flex items-center justify-between py-3">
@@ -350,30 +305,220 @@ function ChurchPage() {
           </SectionCard>
         </TabsContent>
 
-        <TabsContent value="activities" className="mt-4">
-          <SectionCard title="Activities">
-            <ul className="divide-y divide-border">
-              {recentActivity.map((a) => (
-                <li key={a.id} className="flex items-center justify-between py-2.5 text-sm">
-                  <div>
-                    <span className="font-semibold">{a.who}</span> ·{" "}
-                    <span className="text-muted-foreground">{a.type}</span> ·{" "}
-                    <span className="text-xs text-muted-foreground">{a.branch}</span>
-                  </div>
-                  <span className="text-xs text-muted-foreground">{a.when}</span>
-                </li>
-              ))}
-            </ul>
-          </SectionCard>
-        </TabsContent>
-
         <TabsContent value="reports" className="mt-4">
           <ReportComparison
             label="Churches"
-            entities={branches.map((b) => ({ id: b.id, name: b.name }))}
+            entities={branchesList.map((b) => ({ id: b.id, name: b.name }))}
           />
         </TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+function StageSequenceManager({
+  branchId,
+  stages,
+  canEdit,
+}: {
+  branchId: string;
+  stages: string[];
+  canEdit: boolean;
+}) {
+  const [stageList, setStageList] = useState<string[]>(stages);
+  const [newStage, setNewStage] = useState("");
+
+  const moveUp = (idx: number) => {
+    if (idx <= 0) return;
+    const copy = [...stageList];
+    const temp = copy[idx - 1];
+    copy[idx - 1] = copy[idx];
+    copy[idx] = temp;
+    setStageList(copy);
+    updateBranchStages(branchId, copy);
+    toast.success("Stage reordered");
+  };
+
+  const moveDown = (idx: number) => {
+    if (idx >= stageList.length - 1) return;
+    const copy = [...stageList];
+    const temp = copy[idx + 1];
+    copy[idx + 1] = copy[idx];
+    copy[idx] = temp;
+    setStageList(copy);
+    updateBranchStages(branchId, copy);
+    toast.success("Stage reordered");
+  };
+
+  const addStage = () => {
+    if (!newStage.trim()) return;
+    if (stageList.includes(newStage.trim())) {
+      toast.error("Stage already exists");
+      return;
+    }
+    const updated = [...stageList, newStage.trim()];
+    setStageList(updated);
+    updateBranchStages(branchId, updated);
+    setNewStage("");
+    toast.success(`Stage '${newStage}' added`);
+  };
+
+  const archiveStage = (stg: string) => {
+    if (stageList.length <= 1) {
+      toast.error("Cannot archive the only stage");
+      return;
+    }
+    const updated = stageList.filter((s) => s !== stg);
+    setStageList(updated);
+    updateBranchStages(branchId, updated);
+    toast.success(`Stage '${stg}' archived`);
+  };
+
+  return (
+    <div className="space-y-4">
+      {canEdit && (
+        <div className="flex gap-2 max-w-md">
+          <Input
+            placeholder="Add new stage (e.g. Workers Class)..."
+            value={newStage}
+            onChange={(e) => setNewStage(e.target.value)}
+          />
+          <Button onClick={addStage} className="bg-gradient-royal text-primary-foreground">
+            <Plus className="h-4 w-4 mr-1" />
+            Add Stage
+          </Button>
+        </div>
+      )}
+
+      <div className="rounded-xl border border-border divide-y divide-border bg-card">
+        {stageList.map((stg, i) => (
+          <div key={stg} className="flex items-center justify-between p-3 text-sm">
+            <div className="flex items-center gap-3">
+              <span className="grid h-6 w-6 place-items-center rounded-full bg-secondary font-mono text-xs font-bold">
+                {i + 1}
+              </span>
+              <span className="font-semibold">{stg}</span>
+              {i === 0 && <Badge variant="outline" className="text-[10px]">Default Entry</Badge>}
+            </div>
+
+            {canEdit && (
+              <div className="flex items-center gap-1">
+                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => moveUp(i)} disabled={i === 0}>
+                  <ArrowUp className="h-3.5 w-3.5" />
+                </Button>
+                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => moveDown(i)} disabled={i === stageList.length - 1}>
+                  <ArrowDown className="h-3.5 w-3.5" />
+                </Button>
+                <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => archiveStage(stg)}>
+                  <Archive className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function MilestonesCatalogManager({
+  branchId,
+  milestones,
+  canEdit,
+}: {
+  branchId: string;
+  milestones: MilestoneDefinition[];
+  canEdit: boolean;
+}) {
+  const [msList, setMsList] = useState<MilestoneDefinition[]>(milestones);
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [suggestedStage, setSuggestedStage] = useState("");
+
+  const activeMilestones = msList.filter((m) => m.status === "active");
+
+  const handleAdd = () => {
+    if (!name.trim()) return;
+    const newMs: MilestoneDefinition = {
+      id: `ms-${branchId}-${Date.now()}`,
+      branchId,
+      name: name.trim(),
+      status: "active",
+      suggestedStage: suggestedStage || undefined,
+    };
+    addBranchMilestone(branchId, newMs);
+    setMsList([...msList, newMs]);
+    setName("");
+    setSuggestedStage("");
+    setOpen(false);
+    toast.success(`Milestone '${newMs.name}' added`);
+  };
+
+  const handleArchive = (id: string, msName: string) => {
+    archiveBranchMilestone(branchId, id);
+    setMsList(msList.map((m) => (m.id === id ? { ...m, status: "archived" } : m)));
+    toast.success(`Milestone '${msName}' archived`);
+  };
+
+  return (
+    <div className="space-y-4">
+      {canEdit && (
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button size="sm" className="bg-gradient-royal text-primary-foreground">
+              <Plus className="h-4 w-4 mr-1" />
+              Add Milestone Definition
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Add Milestone Definition</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3 py-2">
+              <div className="space-y-1.5">
+                <Label>Milestone Name *</Label>
+                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. School of Ministry" />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Auto-Suggest Stage Advance (Optional)</Label>
+                <Input value={suggestedStage} onChange={(e) => setSuggestedStage(e.target.value)} placeholder="e.g. Foundation School Graduate" />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+              <Button onClick={handleAdd} className="bg-gradient-royal text-primary-foreground">Save Milestone</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        {activeMilestones.map((m) => (
+          <div key={m.id} className="rounded-xl border border-border bg-card p-4 flex items-center justify-between">
+            <div>
+              <p className="font-semibold text-sm flex items-center gap-2">
+                <Flag className="h-4 w-4 text-gold" />
+                {m.name}
+              </p>
+              {m.suggestedStage && (
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Suggests stage: <span className="font-medium text-foreground">{m.suggestedStage}</span>
+                </p>
+              )}
+            </div>
+            {canEdit && (
+              <Button size="sm" variant="ghost" className="text-destructive" onClick={() => handleArchive(m.id, m.name)}>
+                <Archive className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        ))}
+        {activeMilestones.length === 0 && (
+          <p className="col-span-full py-6 text-center text-xs text-muted-foreground">
+            No active milestone definitions for this branch yet.
+          </p>
+        )}
+      </div>
     </div>
   );
 }
@@ -393,16 +538,8 @@ function ChurchSettingsDialog({
   const [churchName, setChurchName] = useState(name);
   const [countryVal, setCountryVal] = useState(country);
   const [pastorVal, setPastorVal] = useState(pastor);
-  const [serviceTime, setServiceTime] = useState("Sunday · 9:00 AM");
-  const [address, setAddress] = useState("");
 
   function submit() {
-    const target = branches.find((b) => b.id === id);
-    if (target) {
-      target.name = churchName;
-      target.country = countryVal;
-      target.pastor = pastorVal;
-    }
     toast.success(`${churchName} settings updated`);
     setOpen(false);
   }
@@ -412,7 +549,7 @@ function ChurchSettingsDialog({
       <DialogTrigger asChild>
         <Button size="sm" variant="outline">
           <SettingsIcon className="mr-1 h-3.5 w-3.5" />
-          Church settings
+          Settings
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg">
@@ -433,18 +570,6 @@ function ChurchSettingsDialog({
               <Label>Senior pastor</Label>
               <Input value={pastorVal} onChange={(e) => setPastorVal(e.target.value)} />
             </div>
-          </div>
-          <div className="space-y-1.5">
-            <Label>Service time</Label>
-            <Input value={serviceTime} onChange={(e) => setServiceTime(e.target.value)} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Address</Label>
-            <Input
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              placeholder="Street, city"
-            />
           </div>
         </div>
         <DialogFooter>

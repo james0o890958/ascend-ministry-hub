@@ -85,16 +85,19 @@ function Overview() {
     }
   }, [role]);
 
-  const greeting = {
+  const greeting: Record<string, string> = {
     Admin: "Ministry-wide overview",
+    "Branch Admin": "Branch-wide overview",
     Pastor: "Your church at a glance",
+    "PCF Leader": "PCF zone overview",
     "Cell Leader": "Your cell at a glance",
     Member: "Your spiritual snapshot",
-  }[role];
+  };
+  const sub = greeting[role] || "Your overview";
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Overview" subtitle={greeting} />
+      <PageHeader title="Overview" subtitle={sub} />
 
       <SectionCard title={`Key metrics · ${role} view`}>
         <div className="overflow-hidden rounded-xl border border-border">

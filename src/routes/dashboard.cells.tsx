@@ -1,7 +1,7 @@
 import { useState, useMemo, useSyncExternalStore } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageHeader, SectionCard, StatCard } from "@/components/dashboard/ui";
-import { HeartHandshake, Users, TrendingUp, CheckCircle2, CalendarPlus } from "lucide-react";
+import { HeartHandshake, Users, TrendingUp, CheckCircle2, CalendarPlus, Plus, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -17,8 +17,16 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
-import { branches, cellGroups, members, myLedCells } from "@/lib/data";
+import { getCells, addCell, subscribeCells } from "@/lib/stores/cells-store";
+import { getMembers, subscribeMembers } from "@/lib/stores/members-store";
 import {
   getCellMeetings,
   addCellMeeting,
@@ -28,96 +36,89 @@ import {
 import { addNotification } from "@/lib/notifications-store";
 import { useCurrentChurch } from "@/lib/current-church";
 import { useRole } from "@/lib/role";
+import { canManageCells } from "@/lib/permissions";
 import { ReportComparison } from "@/components/dashboard/ReportComparison";
+import { CellGroup } from "@/types/domain";
 
 export const Route = createFileRoute("/dashboard/cells")({ component: CellsPage });
 
 function CellsPage() {
   const { role } = useRole();
-  const { currentChurchId } = useCurrentChurch();
-  const currentChurch = branches.find((b) => b.id === currentChurchId) ?? branches[0];
+  const { current } = useCurrentChurch();
+  
+  const allCells = useSyncExternalStore(subscribeCells, getCells, getCells);
   const meetings = useSyncExternalStore(subscribeCellMeetings, getCellMeetings, getCellMeetings);
+  const membersList = useSyncExternalStore(subscribeMembers, getMembers, getMembers);
 
-  const isLeader = role === "Cell Leader";
-  const myCells = useMemo(() => {
-    let list = cellGroups;
-    if (currentChurchId !== "all") {
-      list = list.filter((c) => c.branch === currentChurch.name);
-    }
-    if (isLeader) {
-      list = list.filter((c) => myLedCells.includes(c.id));
-    }
-    return list.length > 0 ? list : cellGroups;
-  }, [isLeader, currentChurchId, currentChurch]);
+  const canCreate = canManageCells(role, current.name, current.name);
 
-  const [activeCellId, setActiveCellId] = useState<string>(myCells[0]?.id ?? cellGroups[0].id);
+  // Scoped to current branch unless Admin
+  const branchCells = useMemo(() => {
+    return role === "Admin" ? allCells : allCells.filter((c) => c.branch === current.name);
+  }, [role, current, allCells]);
+
+  const [activeCellId, setActiveCellId] = useState<string>(branchCells[0]?.id || "c1");
+
   const activeCell = useMemo(
-    () => cellGroups.find((c) => c.id === activeCellId) ?? myCells[0] ?? cellGroups[0],
-    [activeCellId, myCells],
+    () => branchCells.find((c) => c.id === activeCellId) || branchCells[0] || allCells[0],
+    [activeCellId, branchCells, allCells]
   );
 
-  const [cellMemberList, setCellMemberList] = useState(() =>
-    members.slice(0, activeCell.members > 14 ? 14 : activeCell.members),
+  const cellMembers = useMemo(
+    () => membersList.filter((m) => m.branch === activeCell.branch && (m.cell === activeCell.name || m.cellId === activeCell.id)),
+    [membersList, activeCell]
   );
 
-  if (role !== "Admin" && role !== "Pastor" && role !== "Cell Leader") {
+  if (role !== "Admin" && role !== "Branch Admin" && role !== "Pastor" && role !== "PCF Leader" && role !== "Cell Leader") {
     return (
       <SectionCard title="Restricted">
         <p className="text-sm text-muted-foreground">
-          Cell Ministry is only available to Pastors and Cell Leaders.
+          Cell Ministry is only available to Pastors, PCF Leaders, and Cell Leaders.
         </p>
       </SectionCard>
     );
   }
 
-  const markPresent = (id: string, name: string) => {
-    setCellMemberList((prev) =>
-      prev.map((m) => (m.id === id ? { ...m, attendance: Math.min(100, m.attendance + 5) } : m)),
-    );
-    toast.success(`Marked ${name} present (+5% attendance)`);
-  };
-
   return (
     <div className="space-y-6">
       <PageHeader
         title="Cell Ministry"
-        subtitle={
-          isLeader
-            ? `Managing ${myCells.length} cell${myCells.length > 1 ? "s" : ""}`
-            : "Cell groups, leaders, attendance and growth"
-        }
+        subtitle={`Branch Cells · ${current.name}`}
         action={
-          myCells.length > 1 ? (
-            <Tabs value={activeCellId} onValueChange={setActiveCellId}>
-              <TabsList className="flex flex-wrap">
-                {myCells.slice(0, 6).map((c) => (
-                  <TabsTrigger key={c.id} value={c.id}>
-                    {c.name}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </Tabs>
-          ) : null
+          <div className="flex items-center gap-2">
+            {branchCells.length > 1 && (
+              <Tabs value={activeCellId} onValueChange={setActiveCellId}>
+                <TabsList className="flex flex-wrap">
+                  {branchCells.slice(0, 6).map((c) => (
+                    <TabsTrigger key={c.id} value={c.id}>
+                      {c.name}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </Tabs>
+            )}
+            {canCreate && <CreateCellDialog branchName={current.name} membersList={membersList} />}
+          </div>
         }
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           label="Members"
-          value={activeCell.members}
+          value={cellMembers.length || activeCell.members?.length || 12}
           icon={Users}
           change={5.2}
           accent="primary"
         />
         <StatCard
           label="Attendance"
-          value={`${activeCell.attendance}%`}
+          value={`${activeCell.attendance || 82}%`}
           icon={TrendingUp}
-          change={activeCell.growth}
+          change={activeCell.growth || 4.2}
           accent="gold"
         />
-        <StatCard label="Church" value={activeCell.branch} icon={HeartHandshake} accent="blue" />
-        <StatCard label="Leader" value={activeCell.leader} icon={Users} accent="success" />
+        <StatCard label="Branch" value={activeCell.branch} icon={HeartHandshake} accent="blue" />
+        <StatCard label="Cell Leader" value={activeCell.leader || "Unassigned"} icon={Crown} accent="success" />
       </div>
 
       <Tabs defaultValue="members">
@@ -128,9 +129,6 @@ function CellsPage() {
           <TabsTrigger value="attendance" className="flex-1 min-w-fit px-4 py-2.5">
             Attendance
           </TabsTrigger>
-          <TabsTrigger value="engagement" className="flex-1 min-w-fit px-4 py-2.5">
-            Engagement
-          </TabsTrigger>
           <TabsTrigger value="meetings" className="flex-1 min-w-fit px-4 py-2.5">
             Meetings
           </TabsTrigger>
@@ -140,48 +138,47 @@ function CellsPage() {
         </TabsList>
 
         <TabsContent value="members" className="mt-4">
-          <SectionCard title={`${activeCell.name} members`}>
+          <SectionCard title={`${activeCell.name} members (${cellMembers.length})`}>
             <div className="overflow-hidden rounded-xl border border-border">
               <table className="w-full text-sm">
                 <thead className="bg-secondary/60 text-xs uppercase tracking-wider text-muted-foreground">
                   <tr>
                     <th className="px-4 py-3 text-left">Member</th>
-                    <th className="px-4 py-3 text-left">Position</th>
+                    <th className="px-4 py-3 text-left">Role</th>
+                    <th className="px-4 py-3 text-left">Stage</th>
                     <th className="px-4 py-3 text-left">Attendance</th>
                     <th className="px-4 py-3" />
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border bg-card">
-                  {cellMemberList.map((m) => (
+                  {cellMembers.map((m) => (
                     <tr key={m.id} className="hover:bg-secondary/40">
-                      <td className="px-4 py-3">
-                        <Link
-                          to="/dashboard/members/$id"
-                          params={{ id: m.id }}
-                          className="flex items-center gap-3 group hover:opacity-80 transition"
-                        >
-                          <Avatar className="h-8 w-8 ring-1 ring-gold/30">
-                            <AvatarFallback className="bg-primary/10 text-primary font-medium">
-                              {m.name[0]}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span className="font-semibold group-hover:text-primary group-hover:underline transition">
-                            {m.name}
-                          </span>
+                      <td className="px-4 py-3 font-semibold">
+                        <Link to="/dashboard/members/$id" params={{ id: m.id }} className="hover:underline">
+                          {m.name}
                         </Link>
                       </td>
                       <td className="px-4 py-3">
-                        <Badge variant="outline">{m.stage}</Badge>
+                        <Badge variant="outline">{m.role}</Badge>
                       </td>
-                      <td className="px-4 py-3 font-semibold text-primary">{m.attendance}%</td>
+                      <td className="px-4 py-3 text-muted-foreground">{m.stage}</td>
+                      <td className="px-4 py-3 font-semibold text-primary">{m.attendance || 85}%</td>
                       <td className="px-4 py-3 text-right">
-                        <Button size="sm" variant="ghost" onClick={() => markPresent(m.id, m.name)}>
-                          <CheckCircle2 className="mr-1 h-4 w-4" />
-                          Mark
+                        <Button size="sm" variant="ghost" asChild>
+                          <Link to="/dashboard/members/$id" params={{ id: m.id }}>
+                            Profile
+                          </Link>
                         </Button>
                       </td>
                     </tr>
                   ))}
+                  {cellMembers.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="py-8 text-center text-sm text-muted-foreground">
+                        No members assigned to this cell yet.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -196,19 +193,17 @@ function CellsPage() {
                   <tr>
                     <th className="px-4 py-3 text-left">Date</th>
                     <th className="px-4 py-3 text-left">Present</th>
-                    <th className="px-4 py-3 text-left">Absent</th>
                     <th className="px-4 py-3 text-left">Rate</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border bg-card">
-                  {["2026-05-15", "2026-05-08", "2026-05-01", "2026-04-24"].map((d, i) => (
+                  {["2026-05-15", "2026-05-08", "2026-05-01"].map((d, i) => (
                     <tr key={d}>
                       <td className="px-4 py-3">{new Date(d).toLocaleDateString()}</td>
-                      <td className="px-4 py-3">{18 + i}</td>
-                      <td className="px-4 py-3">{4 - i}</td>
+                      <td className="px-4 py-3">{18 - i}</td>
                       <td className="px-4 py-3">
                         <Badge className="bg-success/15 text-success border-success/30">
-                          {82 + i}%
+                          {88 - i * 2}%
                         </Badge>
                       </td>
                     </tr>
@@ -219,34 +214,14 @@ function CellsPage() {
           </SectionCard>
         </TabsContent>
 
-        <TabsContent value="engagement" className="mt-4">
-          <div className="grid gap-4 sm:grid-cols-3">
-            <StatCard
-              label="Active members"
-              value={Math.round(activeCell.members * 0.86)}
-              icon={Users}
-              accent="primary"
-            />
-            <StatCard label="New invitees" value={3} icon={Users} change={2} accent="gold" />
-            <StatCard
-              label="Avg engagement"
-              value="74%"
-              icon={TrendingUp}
-              change={3.1}
-              accent="success"
-            />
-          </div>
-        </TabsContent>
-
         <TabsContent value="meetings" className="mt-4">
           <SectionCard
-            title="Schedule"
+            title="Cell Meetings Schedule"
             action={
               <NewMeetingDialog
                 cellId={activeCell.id}
                 cellName={activeCell.name}
-                memberCount={activeCell.members}
-                onAdded={(m) => setMeetings((prev) => [m, ...prev])}
+                memberCount={cellMembers.length || 10}
               />
             }
           >
@@ -261,19 +236,9 @@ function CellsPage() {
                         {new Date(m.date).toLocaleDateString()} · {m.time} · {m.location}
                       </p>
                     </div>
-                    <Badge className="bg-gold-soft text-primary border-gold/30">New Meeting</Badge>
+                    <Badge className="bg-gold-soft text-primary border-gold/30">Meeting</Badge>
                   </li>
                 ))}
-              {[
-                "Fri May 22 · 7:00 PM · Bible Study",
-                "Fri May 29 · 7:00 PM · Outreach Planning",
-                "Fri Jun 5 · 7:00 PM · Worship Night",
-              ].map((m) => (
-                <li key={m} className="py-3 flex items-center justify-between">
-                  <span className="text-sm">{m}</span>
-                  <Badge variant="outline">Upcoming</Badge>
-                </li>
-              ))}
             </ul>
           </SectionCard>
         </TabsContent>
@@ -281,11 +246,86 @@ function CellsPage() {
         <TabsContent value="reports" className="mt-4">
           <ReportComparison
             label="Cells"
-            entities={cellGroups.map((c) => ({ id: c.id, name: `${c.name} · ${c.branch}` }))}
+            entities={branchCells.map((c) => ({ id: c.id, name: `${c.name} · ${c.branch}` }))}
           />
         </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+function CreateCellDialog({ branchName, membersList }: { branchName: string; membersList: any[] }) {
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [leaderId, setLeaderId] = useState("");
+
+  const candidateLeaders = membersList.filter((m) => m.branch === branchName);
+
+  const submit = () => {
+    if (!name.trim()) {
+      toast.error("Cell name is required");
+      return;
+    }
+
+    const leaderMember = membersList.find((m) => m.id === leaderId);
+
+    const newCell: CellGroup = {
+      id: `c${Date.now()}`,
+      name: name.trim(),
+      branch: branchName,
+      leader: leaderMember ? leaderMember.name : "Unassigned Leader",
+      leaderId: leaderId || undefined,
+      members: leaderId ? [leaderId] : [],
+      status: "active",
+      attendance: 100,
+      growth: 0,
+    };
+
+    addCell(newCell);
+    toast.success(`Cell Group '${name}' created for ${branchName}`);
+    setOpen(false);
+    setName("");
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button className="bg-gradient-royal text-primary-foreground shadow-elegant">
+          <Plus className="mr-1 h-4 w-4" />
+          Create Cell Group
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Create Cell Group — {branchName}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3 py-2">
+          <div className="space-y-1.5">
+            <Label>Cell Name *</Label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Cell C-3" />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Assign Cell Leader</Label>
+            <Select value={leaderId} onValueChange={setLeaderId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select leader from branch..." />
+              </SelectTrigger>
+              <SelectContent className="max-h-56">
+                {candidateLeaders.map((m) => (
+                  <SelectItem key={m.id} value={m.id}>
+                    {m.name} ({m.role})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+          <Button className="bg-gradient-royal text-primary-foreground" onClick={submit}>Create Cell</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 

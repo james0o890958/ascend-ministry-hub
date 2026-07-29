@@ -22,20 +22,21 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Sparkles, Plus, Phone, Mail, MapPin, Search } from "lucide-react";
+import { Sparkles, Plus, Phone, Mail, MapPin, Search, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { addSoulToStore, getSouls, type Soul, type SoulStage as Stage } from "@/lib/souls";
+import { useCurrentChurch } from "@/lib/current-church";
 
 export const Route = createFileRoute("/dashboard/groups/")({ component: SoulsPage });
 
-const stages: Stage[] = ["Contacted", "Visited", "Following Up", "Converted", "Discipled"];
+// Fixed 4-stage pipeline according to Soul Tracer spec
+const stages: Stage[] = ["Contacted", "Visited", "Following Up", "Converted"];
 
 const stageColor: Record<Stage, string> = {
   Contacted: "bg-secondary text-foreground",
   Visited: "bg-primary/10 text-primary border-primary/20",
   "Following Up": "bg-gold-soft text-primary border-gold/30",
   Converted: "bg-success/15 text-success border-success/30",
-  Discipled: "bg-gradient-royal text-primary-foreground border-transparent",
 };
 
 function SoulsPage() {
@@ -43,6 +44,9 @@ function SoulsPage() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Stage | "All">("All");
+  const [showArchived, setShowArchived] = useState(false);
+  const { current } = useCurrentChurch();
+
   type FormState = Pick<
     Soul,
     "name" | "phone" | "email" | "location" | "stage" | "invitedBy" | "notes"
@@ -63,7 +67,8 @@ function SoulsPage() {
       s.name.toLowerCase().includes(query.toLowerCase()) ||
       s.invitedBy.toLowerCase().includes(query.toLowerCase());
     const matchF = filter === "All" || s.stage === filter;
-    return matchQ && matchF;
+    const matchArchived = showArchived ? true : s.status !== "archived" && s.stage !== "Converted";
+    return matchQ && matchF && matchArchived;
   });
 
   const addSoul = () => {
@@ -74,6 +79,8 @@ function SoulsPage() {
     const next: Soul = {
       ...form,
       id: `s${Date.now()}`,
+      status: "active",
+      branch: current.name,
       date: new Date().toISOString().slice(0, 10),
       mentor: "Unassigned",
       badges: [],
@@ -83,7 +90,8 @@ function SoulsPage() {
       noteLog: [],
       growth: { discipleship: 0, bibleStudy: 0, churchInvolvement: 0, followUpCompletion: 0 },
     };
-    setSouls(addSoulToStore(next));
+    addSoulToStore(next);
+    setSouls(getSouls());
     setForm(emptyForm);
     setOpen(false);
     toast.success(`${next.name} added to souls`);
@@ -93,11 +101,11 @@ function SoulsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Souls"
-        subtitle="Track every soul reached, invited and discipled"
+        subtitle="Track every soul reached, invited, and followed up across Christ Embassy"
         action={
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-gradient-royal text-primary-foreground">
+              <Button className="bg-gradient-royal text-primary-foreground shadow-elegant">
                 <Plus className="mr-1 h-4 w-4" />
                 Add soul
               </Button>
@@ -139,6 +147,7 @@ function SoulsPage() {
                     <Input
                       value={form.location}
                       onChange={(e) => setForm({ ...form, location: e.target.value })}
+                      placeholder="e.g. Lagos, Nigeria"
                     />
                   </div>
                   <div className="grid gap-2">
@@ -146,11 +155,12 @@ function SoulsPage() {
                     <Input
                       value={form.invitedBy}
                       onChange={(e) => setForm({ ...form, invitedBy: e.target.value })}
+                      placeholder="Inviter name"
                     />
                   </div>
                 </div>
                 <div className="grid gap-2">
-                  <Label>Stage</Label>
+                  <Label>Pipeline Stage (4 Stages)</Label>
                   <Select
                     value={form.stage}
                     onValueChange={(v) => setForm({ ...form, stage: v as Stage })}
@@ -168,11 +178,12 @@ function SoulsPage() {
                   </Select>
                 </div>
                 <div className="grid gap-2">
-                  <Label>Notes</Label>
+                  <Label>Initial Notes</Label>
                   <Textarea
-                    value={form.notes}
+                    value={form.notes ?? ""}
                     onChange={(e) => setForm({ ...form, notes: e.target.value })}
                     rows={3}
+                    placeholder="How they were reached, prayer points..."
                   />
                 </div>
               </div>
@@ -190,51 +201,61 @@ function SoulsPage() {
       />
 
       <div className="grid gap-4 sm:grid-cols-4">
-        <StatCard label="Total souls" value={souls.length} icon={Sparkles} accent="primary" />
+        <StatCard label="Total active souls" value={souls.filter(s => s.status !== "archived" && s.stage !== "Converted").length} icon={Sparkles} accent="primary" />
+        <StatCard
+          label="Contacted & Visited"
+          value={souls.filter((s) => (s.stage === "Contacted" || s.stage === "Visited") && s.status !== "archived").length}
+          icon={Sparkles}
+          accent="primary"
+        />
         <StatCard
           label="Following up"
-          value={souls.filter((s) => s.stage === "Following Up").length}
+          value={souls.filter((s) => s.stage === "Following Up" && s.status !== "archived").length}
           icon={Sparkles}
           accent="gold"
         />
         <StatCard
-          label="Converted"
+          label="Converted to Members"
           value={souls.filter((s) => s.stage === "Converted").length}
-          icon={Sparkles}
+          icon={CheckCircle2}
           accent="success"
-        />
-        <StatCard
-          label="Discipled"
-          value={souls.filter((s) => s.stage === "Discipled").length}
-          icon={Sparkles}
-          accent="primary"
         />
       </div>
 
-      <SectionCard title="All souls">
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              className="pl-9"
-              placeholder="Search by name or inviter…"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-            />
+      <SectionCard title="Soul Pipeline">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center justify-between">
+          <div className="flex flex-1 items-center gap-3">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                className="pl-9"
+                placeholder="Search by name or inviter…"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+            </div>
+            <Select value={filter} onValueChange={(v) => setFilter(v as Stage | "All")}>
+              <SelectTrigger className="sm:w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">All stages</SelectItem>
+                {stages.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {s}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-          <Select value={filter} onValueChange={(v) => setFilter(v as Stage | "All")}>
-            <SelectTrigger className="sm:w-48">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="All">All stages</SelectItem>
-              {stages.map((s) => (
-                <SelectItem key={s} value={s}>
-                  {s}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Button
+            variant={showArchived ? "secondary" : "outline"}
+            size="sm"
+            onClick={() => setShowArchived((v) => !v)}
+            className="text-xs"
+          >
+            {showArchived ? "Hide Converted Souls" : "Show Converted Souls"}
+          </Button>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -262,7 +283,7 @@ function SoulsPage() {
                     <p className="text-xs text-muted-foreground">Invited by {s.invitedBy || "—"}</p>
                   </div>
                 </Link>
-                <Badge variant="outline" className={stageColor[s.stage]}>
+                <Badge variant="outline" className={stageColor[s.stage] || "bg-secondary"}>
                   {s.stage}
                 </Badge>
               </div>
@@ -287,7 +308,7 @@ function SoulsPage() {
               <div className="mt-4">
                 <Button asChild size="sm" variant="outline" className="w-full">
                   <Link to="/dashboard/groups/$id" params={{ id: s.id }}>
-                    View Profile
+                    View Profile &amp; Follow Up
                   </Link>
                 </Button>
               </div>

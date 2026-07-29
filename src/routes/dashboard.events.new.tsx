@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, CalendarDays } from "lucide-react";
+import { ArrowLeft, CalendarDays, Globe, Building2 } from "lucide-react";
 import { PageHeader, SectionCard } from "@/components/dashboard/ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,35 +14,43 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { branches, type ChurchEvent } from "@/lib/data";
-import { addEvent } from "@/lib/events-store";
+import { addEvent } from "@/lib/stores/events-store";
+import { getBranches } from "@/lib/stores/branches-store";
 import { addNotification } from "@/lib/notifications-store";
 import { useRole } from "@/lib/role";
+import { useCurrentChurch } from "@/lib/current-church";
+import { canCreateGlobalEvent, canCreateBranchEvent } from "@/lib/permissions";
+import { EventScope, ChurchEvent } from "@/types/domain";
 
 export const Route = createFileRoute("/dashboard/events/new")({ component: NewEventPage });
 
 const TYPES: ChurchEvent["type"][] = ["Service", "Midweek", "Cell", "Crusade", "Training"];
 
 function NewEventPage() {
-  const { role } = useRole();
+  const { role, userId } = useRole();
+  const { current } = useCurrentChurch();
   const navigate = useNavigate();
-  const canModify = role === "Admin" || role === "Pastor";
 
+  const canCreateGlobal = canCreateGlobalEvent(role);
+  const canCreateBranch = canCreateBranchEvent(role, current.name, current.name);
+
+  const [scope, setScope] = useState<EventScope>(canCreateGlobal ? "global" : "branch");
   const [name, setName] = useState("");
   const [type, setType] = useState<ChurchEvent["type"]>("Service");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("10:00");
   const [location, setLocation] = useState("");
-  const [branch, setBranch] = useState(branches[0].name);
+  const [branch, setBranch] = useState(current.name);
   const [capacity, setCapacity] = useState("100");
   const [description, setDescription] = useState("");
-  const [organizer, setOrganizer] = useState("");
 
-  if (!canModify) {
+  const branchesList = getBranches();
+
+  if (!canCreateGlobal && !canCreateBranch) {
     return (
       <SectionCard title="Restricted">
         <p className="text-sm text-muted-foreground">
-          Only Admins and Pastors can create main church events.
+          Only Admins, Branch Admins, and Pastors can create events.
         </p>
       </SectionCard>
     );
@@ -53,16 +61,26 @@ function NewEventPage() {
       toast.error("Event name and date are required");
       return;
     }
-    const rec = addEvent({ name, type, date, branch, capacity: Number(capacity) || 100 });
+    const rec: ChurchEvent = {
+      id: `e${Date.now()}`,
+      name,
+      type,
+      date,
+      scope,
+      branch: scope === "global" ? null : branch,
+      createdBy: userId,
+      capacity: Number(capacity) || 100,
+      attendees: 0,
+      description,
+    };
+    addEvent(rec);
     addNotification({
-      title: `New Church Event: ${name}`,
-      desc: `${new Date(date).toLocaleDateString()} at ${time} · ${branch}`,
+      title: `New Event Created (${scope.toUpperCase()}): ${name}`,
+      desc: `${new Date(date).toLocaleDateString()} at ${time}`,
       time: "Just now",
     });
     toast.success(`Event "${rec.name}" created`, {
-      description: location
-        ? `${new Date(date).toLocaleDateString()} · ${time} · ${location}`
-        : undefined,
+      description: `${new Date(date).toLocaleDateString()} · Scope: ${scope}`,
     });
     navigate({ to: "/dashboard/events" });
   }
@@ -77,18 +95,44 @@ function NewEventPage() {
       </Button>
 
       <PageHeader
-        title="New event"
-        subtitle="Fill in the event details. It will appear on the events list once created."
+        title="New Event"
+        subtitle="Create a global ministry-wide event or local branch event"
       />
 
       <SectionCard title="Event details">
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-1.5 md:col-span-2">
-            <Label>Event name</Label>
+            <Label>Event Scope</Label>
+            <div className="flex gap-4 pt-1">
+              {canCreateGlobal && (
+                <Button
+                  type="button"
+                  variant={scope === "global" ? "default" : "outline"}
+                  className={scope === "global" ? "bg-gradient-royal text-primary-foreground" : ""}
+                  onClick={() => setScope("global")}
+                >
+                  <Globe className="h-4 w-4 mr-1.5" />
+                  Global (Ministry-wide)
+                </Button>
+              )}
+              <Button
+                type="button"
+                variant={scope === "branch" ? "default" : "outline"}
+                className={scope === "branch" ? "bg-gradient-royal text-primary-foreground" : ""}
+                onClick={() => setScope("branch")}
+              >
+                <Building2 className="h-4 w-4 mr-1.5" />
+                Branch Local ({current.name})
+              </Button>
+            </div>
+          </div>
+
+          <div className="space-y-1.5 md:col-span-2">
+            <Label>Event Name *</Label>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Sunday Service, Healing Crusade…"
+              placeholder="Sunday Service, Healing Streams, Youth Night…"
             />
           </div>
 
@@ -108,24 +152,26 @@ function NewEventPage() {
             </Select>
           </div>
 
-          <div className="space-y-1.5">
-            <Label>Church / branch</Label>
-            <Select value={branch} onValueChange={setBranch}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {branches.map((b) => (
-                  <SelectItem key={b.id} value={b.name}>
-                    {b.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {scope === "branch" && (
+            <div className="space-y-1.5">
+              <Label>Branch</Label>
+              <Select value={branch} onValueChange={setBranch}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {branchesList.map((b) => (
+                    <SelectItem key={b.id} value={b.name}>
+                      {b.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div className="space-y-1.5">
-            <Label>Date</Label>
+            <Label>Date *</Label>
             <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
           </div>
 
@@ -135,11 +181,11 @@ function NewEventPage() {
           </div>
 
           <div className="space-y-1.5 md:col-span-2">
-            <Label>Location</Label>
+            <Label>Location / Venue</Label>
             <Input
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              placeholder="Auditorium, address, or link"
+              placeholder="Auditorium, online stream URL, address..."
             />
           </div>
 
@@ -153,22 +199,13 @@ function NewEventPage() {
             />
           </div>
 
-          <div className="space-y-1.5">
-            <Label>Organizer / Host</Label>
-            <Input
-              value={organizer}
-              onChange={(e) => setOrganizer(e.target.value)}
-              placeholder="Pastor / Team"
-            />
-          </div>
-
           <div className="space-y-1.5 md:col-span-2">
             <Label>Description</Label>
             <Textarea
               rows={4}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="What's this event about? Agenda, speakers, notes…"
+              placeholder="Agenda, speakers, registration instructions…"
             />
           </div>
         </div>
@@ -179,7 +216,7 @@ function NewEventPage() {
           </Button>
           <Button className="bg-gradient-royal text-primary-foreground" onClick={submit}>
             <CalendarDays className="mr-1 h-4 w-4" />
-            Create event
+            Create Event
           </Button>
         </div>
       </SectionCard>

@@ -22,6 +22,8 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Shield,
+  Lock,
+  Building2,
 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { Input } from "@/components/ui/input";
@@ -44,6 +46,8 @@ import { getNotifications, subscribeNotifications } from "@/lib/notifications-st
 import { getMembers, subscribeMembers } from "@/lib/members-store";
 import { getSouls } from "@/lib/souls";
 import { useRole, ROLES, Role } from "@/lib/role";
+import { useCurrentChurch } from "@/lib/current-church";
+import { canSwitchBranch } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
 
 type NavItem = {
@@ -56,12 +60,12 @@ type NavItem = {
 
 const nav: NavItem[] = [
   { to: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true },
-  { to: "/dashboard/church", label: "Church Ministry", icon: Church, roles: ["Admin", "Pastor"] },
+  { to: "/dashboard/church", label: "Church Ministry", icon: Church, roles: ["Admin", "Branch Admin", "Pastor"] },
   {
     to: "/dashboard/cells",
     label: "Cell Ministry",
     icon: HeartHandshake,
-    roles: ["Admin", "Pastor", "Cell Leader"],
+    roles: ["Admin", "Branch Admin", "Pastor", "PCF Leader", "Cell Leader"],
   },
   { to: "/dashboard/groups", label: "Souls", icon: Sparkles },
   { to: "/dashboard/events", label: "Events", icon: CalendarDays },
@@ -73,7 +77,7 @@ const nav: NavItem[] = [
     to: "/dashboard/reports",
     label: "Reports",
     icon: BarChart3,
-    roles: ["Admin", "Pastor", "Cell Leader"],
+    roles: ["Admin", "Branch Admin", "Pastor", "PCF Leader", "Cell Leader"],
   },
   { to: "/dashboard/admins", label: "Administrators", icon: Shield, roles: ["Admin"] },
 ];
@@ -86,6 +90,7 @@ export function DashboardShell({ children }: { children?: ReactNode }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const { role, setRole } = useRole();
+  const { current, setCurrentChurchId, branchesList } = useCurrentChurch();
 
   const notifications = useSyncExternalStore(
     subscribeNotifications,
@@ -93,6 +98,8 @@ export function DashboardShell({ children }: { children?: ReactNode }) {
     getNotifications,
   );
   const membersList = useSyncExternalStore(subscribeMembers, getMembers, getMembers);
+
+  const isBranchSwitchAllowed = canSwitchBranch(role);
 
   const isActive = (to: string, exact?: boolean) =>
     exact ? path === to : path === to || path.startsWith(to + "/");
@@ -169,7 +176,7 @@ export function DashboardShell({ children }: { children?: ReactNode }) {
               collapsed ? "opacity-0 group-hover/sidebar:opacity-100" : "opacity-100",
             )}
           >
-            Ministry
+            Christ Embassy
           </p>
           {visible.map((item) => {
             const active = isActive(item.to, item.exact);
@@ -236,6 +243,50 @@ export function DashboardShell({ children }: { children?: ReactNode }) {
             >
               <Menu className="h-5 w-5" />
             </button>
+
+            {/* Topbar Branch Switcher */}
+            <div className="flex items-center gap-2">
+              {isBranchSwitchAllowed ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="flex items-center gap-2 rounded-lg border border-white/15 bg-white/10 px-3 py-1.5 text-xs text-white hover:bg-white/20 transition">
+                      <Building2 className="h-4 w-4 text-gold" />
+                      <span className="font-medium max-w-[140px] truncate">{current.name}</span>
+                      <ChevronDown className="h-3.5 w-3.5 text-white/60" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-56">
+                    <DropdownMenuLabel className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                      Switch Branch (Admin)
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {branchesList.map((b) => (
+                      <DropdownMenuItem
+                        key={b.id}
+                        onClick={() => setCurrentChurchId(b.id)}
+                        className={cn(
+                          "cursor-pointer text-xs flex items-center justify-between",
+                          b.id === current.id && "font-bold text-gold"
+                        )}
+                      >
+                        <span>{b.name}</span>
+                        {b.country && <span className="text-[10px] text-muted-foreground">{b.country}</span>}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <div
+                  title="Branch locked to your assigned branch"
+                  className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/80 cursor-not-allowed"
+                >
+                  <Building2 className="h-4 w-4 text-gold/80" />
+                  <span className="font-medium max-w-[140px] truncate">{current.name}</span>
+                  <Lock className="h-3 w-3 text-white/40 ml-1" />
+                </div>
+              )}
+            </div>
+
             <div className="relative hidden max-w-md flex-1 sm:block">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/60" />
               <Input
@@ -276,6 +327,7 @@ export function DashboardShell({ children }: { children?: ReactNode }) {
                 </div>
               )}
             </div>
+
             <div className="ml-auto flex items-center gap-2">
               <Popover>
                 <PopoverTrigger asChild>
@@ -357,7 +409,7 @@ export function DashboardShell({ children }: { children?: ReactNode }) {
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                    View as
+                    View as (Dev Switcher)
                   </DropdownMenuLabel>
                   <DropdownMenuRadioGroup value={role} onValueChange={(v) => setRole(v as Role)}>
                     {ROLES.map((r) => (

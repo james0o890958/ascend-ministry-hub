@@ -23,12 +23,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { branches, cellGroups, myLedCells, STAGES } from "@/lib/data";
+import { branches, STAGES } from "@/lib/data";
 import { getMembers, addMember, importMembers, subscribeMembers } from "@/lib/members-store";
+import { getCells, subscribeCells } from "@/lib/stores/cells-store";
 import { useCurrentChurch } from "@/lib/current-church";
 import { useRole } from "@/lib/role";
 import { toast } from "sonner";
-import { type Member, type Stage } from "@/lib/data";
+import { Member } from "@/types/domain";
 
 export const Route = createFileRoute("/dashboard/members/")({ component: MembersPage });
 
@@ -38,6 +39,8 @@ function MembersPage() {
   const { currentChurchId } = useCurrentChurch();
   const currentChurch = branches.find((b) => b.id === currentChurchId) ?? branches[0];
   const memberList = useSyncExternalStore(subscribeMembers, getMembers, getMembers);
+  const cellsList = useSyncExternalStore(subscribeCells, getCells, getCells);
+  const visibleCells = cellsList;
 
   const [q, setQ] = useState("");
   const [position, setPosition] = useState<string>("all");
@@ -60,10 +63,6 @@ function MembersPage() {
       }),
     [memberList, q, position, church, cell, currentChurchId, currentChurch],
   );
-
-  const handleAddMember = (m: Member) => {
-    setMemberList((prev) => [m, ...prev]);
-  };
 
   return (
     <div className="space-y-6">
@@ -232,9 +231,10 @@ function AddMemberDialog({ onAdded }: { onAdded: (m: Member) => void }) {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [stage, setStage] = useState<Stage>("First Timer");
+  const [stage, setStage] = useState<string>("First Timer");
   const [branch, setBranch] = useState(branches[0].name);
-  const [cell, setCell] = useState(cellGroups[0].name);
+  const cells = getCells();
+  const [cell, setCell] = useState(cells[0]?.name || "Unassigned");
 
   function submit() {
     if (!firstName.trim() || !lastName.trim()) {
@@ -248,7 +248,9 @@ function AddMemberDialog({ onAdded }: { onAdded: (m: Member) => void }) {
       email: email.trim() || `${firstName.toLowerCase()}.${lastName.toLowerCase()}@ministry.org`,
       phone: phone.trim() || "+234 800 000 0000",
       branch,
+      role: "Member",
       stage,
+      milestones: [],
       joinedAt: new Date().toISOString(),
       mentor: "Unassigned",
       attendance: 100,
@@ -319,7 +321,7 @@ function AddMemberDialog({ onAdded }: { onAdded: (m: Member) => void }) {
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label>Position</Label>
-              <Select value={stage} onValueChange={(v) => setStage(v as Stage)}>
+              <Select value={stage} onValueChange={(v) => setStage(v)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -354,7 +356,7 @@ function AddMemberDialog({ onAdded }: { onAdded: (m: Member) => void }) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {cellGroups.map((c) => (
+                  {cells.map((c) => (
                     <SelectItem key={c.id} value={c.name}>
                       {c.name}
                     </SelectItem>
@@ -387,6 +389,7 @@ function ImportMembersDialog({ onImported }: { onImported: (members: Member[]) =
   }
 
   function handleImport() {
+    const cells = getCells();
     const sampleImported: Member[] = [
       {
         id: `m_imp_${Date.now()}_1`,
@@ -394,11 +397,13 @@ function ImportMembersDialog({ onImported }: { onImported: (members: Member[]) =
         email: "emmanuel.c@ministry.org",
         phone: "+234 803 555 1212",
         branch: branches[0].name,
+        role: "Member",
         stage: "First Timer",
+        milestones: [],
         joinedAt: new Date().toISOString(),
         mentor: "Pst. Daniel Okafor",
         attendance: 100,
-        cell: cellGroups[0].name,
+        cell: cells[0]?.name || "Cell A-1",
         avatar: "https://i.pravatar.cc/120?img=60",
         status: "active",
       },
@@ -408,11 +413,13 @@ function ImportMembersDialog({ onImported }: { onImported: (members: Member[]) =
         email: "mercy.o@ministry.org",
         phone: "+234 805 777 3434",
         branch: branches[0].name,
+        role: "Member",
         stage: "Invitee",
+        milestones: [],
         joinedAt: new Date().toISOString(),
         mentor: "Grace Adeyemi",
         attendance: 80,
-        cell: cellGroups[1].name,
+        cell: cells[1]?.name || "Cell B-2",
         avatar: "https://i.pravatar.cc/120?img=44",
         status: "active",
       },

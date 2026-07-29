@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { useEffect, useState, useRef } from "react";
+import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import {
   ArrowLeft,
   Mail,
@@ -16,7 +16,6 @@ import {
   Flag,
   Repeat,
   Plus,
-  X,
   CheckCircle2,
   Clock,
   BookOpen,
@@ -24,6 +23,8 @@ import {
   MessageSquare,
   Activity,
   Star,
+  Copy,
+  Key,
 } from "lucide-react";
 import { SectionCard } from "@/components/dashboard/ui";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -49,6 +50,7 @@ import {
   addSoulNote,
   addSoulPrayer,
   addSoulMilestone,
+  convertSoulToMember,
   type Soul,
   type SoulBadge,
   type SoulFollowUp,
@@ -57,8 +59,9 @@ import {
   type SoulPrayer,
   type SoulNote,
 } from "@/lib/souls";
-import { type Stage } from "@/lib/data";
-import { addMember } from "@/lib/members-store";
+import { useRole } from "@/lib/role";
+import { canSetHigherStartingStage } from "@/lib/permissions";
+import { useCurrentChurch } from "@/lib/current-church";
 import { addNotification } from "@/lib/notifications-store";
 import {
   Select,
@@ -69,7 +72,6 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { useNavigate } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/dashboard/groups/$id")({
   loader: ({ params }) => {
@@ -100,7 +102,6 @@ const stageColor: Record<string, string> = {
   Visited: "bg-primary/10 text-primary border-primary/20",
   "Following Up": "bg-gold-soft text-primary border-gold/30",
   Converted: "bg-success/15 text-success border-success/30",
-  Discipled: "bg-gradient-royal text-primary-foreground border-transparent",
 };
 
 function SoulProfile() {
@@ -109,7 +110,6 @@ function SoulProfile() {
   const [activeSection, setActiveSection] = useState("overview");
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
 
-  // Scroll spy
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -175,6 +175,11 @@ function SoulProfile() {
                   >
                     {soul.stage}
                   </Badge>
+                  {soul.convertedMemberId && (
+                    <Badge variant="secondary" className="bg-success/20 text-success font-medium">
+                      Converted Member
+                    </Badge>
+                  )}
                 </div>
                 <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-muted-foreground">
                   <span className="inline-flex items-center gap-1.5 bg-secondary/60 px-2.5 py-1 rounded-md border border-border/40">
@@ -203,15 +208,15 @@ function SoulProfile() {
               />
               <AddNoteDialog
                 soul={soul}
-                onAdded={(n) => setSoul((s) => ({ ...s, noteLog: [n, ...s.noteLog] }))}
+                onAdded={(n) => setSoul((s) => ({ ...s, noteLog: [n, ...(s.noteLog || [])] }))}
               />
               <AddPrayerDialog
                 soul={soul}
-                onAdded={(p) => setSoul((s) => ({ ...s, prayers: [p, ...s.prayers] }))}
+                onAdded={(p) => setSoul((s) => ({ ...s, prayers: [p, ...(s.prayers || [])] }))}
               />
               <FollowUpDialog
                 soul={soul}
-                onAdded={(f) => setSoul((s) => ({ ...s, followUps: [f, ...s.followUps] }))}
+                onAdded={(f) => setSoul((s) => ({ ...s, followUps: [f, ...(s.followUps || [])] }))}
               />
               <AssignLeaderDialog
                 soul={soul}
@@ -219,24 +224,26 @@ function SoulProfile() {
               />
               <RecordMilestoneDialog
                 soul={soul}
-                onAdded={(m) => setSoul((s) => ({ ...s, milestones: [m, ...s.milestones] }))}
+                onAdded={(m) => setSoul((s) => ({ ...s, milestones: [m, ...(s.milestones || [])] }))}
               />
-              <ConvertToUserDialog
-                soul={soul}
-                onConverted={(patch) => setSoul((s) => ({ ...s, ...patch }))}
-              />
+              {soul.stage !== "Converted" && (
+                <ConvertToUserDialog
+                  soul={soul}
+                  onConverted={(patch) => setSoul((s) => ({ ...s, ...patch }))}
+                />
+              )}
             </div>
           </div>
 
           {/* Quick stats + badges */}
           <div className="mt-6 grid gap-4 lg:grid-cols-[1.2fr_1fr]">
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <MiniStat label="Milestones" value={soul.milestones.length} icon={Flag} />
-              <MiniStat label="Prayers" value={soul.prayers.length} icon={Heart} />
-              <MiniStat label="Follow-ups" value={soul.followUps.length} icon={Activity} />
+              <MiniStat label="Milestones" value={soul.milestones?.length || 0} icon={Flag} />
+              <MiniStat label="Prayers" value={soul.prayers?.length || 0} icon={Heart} />
+              <MiniStat label="Follow-ups" value={soul.followUps?.length || 0} icon={Activity} />
               <MiniStat
                 label="Growth"
-                value={`${Math.round((soul.growth.discipleship + soul.growth.bibleStudy + soul.growth.churchInvolvement + soul.growth.followUpCompletion) / 4)}%`}
+                value={`${Math.round(((soul.growth?.discipleship || 0) + (soul.growth?.bibleStudy || 0) + (soul.growth?.churchInvolvement || 0) + (soul.growth?.followUpCompletion || 0)) / 4)}%`}
                 icon={Star}
               />
             </div>
@@ -246,15 +253,15 @@ function SoulProfile() {
                   <Award className="h-4 w-4 text-gold" />
                   Spiritual badges
                 </p>
-                <BadgeManager badges={soul.badges} onToggle={toggleBadge} />
+                <BadgeManager badges={soul.badges || []} onToggle={toggleBadge} />
               </div>
               <div className="flex flex-wrap gap-2">
-                {soul.badges.length === 0 && (
+                {(!soul.badges || soul.badges.length === 0) && (
                   <span className="text-xs text-muted-foreground">
                     No badges yet — add one to mark spiritual milestones.
                   </span>
                 )}
-                {soul.badges.map((b) => (
+                {soul.badges?.map((b) => (
                   <Badge
                     key={b}
                     className="bg-gradient-gold text-gold-foreground border-transparent gap-1"
@@ -331,7 +338,7 @@ function SoulProfile() {
                 Recent activity
               </h4>
               <ul className="space-y-2 text-sm">
-                {[...soul.followUps].slice(0, 3).map((f) => (
+                {(soul.followUps || []).slice(0, 3).map((f) => (
                   <li key={f.id} className="flex items-start gap-2 rounded-lg bg-secondary/30 p-3">
                     <Activity className="mt-0.5 h-4 w-4 text-gold" />
                     <div>
@@ -360,7 +367,7 @@ function SoulProfile() {
       >
         <SectionCard title="Spiritual Journey">
           <ol className="relative space-y-6 border-l-2 border-border pl-6">
-            {soul.milestones.map((m, i) => (
+            {(soul.milestones || []).map((m, i) => (
               <li key={i} className="relative">
                 <span className="absolute -left-[33px] grid h-6 w-6 place-items-center rounded-full bg-gradient-royal text-primary-foreground ring-4 ring-background">
                   <Flag className="h-3 w-3" />
@@ -396,7 +403,7 @@ function SoulProfile() {
       >
         <SectionCard title="Prayer Requests">
           <div className="grid gap-3 sm:grid-cols-2">
-            {soul.prayers.map((p) => (
+            {(soul.prayers || []).map((p) => (
               <div
                 key={p.id}
                 className={cn(
@@ -443,7 +450,7 @@ function SoulProfile() {
       >
         <SectionCard title="Follow-Up History">
           <ul className="divide-y divide-border">
-            {soul.followUps.map((f) => (
+            {(soul.followUps || []).map((f) => (
               <li key={f.id} className="flex items-start gap-3 py-3">
                 <span className="grid h-9 w-9 place-items-center rounded-lg bg-gradient-gold text-gold-foreground">
                   {f.type === "Call" && <Phone className="h-4 w-4" />}
@@ -478,7 +485,7 @@ function SoulProfile() {
       >
         <SectionCard title="Notes">
           <div className="space-y-3">
-            {soul.noteLog.map((n) => (
+            {(soul.noteLog || []).map((n) => (
               <div key={n.id} className="rounded-xl border border-border bg-secondary/30 p-4">
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span className="font-semibold text-foreground">{n.by}</span>
@@ -501,35 +508,22 @@ function SoulProfile() {
       >
         <SectionCard title="Growth Tracker">
           <div className="grid gap-4 sm:grid-cols-2">
-            <GrowthBar label="Discipleship" value={soul.growth.discipleship} icon={BookOpen} />
-            <GrowthBar label="Bible Study" value={soul.growth.bibleStudy} icon={BookOpen} />
+            <GrowthBar label="Discipleship" value={soul.growth?.discipleship || 0} icon={BookOpen} />
+            <GrowthBar label="Bible Study" value={soul.growth?.bibleStudy || 0} icon={BookOpen} />
             <GrowthBar
               label="Church Involvement"
-              value={soul.growth.churchInvolvement}
+              value={soul.growth?.churchInvolvement || 0}
               icon={Users}
             />
             <GrowthBar
               label="Follow-up Completion"
-              value={soul.growth.followUpCompletion}
+              value={soul.growth?.followUpCompletion || 0}
               icon={CheckCircle2}
             />
           </div>
         </SectionCard>
       </section>
     </div>
-  );
-}
-
-function ActionButton({ icon: Icon, label }: { icon: typeof Pencil; label: string }) {
-  return (
-    <Button
-      size="sm"
-      variant="outline"
-      onClick={() => toast(label, { description: "Coming soon" })}
-    >
-      <Icon className="mr-1 h-4 w-4" />
-      {label}
-    </Button>
   );
 }
 
@@ -608,7 +602,7 @@ function BadgeManager({
         </p>
         <div className="grid gap-1">
           {ALL_BADGES.map((b) => {
-            const on = badges.includes(b);
+            const on = (badges || []).includes(b);
             return (
               <button
                 key={b}
@@ -744,109 +738,194 @@ function ConvertToUserDialog({
   onConverted: (patch: Partial<Soul>) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [credentialsOpen, setCredentialsOpen] = useState(false);
+  const [credentials, setCredentials] = useState<{ email: string; tempPasskey: string; memberId: string } | null>(null);
   const navigate = useNavigate();
+  const { current } = useCurrentChurch();
+  const { role } = useRole();
+
   const [name, setName] = useState(soul.name);
   const [email, setEmail] = useState(soul.email ?? "");
   const [phone, setPhone] = useState(soul.phone);
-  const [location, setLocation] = useState(soul.location ?? "");
-  const [cell, setCell] = useState("Cell A-1");
+  const [branch, setBranch] = useState(soul.branch || current.name);
   const [mentor, setMentor] = useState(soul.mentor);
-  const [stage, setStage] = useState("Regular Attendee");
+  
+  // Starting stage default is "Invitee" (branch's first stage), but leaders can set higher stage
+  const branchStages = current.stages || ["Invitee", "First Timer", "Regular Attendee", "Baptized Member", "Foundation School Student", "Foundation School Graduate", "Cell Member", "Workforce Member"];
+  const [startingStage, setStartingStage] = useState(branchStages[0] || "Invitee");
+
+  const canChooseStage = canSetHigherStartingStage(role);
 
   function submit() {
     if (!name || !email || !phone) {
-      toast.error("Name, email, and phone are required");
+      toast.error("Name, email, and phone are required for member conversion");
       return;
     }
-    const memberId = `m_conv_${Date.now()}`;
-    const tempPass = `ST-PASS-${Math.floor(1000 + Math.random() * 9000)}`;
-    const newMember = {
-      id: memberId,
-      name,
-      email,
-      phone,
-      branch: soul.location ?? "Lagos Central",
-      stage: stage as Stage,
-      joinedAt: new Date().toISOString(),
-      mentor,
-      attendance: 100,
-      cell: cell || "Cell A-1",
-      avatar: soul.avatar ?? "https://i.pravatar.cc/120?img=12",
-      status: "active" as const,
-    };
-    addMember(newMember);
-    updateSoul(soul.id, { stage: "Converted", name, email, phone, location, mentor });
-    onConverted({ stage: "Converted", name, email, phone, location, mentor });
-    addNotification({
-      title: `Soul Converted to Member: ${name}`,
-      desc: `Registered in ${cell || "Cell A-1"}. Login Temp Password: ${tempPass}`,
-      time: "Just now",
-    });
-    toast.success(`${name} registered as a church member`, {
-      description: `Temporary Password: ${tempPass} (Credentials copied)`,
-    });
-    setOpen(false);
-    setTimeout(() => navigate({ to: "/dashboard/members/$id", params: { id: memberId } }), 300);
+
+    try {
+      const res = convertSoulToMember(soul.id, {
+        name,
+        email,
+        phone,
+        branch,
+        startingStage,
+        mentor,
+      });
+
+      onConverted({
+        stage: "Converted",
+        status: "archived",
+        convertedMemberId: res.member.id,
+      });
+
+      addNotification({
+        title: `Soul Converted to Member: ${name}`,
+        desc: `Registered under ${branch}. Temp Passkey generated.`,
+        time: "Just now",
+      });
+
+      setCredentials({
+        email: res.credentials.email,
+        tempPasskey: res.credentials.tempPasskey,
+        memberId: res.member.id,
+      });
+
+      setOpen(false);
+      setCredentialsOpen(true);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to convert soul");
+    }
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button
-          size="sm"
-          className="bg-gradient-royal text-primary-foreground shadow-elegant hover:opacity-95"
-        >
-          <Repeat className="mr-1 h-4 w-4" />
-          Convert to User
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-xl">
-        <DialogHeader>
-          <DialogTitle>Register {soul.name} as a member</DialogTitle>
-        </DialogHeader>
-        <p className="text-xs text-muted-foreground">
-          Fields are pre-filled from the soul profile. Adjust as needed.
-        </p>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label>Full name</Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Email</Label>
-            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Phone</Label>
-            <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Location</Label>
-            <Input value={location} onChange={(e) => setLocation(e.target.value)} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Assigned mentor</Label>
-            <Input value={mentor} onChange={(e) => setMentor(e.target.value)} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Cell group</Label>
-            <Input value={cell} onChange={(e) => setCell(e.target.value)} placeholder="Cell A-1" />
-          </div>
-          <div className="space-y-1.5 sm:col-span-2">
-            <Label>Starting stage</Label>
-            <Input value={stage} onChange={(e) => setStage(e.target.value)} />
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>
-            Cancel
+    <>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+          <Button
+            size="sm"
+            className="bg-gradient-royal text-primary-foreground shadow-elegant hover:opacity-95"
+          >
+            <Repeat className="mr-1 h-4 w-4" />
+            Convert to User
           </Button>
-          <Button className="bg-gradient-royal text-primary-foreground" onClick={submit}>
-            Register member
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </DialogTrigger>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Convert {soul.name} to Church Member</DialogTitle>
+          </DialogHeader>
+          <p className="text-xs text-muted-foreground">
+            Confirm member details. Account will be created and soul record archived to journey history.
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label>Full name *</Label>
+              <Input value={name} onChange={(e) => setName(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Email (for account) *</Label>
+              <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email@domain.com" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Phone *</Label>
+              <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Branch</Label>
+              <Input value={branch} onChange={(e) => setBranch(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Assigned mentor</Label>
+              <Input value={mentor} onChange={(e) => setMentor(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Starting Member Stage</Label>
+              {canChooseStage ? (
+                <Select value={startingStage} onValueChange={setStartingStage}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {branchStages.map((stg) => (
+                      <SelectItem key={stg} value={stg}>
+                        {stg}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input value={startingStage} disabled className="bg-secondary" />
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
+            <Button className="bg-gradient-royal text-primary-foreground" onClick={submit}>
+              Confirm Conversion &amp; Generate Credentials
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Simulated Login Details Dialog */}
+      <Dialog open={credentialsOpen} onOpenChange={setCredentialsOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-success">
+              <CheckCircle2 className="h-5 w-5" />
+              Conversion Successful!
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-xs text-muted-foreground">
+            Simulated login details generated for <strong>{name}</strong>:
+          </p>
+          <div className="rounded-xl border border-border bg-secondary/40 p-4 space-y-3">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">Username / Email:</span>
+              <strong className="font-mono text-foreground">{credentials?.email}</strong>
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground flex items-center gap-1">
+                <Key className="h-3.5 w-3.5 text-gold" />
+                Temp Passkey:
+              </span>
+              <strong className="font-mono text-gold bg-black/20 px-2 py-1 rounded text-base">
+                {credentials?.tempPasskey}
+              </strong>
+            </div>
+          </div>
+          <p className="text-[11px] text-muted-foreground text-center">
+            (No real email dispatched — simulated credentials for frontend testing)
+          </p>
+          <DialogFooter className="sm:justify-between">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                navigator.clipboard.writeText(`Email: ${credentials?.email}, Temp Passkey: ${credentials?.tempPasskey}`);
+                toast.success("Credentials copied to clipboard");
+              }}
+            >
+              <Copy className="mr-1 h-3.5 w-3.5" />
+              Copy Credentials
+            </Button>
+            <Button
+              className="bg-gradient-royal text-primary-foreground"
+              size="sm"
+              onClick={() => {
+                setCredentialsOpen(false);
+                if (credentials?.memberId) {
+                  navigate({ to: "/dashboard/members/$id", params: { id: credentials.memberId } });
+                }
+              }}
+            >
+              View Member Profile
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
@@ -862,7 +941,7 @@ function EditSoulDialog({
   const [phone, setPhone] = useState(soul.phone);
   const [email, setEmail] = useState(soul.email ?? "");
   const [location, setLocation] = useState(soul.location ?? "");
-  const [stage, setStage] = useState<SoulStage>(soul.stage);
+  const [stage, setStage] = useState<SoulStage>(soul.stage as SoulStage);
 
   function submit() {
     if (!name || !phone) {
@@ -914,13 +993,13 @@ function EditSoulDialog({
             <Input value={location} onChange={(e) => setLocation(e.target.value)} />
           </div>
           <div className="space-y-1.5">
-            <Label>Stage</Label>
+            <Label>Pipeline Stage (4 Stages)</Label>
             <Select value={stage} onValueChange={(v) => setStage(v as SoulStage)}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {(["Contacted", "Visited", "Following Up", "Converted", "Discipled"] as const).map(
+                {(["Contacted", "Visited", "Following Up", "Converted"] as const).map(
                   (s) => (
                     <SelectItem key={s} value={s}>
                       {s}

@@ -1,7 +1,6 @@
-import { createContext, useContext, useState, ReactNode } from "react";
-
-export type Role = "Admin" | "Pastor" | "Cell Leader" | "Member";
-export const ROLES: Role[] = ["Admin", "Pastor", "Cell Leader", "Member"];
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { Role } from "@/types/domain";
+import { getSession, setSessionRole, subscribeSession } from "@/lib/stores/session-store";
 
 type Ctx = {
   role: Role;
@@ -13,9 +12,27 @@ type Ctx = {
 const RoleContext = createContext<Ctx | null>(null);
 
 export function RoleProvider({ children }: { children: ReactNode }) {
-  const [role, setRole] = useState<Role>("Admin");
+  const [session, setSessionState] = useState(getSession());
+
+  useEffect(() => {
+    return subscribeSession(() => {
+      setSessionState(getSession());
+    });
+  }, []);
+
+  const handleSetRole = (newRole: Role) => {
+    setSessionRole(newRole);
+  };
+
   return (
-    <RoleContext.Provider value={{ role, setRole, userId: "m1000", userName: "Pst. D. Okafor" }}>
+    <RoleContext.Provider
+      value={{
+        role: session.role,
+        setRole: handleSetRole,
+        userId: session.memberId,
+        userName: "Pst. D. Okafor",
+      }}
+    >
       {children}
     </RoleContext.Provider>
   );
@@ -26,3 +43,6 @@ export function useRole() {
   if (!c) throw new Error("useRole must be used within RoleProvider");
   return c;
 }
+
+export { ROLES } from "@/types/domain";
+export type { Role };

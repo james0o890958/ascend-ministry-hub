@@ -8,7 +8,10 @@ export type NotificationItem = {
   unread?: boolean;
 };
 
-let notificationsList: NotificationItem[] = [...seedNotifications];
+let notificationsList: NotificationItem[] = seedNotifications.map((n) => ({
+  ...n,
+  id: String(n.id),
+}));
 const listeners = new Set<() => void>();
 
 export function getNotifications(): NotificationItem[] {

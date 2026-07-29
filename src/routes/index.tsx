@@ -418,7 +418,7 @@ function Landing() {
                 </Link>
               </li>
               <li>
-                <Link to="/dashboard/branches" className="hover:text-primary">
+                <Link to="/dashboard/church" className="hover:text-primary">
                   Branches
                 </Link>
               </li>
