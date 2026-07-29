@@ -161,9 +161,13 @@ function CellsPage() {
                           className="flex items-center gap-3 group hover:opacity-80 transition"
                         >
                           <Avatar className="h-8 w-8 ring-1 ring-gold/30">
-                            <AvatarFallback className="bg-primary/10 text-primary font-medium">{m.name[0]}</AvatarFallback>
+                            <AvatarFallback className="bg-primary/10 text-primary font-medium">
+                              {m.name[0]}
+                            </AvatarFallback>
                           </Avatar>
-                          <span className="font-semibold group-hover:text-primary group-hover:underline transition">{m.name}</span>
+                          <span className="font-semibold group-hover:text-primary group-hover:underline transition">
+                            {m.name}
+                          </span>
                         </Link>
                       </td>
                       <td className="px-4 py-3">

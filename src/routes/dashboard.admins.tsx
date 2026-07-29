@@ -69,19 +69,23 @@ function AdminsPage() {
               {admins.map((a) => (
                 <tr key={a.id} className="hover:bg-secondary/40">
                   <td className="px-4 py-3">
-                      <Link
-                        to="/dashboard/members/$id"
-                        params={{ id: "m1" }}
-                        className="flex items-center gap-3 group hover:opacity-80 transition"
-                      >
-                        <Avatar className="h-8 w-8 ring-1 ring-gold/30">
-                          <AvatarFallback className="bg-primary/10 text-primary font-medium">{a.name[0]}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-semibold group-hover:text-primary group-hover:underline transition">{a.name}</p>
-                          <p className="text-xs text-muted-foreground">{a.email}</p>
-                        </div>
-                      </Link>
+                    <Link
+                      to="/dashboard/members/$id"
+                      params={{ id: "m1" }}
+                      className="flex items-center gap-3 group hover:opacity-80 transition"
+                    >
+                      <Avatar className="h-8 w-8 ring-1 ring-gold/30">
+                        <AvatarFallback className="bg-primary/10 text-primary font-medium">
+                          {a.name[0]}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-semibold group-hover:text-primary group-hover:underline transition">
+                          {a.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground">{a.email}</p>
+                      </div>
+                    </Link>
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">{a.scope}</td>
                   <td className="px-4 py-3 text-muted-foreground">{a.invitedBy}</td>

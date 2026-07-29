@@ -259,9 +259,7 @@ function SoulsPage() {
                     <h3 className="font-display text-lg font-bold group-hover:text-primary transition">
                       {s.name}
                     </h3>
-                    <p className="text-xs text-muted-foreground">
-                      Invited by {s.invitedBy || "—"}
-                    </p>
+                    <p className="text-xs text-muted-foreground">Invited by {s.invitedBy || "—"}</p>
                   </div>
                 </Link>
                 <Badge variant="outline" className={stageColor[s.stage]}>
