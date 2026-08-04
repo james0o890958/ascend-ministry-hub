@@ -28,7 +28,7 @@ export function getBranches(): Branch[] {
 }
 
 export function getBranchById(id: string): Branch | undefined {
-  return getBranches().find((b) => b.id === id);
+  return getBranches().find((b) => b.id === id || b.name === id);
 }
 
 export function saveBranches(branches: Branch[]) {
@@ -65,7 +65,11 @@ export function addBranchMilestone(branchId: string, milestone: MilestoneDefinit
   updateBranch(branchId, { milestones });
 }
 
-export function updateBranchMilestone(branchId: string, milestoneId: string, patch: Partial<MilestoneDefinition>) {
+export function updateBranchMilestone(
+  branchId: string,
+  milestoneId: string,
+  patch: Partial<MilestoneDefinition>,
+) {
   const branch = getBranchById(branchId);
   if (!branch) return;
   const milestones = branch.milestones.map((m) => (m.id === milestoneId ? { ...m, ...patch } : m));

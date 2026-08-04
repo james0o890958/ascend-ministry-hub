@@ -50,7 +50,9 @@ function RegisterPage() {
 
   const [onboardingOpen, setOnboardingOpen] = useState(false);
   const [createdMember, setCreatedMember] = useState<Member | null>(null);
-  const [selectedMilestones, setSelectedMilestones] = useState<Record<string, { completed: boolean; date?: string }>>({});
+  const [selectedMilestones, setSelectedMilestones] = useState<
+    Record<string, { completed: boolean; date?: string }>
+  >({});
 
   const selectedBranch = getBranchById(branchId) || branchesList[0];
   const activeMilestones = selectedBranch?.milestones?.filter((m) => m.status === "active") || [];
@@ -89,7 +91,7 @@ function RegisterPage() {
 
     setCreatedMember(newMember);
     toast.success("Account created successfully!");
-    
+
     // Redirect to onboarding step for retroactive milestone declaration (Section 4.1 & 4.2)
     setOnboardingOpen(true);
   };
@@ -98,7 +100,12 @@ function RegisterPage() {
     if (createdMember) {
       Object.entries(selectedMilestones).forEach(([msId, data]) => {
         if (data.completed) {
-          toggleMemberMilestone(createdMember.id, msId, true, data.date || new Date().toISOString().slice(0, 10));
+          toggleMemberMilestone(
+            createdMember.id,
+            msId,
+            true,
+            data.date || new Date().toISOString().slice(0, 10),
+          );
         }
       });
     }
@@ -124,11 +131,21 @@ function RegisterPage() {
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-2">
             <Label>First name *</Label>
-            <Input value={first} onChange={(e) => setFirst(e.target.value)} placeholder="Daniel" required />
+            <Input
+              value={first}
+              onChange={(e) => setFirst(e.target.value)}
+              placeholder="Daniel"
+              required
+            />
           </div>
           <div className="space-y-2">
             <Label>Last name *</Label>
-            <Input value={last} onChange={(e) => setLast(e.target.value)} placeholder="Okafor" required />
+            <Input
+              value={last}
+              onChange={(e) => setLast(e.target.value)}
+              placeholder="Okafor"
+              required
+            />
           </div>
         </div>
 
@@ -171,11 +188,18 @@ function RegisterPage() {
 
         <div className="space-y-2">
           <Label>Password *</Label>
-          <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 8 characters" required />
+          <Input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="At least 8 characters"
+            required
+          />
         </div>
 
         <p className="text-xs text-muted-foreground">
-          By registering, your initial stage will be set to <strong>{selectedBranch.stages?.[0] || "Invitee"}</strong>.
+          By registering, your initial stage will be set to{" "}
+          <strong>{selectedBranch.stages?.[0] || "Invitee"}</strong>.
         </p>
 
         <Button
@@ -197,13 +221,17 @@ function RegisterPage() {
             </DialogTitle>
           </DialogHeader>
           <p className="text-xs text-muted-foreground">
-            Have you already completed any of these milestones prior to registering? Check any that apply:
+            Have you already completed any of these milestones prior to registering? Check any that
+            apply:
           </p>
           <div className="space-y-3 py-2 max-h-64 overflow-y-auto">
             {activeMilestones.map((ms) => {
               const item = selectedMilestones[ms.id] || { completed: false };
               return (
-                <div key={ms.id} className="flex items-start justify-between rounded-xl border border-border bg-card p-3">
+                <div
+                  key={ms.id}
+                  className="flex items-start justify-between rounded-xl border border-border bg-card p-3"
+                >
                   <div>
                     <p className="font-semibold text-sm flex items-center gap-1.5">
                       <Award className="h-4 w-4 text-gold" />
@@ -242,7 +270,10 @@ function RegisterPage() {
             )}
           </div>
           <DialogFooter>
-            <Button className="bg-gradient-royal text-primary-foreground w-full" onClick={handleSaveOnboarding}>
+            <Button
+              className="bg-gradient-royal text-primary-foreground w-full"
+              onClick={handleSaveOnboarding}
+            >
               Complete Registration &amp; Go to Dashboard
             </Button>
           </DialogFooter>

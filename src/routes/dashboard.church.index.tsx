@@ -41,9 +41,16 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { events, recentActivity } from "@/lib/data";
+import { recentActivity } from "@/lib/data";
 import { getMembers, subscribeMembers } from "@/lib/stores/members-store";
-import { getBranches, updateBranchStages, addBranchMilestone, archiveBranchMilestone, subscribeBranches } from "@/lib/stores/branches-store";
+import { getEvents, subscribeEvents } from "@/lib/stores/events-store";
+import {
+  getBranches,
+  updateBranchStages,
+  addBranchMilestone,
+  archiveBranchMilestone,
+  subscribeBranches,
+} from "@/lib/stores/branches-store";
 import { useRole } from "@/lib/role";
 import { useCurrentChurch } from "@/lib/current-church";
 import { canConfigureBranch, canSwitchBranch } from "@/lib/permissions";
@@ -57,12 +64,13 @@ function ChurchPage() {
   const { current, currentChurchId, setCurrentChurchId } = useCurrentChurch();
   const branchesList = useSyncExternalStore(subscribeBranches, getBranches, getBranches);
   const membersList = useSyncExternalStore(subscribeMembers, getMembers, getMembers);
+  const eventsList = useSyncExternalStore(subscribeEvents, getEvents, getEvents);
 
   const canSwitch = canSwitchBranch(role);
   const canConfig = canConfigureBranch(role, current.name, current.name);
 
   const churchMembers = membersList.filter((m) => m.branch === current.name);
-  const churchEvents = events.filter((e) => e.branch === current.name);
+  const churchEvents = eventsList.filter((e) => e.branch === current.name || e.scope === "global");
   const churchActivity = recentActivity.filter((a) => a.branch === current.name);
   const giving = 12400 + (current.membersCount || 100) * 3.2;
 
@@ -144,7 +152,7 @@ function ChurchPage() {
             />
             <StatCard
               label="Giving (mo.)"
-              value={`$${Math.round(giving).toLocaleString()}`}
+              value={`₦${Math.round(giving).toLocaleString()}`}
               icon={HandCoins}
               change={4.4}
               accent="success"
@@ -196,23 +204,32 @@ function ChurchPage() {
         <TabsContent value="discipleship" className="mt-4 space-y-6">
           <SectionCard title={`Discipleship Stages Sequence — ${current.name}`}>
             <p className="text-xs text-muted-foreground mb-4">
-              Configurable stage sequence driving progress visualization for members in {current.name}. The standard sequence starts with <strong>Invitee</strong>.
+              Configurable stage sequence driving progress visualization for members in{" "}
+              {current.name}. The standard sequence starts with <strong>Invitee</strong>.
             </p>
-            <StageSequenceManager branchId={current.id} stages={current.stages || []} canEdit={canConfig} />
+            <StageSequenceManager
+              branchId={current.id}
+              stages={current.stages || []}
+              canEdit={canConfig}
+            />
           </SectionCard>
 
           <SectionCard title={`Branch Milestones Catalog — ${current.name}`}>
             <p className="text-xs text-muted-foreground mb-4">
               Configurable non-sequential milestones catalog for members in {current.name}.
             </p>
-            <MilestonesCatalogManager branchId={current.id} milestones={current.milestones || []} canEdit={canConfig} />
+            <MilestonesCatalogManager
+              branchId={current.id}
+              milestones={current.milestones || []}
+              canEdit={canConfig}
+            />
           </SectionCard>
         </TabsContent>
 
         <TabsContent value="members" className="mt-4">
           <SectionCard title={`Members of ${current.name} (${churchMembers.length})`}>
-            <div className="overflow-hidden rounded-xl border border-border">
-              <table className="w-full text-sm">
+            <div className="overflow-x-auto rounded-xl border border-border">
+              <table className="w-full min-w-[500px] text-sm">
                 <thead className="bg-secondary/60 text-xs uppercase tracking-wider text-muted-foreground">
                   <tr>
                     <th className="px-4 py-3 text-left">Name</th>
@@ -256,8 +273,8 @@ function ChurchPage() {
 
         <TabsContent value="attendance" className="mt-4">
           <SectionCard title="Attendance trend">
-            <div className="overflow-hidden rounded-xl border border-border">
-              <table className="w-full text-sm">
+            <div className="overflow-x-auto rounded-xl border border-border">
+              <table className="w-full min-w-[500px] text-sm">
                 <thead className="bg-secondary/60 text-xs uppercase tracking-wider text-muted-foreground">
                   <tr>
                     <th className="px-4 py-3 text-left">Service</th>
@@ -286,7 +303,7 @@ function ChurchPage() {
         <TabsContent value="events" className="mt-4">
           <SectionCard title="Branch Events">
             <ul className="divide-y divide-border">
-              {(churchEvents.length ? churchEvents : events).map((e) => (
+              {(churchEvents.length ? churchEvents : eventsList).map((e) => (
                 <li key={e.id} className="flex items-center justify-between py-3">
                   <div>
                     <p className="font-semibold">{e.name}</p>
@@ -398,18 +415,39 @@ function StageSequenceManager({
                 {i + 1}
               </span>
               <span className="font-semibold">{stg}</span>
-              {i === 0 && <Badge variant="outline" className="text-[10px]">Default Entry</Badge>}
+              {i === 0 && (
+                <Badge variant="outline" className="text-[10px]">
+                  Default Entry
+                </Badge>
+              )}
             </div>
 
             {canEdit && (
               <div className="flex items-center gap-1">
-                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => moveUp(i)} disabled={i === 0}>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-7 w-7"
+                  onClick={() => moveUp(i)}
+                  disabled={i === 0}
+                >
                   <ArrowUp className="h-3.5 w-3.5" />
                 </Button>
-                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => moveDown(i)} disabled={i === stageList.length - 1}>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-7 w-7"
+                  onClick={() => moveDown(i)}
+                  disabled={i === stageList.length - 1}
+                >
                   <ArrowDown className="h-3.5 w-3.5" />
                 </Button>
-                <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => archiveStage(stg)}>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-7 w-7 text-destructive"
+                  onClick={() => archiveStage(stg)}
+                >
                   <Archive className="h-3.5 w-3.5" />
                 </Button>
               </div>
@@ -477,16 +515,28 @@ function MilestonesCatalogManager({
             <div className="space-y-3 py-2">
               <div className="space-y-1.5">
                 <Label>Milestone Name *</Label>
-                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. School of Ministry" />
+                <Input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g. School of Ministry"
+                />
               </div>
               <div className="space-y-1.5">
                 <Label>Auto-Suggest Stage Advance (Optional)</Label>
-                <Input value={suggestedStage} onChange={(e) => setSuggestedStage(e.target.value)} placeholder="e.g. Foundation School Graduate" />
+                <Input
+                  value={suggestedStage}
+                  onChange={(e) => setSuggestedStage(e.target.value)}
+                  placeholder="e.g. Foundation School Graduate"
+                />
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-              <Button onClick={handleAdd} className="bg-gradient-royal text-primary-foreground">Save Milestone</Button>
+              <Button variant="outline" onClick={() => setOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleAdd} className="bg-gradient-royal text-primary-foreground">
+                Save Milestone
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -494,7 +544,10 @@ function MilestonesCatalogManager({
 
       <div className="grid gap-3 sm:grid-cols-2">
         {activeMilestones.map((m) => (
-          <div key={m.id} className="rounded-xl border border-border bg-card p-4 flex items-center justify-between">
+          <div
+            key={m.id}
+            className="rounded-xl border border-border bg-card p-4 flex items-center justify-between"
+          >
             <div>
               <p className="font-semibold text-sm flex items-center gap-2">
                 <Flag className="h-4 w-4 text-gold" />
@@ -502,12 +555,18 @@ function MilestonesCatalogManager({
               </p>
               {m.suggestedStage && (
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Suggests stage: <span className="font-medium text-foreground">{m.suggestedStage}</span>
+                  Suggests stage:{" "}
+                  <span className="font-medium text-foreground">{m.suggestedStage}</span>
                 </p>
               )}
             </div>
             {canEdit && (
-              <Button size="sm" variant="ghost" className="text-destructive" onClick={() => handleArchive(m.id, m.name)}>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-destructive"
+                onClick={() => handleArchive(m.id, m.name)}
+              >
                 <Archive className="h-4 w-4" />
               </Button>
             )}

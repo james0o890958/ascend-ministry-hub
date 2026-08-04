@@ -32,9 +32,7 @@ export function getEventById(id: string): ChurchEvent | undefined {
 }
 
 export function getVisibleEventsForMember(memberBranch: string): ChurchEvent[] {
-  return getEvents().filter(
-    (e) => e.scope === "global" || e.branch === memberBranch
-  );
+  return getEvents().filter((e) => e.scope === "global" || e.branch === memberBranch);
 }
 
 export function saveEvents(events: ChurchEvent[]) {
@@ -66,6 +64,19 @@ export function registerForEvent(eventId: string, memberId: string) {
   updateEvent(eventId, {
     registeredMemberIds: updatedRegistered,
     attendees: (event.attendees || 0) + 1,
+  });
+}
+
+export function unregisterFromEvent(eventId: string, memberId: string) {
+  const event = getEventById(eventId);
+  if (!event) return;
+  const currentRegistered = event.registeredMemberIds || [];
+  if (!currentRegistered.includes(memberId)) return;
+
+  const updatedRegistered = currentRegistered.filter((id) => id !== memberId);
+  updateEvent(eventId, {
+    registeredMemberIds: updatedRegistered,
+    attendees: Math.max(0, (event.attendees || 0) - 1),
   });
 }
 

@@ -56,15 +56,15 @@ export function AuthShell({
 
       {/* Form side */}
       <div className="relative flex items-center justify-center bg-background p-6 sm:p-12">
-        <div className="absolute right-6 top-6 lg:hidden">
-          <Logo />
-        </div>
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           className="w-full max-w-md"
         >
+          <div className="mb-6 lg:hidden">
+            <Logo />
+          </div>
           <h1 className="font-display text-3xl font-bold sm:text-4xl">{title}</h1>
           <p className="mt-2 text-muted-foreground">{subtitle}</p>
           <div className="mt-8">{children}</div>

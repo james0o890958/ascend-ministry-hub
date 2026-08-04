@@ -10,14 +10,17 @@ import {
   Globe2,
   HeartHandshake,
   LineChart,
+  Moon,
   ShieldCheck,
   Sparkles,
+  Sun,
   Users2,
 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { stats, branches, STAGES } from "@/lib/data";
+import { useTheme } from "@/lib/theme";
 
 export const Route = createFileRoute("/")({
   component: Landing,
@@ -66,6 +69,14 @@ const fade = {
 };
 
 function Landing() {
+  const { theme, setTheme } = useTheme();
+  const isDark =
+    theme === "dark" ||
+    (theme === "system" &&
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches);
+  const toggleTheme = () => setTheme(isDark ? "light" : "dark");
+
   return (
     <div className="min-h-screen bg-background">
       {/* NAV */}
@@ -87,6 +98,20 @@ function Landing() {
             </a>
           </nav>
           <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+              aria-label={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+              className="text-white hover:bg-white/15 hover:text-white rounded-lg"
+            >
+              {isDark ? (
+                <Sun className="h-5 w-5 text-gold" />
+              ) : (
+                <Moon className="h-5 w-5 text-white/90" />
+              )}
+            </Button>
             <Button
               asChild
               variant="ghost"

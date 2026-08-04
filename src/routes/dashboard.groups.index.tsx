@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { PageHeader, SectionCard, StatCard } from "@/components/dashboard/ui";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,8 +24,15 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sparkles, Plus, Phone, Mail, MapPin, Search, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
-import { addSoulToStore, getSouls, type Soul, type SoulStage as Stage } from "@/lib/souls";
+import {
+  addSoulToStore,
+  getSouls,
+  subscribeSouls,
+  type Soul,
+  type SoulStage as Stage,
+} from "@/lib/souls";
 import { useCurrentChurch } from "@/lib/current-church";
+import { useRole } from "@/lib/role";
 
 export const Route = createFileRoute("/dashboard/groups/")({ component: SoulsPage });
 
@@ -40,12 +47,13 @@ const stageColor: Record<Stage, string> = {
 };
 
 function SoulsPage() {
-  const [souls, setSouls] = useState<Soul[]>(() => getSouls());
+  const souls = useSyncExternalStore(subscribeSouls, getSouls, getSouls);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Stage | "All">("All");
   const [showArchived, setShowArchived] = useState(false);
   const { current } = useCurrentChurch();
+  const { role } = useRole();
 
   type FormState = Pick<
     Soul,
@@ -62,13 +70,18 @@ function SoulsPage() {
   };
   const [form, setForm] = useState<FormState>(emptyForm);
 
+  const q = query.toLowerCase();
   const filtered = souls.filter((s) => {
     const matchQ =
-      s.name.toLowerCase().includes(query.toLowerCase()) ||
-      s.invitedBy.toLowerCase().includes(query.toLowerCase());
+      !query ||
+      s.name.toLowerCase().includes(q) ||
+      (s.invitedBy && s.invitedBy.toLowerCase().includes(q)) ||
+      (s.soulTracerId && s.soulTracerId.toLowerCase().includes(q)) ||
+      s.id.toLowerCase().includes(q);
     const matchF = filter === "All" || s.stage === filter;
     const matchArchived = showArchived ? true : s.status !== "archived" && s.stage !== "Converted";
-    return matchQ && matchF && matchArchived;
+    const matchBranch = role === "Admin" ? true : s.branch === current.name;
+    return matchQ && matchF && matchArchived && matchBranch;
   });
 
   const addSoul = () => {
@@ -91,7 +104,6 @@ function SoulsPage() {
       growth: { discipleship: 0, bibleStudy: 0, churchInvolvement: 0, followUpCompletion: 0 },
     };
     addSoulToStore(next);
-    setSouls(getSouls());
     setForm(emptyForm);
     setOpen(false);
     toast.success(`${next.name} added to souls`);
@@ -201,25 +213,50 @@ function SoulsPage() {
       />
 
       <div className="grid gap-4 sm:grid-cols-4">
-        <StatCard label="Total active souls" value={souls.filter(s => s.status !== "archived" && s.stage !== "Converted").length} icon={Sparkles} accent="primary" />
-        <StatCard
-          label="Contacted & Visited"
-          value={souls.filter((s) => (s.stage === "Contacted" || s.stage === "Visited") && s.status !== "archived").length}
-          icon={Sparkles}
-          accent="primary"
-        />
-        <StatCard
-          label="Following up"
-          value={souls.filter((s) => s.stage === "Following Up" && s.status !== "archived").length}
-          icon={Sparkles}
-          accent="gold"
-        />
-        <StatCard
-          label="Converted to Members"
-          value={souls.filter((s) => s.stage === "Converted").length}
-          icon={CheckCircle2}
-          accent="success"
-        />
+        {(() => {
+          const branchSouls = souls.filter((s) =>
+            role === "Admin" ? true : s.branch === current.name,
+          );
+          return (
+            <>
+              <StatCard
+                label="Total active souls"
+                value={
+                  branchSouls.filter((s) => s.status !== "archived" && s.stage !== "Converted")
+                    .length
+                }
+                icon={Sparkles}
+                accent="primary"
+              />
+              <StatCard
+                label="Contacted & Visited"
+                value={
+                  branchSouls.filter(
+                    (s) =>
+                      (s.stage === "Contacted" || s.stage === "Visited") && s.status !== "archived",
+                  ).length
+                }
+                icon={Sparkles}
+                accent="primary"
+              />
+              <StatCard
+                label="Following up"
+                value={
+                  branchSouls.filter((s) => s.stage === "Following Up" && s.status !== "archived")
+                    .length
+                }
+                icon={Sparkles}
+                accent="gold"
+              />
+              <StatCard
+                label="Converted to Members"
+                value={branchSouls.filter((s) => s.stage === "Converted").length}
+                icon={CheckCircle2}
+                accent="success"
+              />
+            </>
+          );
+        })()}
       </div>
 
       <SectionCard title="Soul Pipeline">
@@ -229,7 +266,7 @@ function SoulsPage() {
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 className="pl-9"
-                placeholder="Search by name or inviter…"
+                placeholder="Search by name, SoulTracer ID, or inviter…"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
               />
@@ -259,65 +296,76 @@ function SoulsPage() {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((s) => (
-            <div
-              key={s.id}
-              className="group relative rounded-2xl border border-border bg-card p-5 shadow-soft transition hover:-translate-y-0.5 hover:shadow-elegant"
-            >
-              <div className="flex items-start justify-between">
-                <Link
-                  to="/dashboard/groups/$id"
-                  params={{ id: s.id }}
-                  className="flex items-center gap-3 group-hover:opacity-90"
-                >
-                  <Avatar className="h-11 w-11 ring-2 ring-primary/20 transition group-hover:ring-primary/60">
-                    <AvatarImage src={s.avatar} className="object-cover" />
-                    <AvatarFallback className="bg-primary/10 text-primary font-bold">
-                      {s.name[0]}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <h3 className="font-display text-lg font-bold group-hover:text-primary transition">
-                      {s.name}
-                    </h3>
-                    <p className="text-xs text-muted-foreground">Invited by {s.invitedBy || "—"}</p>
-                  </div>
-                </Link>
-                <Badge variant="outline" className={stageColor[s.stage] || "bg-secondary"}>
-                  {s.stage}
-                </Badge>
-              </div>
-              <div className="mt-4 space-y-1.5 text-sm text-muted-foreground">
-                <p className="flex items-center gap-2">
-                  <Phone className="h-3.5 w-3.5 text-gold" />
-                  {s.phone}
-                </p>
-                {s.email && (
-                  <p className="flex items-center gap-2">
-                    <Mail className="h-3.5 w-3.5 text-gold" />
-                    {s.email}
-                  </p>
-                )}
-                {s.location && (
-                  <p className="flex items-center gap-2">
-                    <MapPin className="h-3.5 w-3.5 text-gold" />
-                    {s.location}
-                  </p>
-                )}
-              </div>
-              <div className="mt-4">
-                <Button asChild size="sm" variant="outline" className="w-full">
-                  <Link to="/dashboard/groups/$id" params={{ id: s.id }}>
-                    View Profile &amp; Follow Up
-                  </Link>
-                </Button>
-              </div>
+          {filtered.length === 0 ? (
+            <div className="col-span-full py-12 text-center text-sm text-muted-foreground">
+              No souls found matching your filter criteria.
             </div>
-          ))}
-          {filtered.length === 0 && (
-            <p className="col-span-full py-12 text-center text-sm text-muted-foreground">
-              No souls match your filters.
-            </p>
+          ) : (
+            filtered.map((s) => (
+              <div
+                key={s.id}
+                className="group relative rounded-2xl border border-border bg-card p-5 shadow-soft transition hover:-translate-y-0.5 hover:shadow-elegant"
+              >
+                <div className="flex items-start justify-between">
+                  <Link
+                    to="/dashboard/groups/$id"
+                    params={{ id: s.id }}
+                    className="flex items-center gap-3 group-hover:opacity-90"
+                  >
+                    <Avatar className="h-11 w-11 ring-2 ring-primary/20 transition group-hover:ring-primary/60">
+                      <AvatarImage src={s.avatar} className="object-cover" />
+                      <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                        {s.name[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <h3 className="font-display text-lg font-bold group-hover:text-primary transition">
+                          {s.name}
+                        </h3>
+                        <span className="text-[10px] font-mono font-semibold text-blue-600 dark:text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded border border-blue-500/30">
+                          {s.soulTracerId || `ST-S-${s.id}`}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Invited by {s.invitedBy || "—"}
+                      </p>
+                    </div>
+                  </Link>
+                  <Badge
+                    variant="outline"
+                    className={stageColor[s.stage as Stage] || "bg-secondary"}
+                  >
+                    {s.stage}
+                  </Badge>
+                </div>
+                <div className="mt-4 space-y-1.5 text-sm text-muted-foreground">
+                  <p className="flex items-center gap-2">
+                    <Phone className="h-3.5 w-3.5 text-gold" />
+                    {s.phone}
+                  </p>
+                  {s.email && (
+                    <p className="flex items-center gap-2">
+                      <Mail className="h-3.5 w-3.5 text-gold" />
+                      {s.email}
+                    </p>
+                  )}
+                  {s.location && (
+                    <p className="flex items-center gap-2">
+                      <MapPin className="h-3.5 w-3.5 text-gold" />
+                      {s.location}
+                    </p>
+                  )}
+                </div>
+                <div className="mt-4">
+                  <Button asChild size="sm" variant="outline" className="w-full">
+                    <Link to="/dashboard/groups/$id" params={{ id: s.id }}>
+                      View Profile &amp; Follow Up
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            ))
           )}
         </div>
       </SectionCard>

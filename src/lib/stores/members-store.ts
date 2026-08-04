@@ -19,7 +19,13 @@ export function getMembers(): Member[] {
       cachedMembers = INITIAL_MEMBERS;
     } else {
       try {
-        cachedMembers = JSON.parse(raw);
+        const parsed: Member[] = JSON.parse(raw);
+        const existingIds = new Set(parsed.map((m) => m.id));
+        const missingSeed = INITIAL_MEMBERS.filter((m) => !existingIds.has(m.id));
+        cachedMembers = missingSeed.length > 0 ? [...parsed, ...missingSeed] : parsed;
+        if (missingSeed.length > 0) {
+          localStorage.setItem(KEY, JSON.stringify(cachedMembers));
+        }
       } catch {
         cachedMembers = INITIAL_MEMBERS;
       }
@@ -42,7 +48,11 @@ export function saveMembers(members: Member[]) {
 
 export function addMember(member: Member) {
   const current = getMembers();
-  saveMembers([member, ...current]);
+  const year = new Date().getFullYear();
+  const serial = String(current.length + 1).padStart(4, "0");
+  const prefix = member.originType === "transfer" ? "ST-T" : "ST-M";
+  const soulTracerId = member.soulTracerId || `${prefix}-${year}-${serial}`;
+  saveMembers([{ ...member, soulTracerId }, ...current]);
 }
 
 export function importMembers(newMembers: Member[]) {
@@ -56,14 +66,24 @@ export function updateMember(id: string, patch: Partial<Member>) {
   saveMembers(updated);
 }
 
+export function assignMemberToCell(memberId: string, cellId: string | null, cellName?: string) {
+  updateMember(memberId, {
+    cellId,
+    cell: cellName || undefined,
+  });
+}
+
 export function transferMember(id: string, newBranch: string) {
   const member = getMemberById(id);
   if (!member) return;
   // Transfer retains role, stage, milestones, giving history, originSoulId, but clears/reassigns cell
+  const now = new Date().toISOString().slice(0, 10);
   updateMember(id, {
     branch: newBranch,
     cellId: null,
     cell: undefined,
+    originType: "transfer",
+    transferredAt: now,
   });
 }
 
@@ -77,7 +97,7 @@ export function toggleMemberMilestone(
   memberId: string,
   milestoneId: string,
   completed: boolean,
-  date?: string
+  date?: string,
 ): StageSuggestion | null {
   const member = getMemberById(memberId);
   if (!member) return null;
@@ -87,7 +107,7 @@ export function toggleMemberMilestone(
 
   if (existingMs.some((m) => m.milestoneId === milestoneId)) {
     updatedMs = existingMs.map((m) =>
-      m.milestoneId === milestoneId ? { ...m, completed, date: date || m.date } : m
+      m.milestoneId === milestoneId ? { ...m, completed, date: date || m.date } : m,
     );
   } else {
     updatedMs = [...existingMs, { milestoneId, completed, date }];

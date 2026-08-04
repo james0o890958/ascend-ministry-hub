@@ -7,7 +7,7 @@
 @theme inline {
   --font-display: "Merriweather", Georgia, serif;
   --font-serif: "Merriweather", Georgia, serif;
-  --font-sans: "Merriweather", Georgia, serif;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -58,7 +58,8 @@
 :root {
   --radius: 0.875rem;
 
-  --background: oklch(0.99 0.005 250);
+  /* Light Mode Surfaces */
+  --background: oklch(0.985 0.005 250);
   --foreground: oklch(0.18 0.05 264);
 
   --card: oklch(1 0 0);
@@ -66,24 +67,24 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.18 0.05 264);
 
-  /* Deep royal blue */
+  /* Deep Royal Blue Primary */
   --primary: oklch(0.32 0.16 264);
   --primary-foreground: oklch(0.99 0.005 250);
   --primary-glow: oklch(0.46 0.18 264);
 
-  --secondary: oklch(0.96 0.015 255);
-  --secondary-foreground: oklch(0.25 0.08 264);
+  --secondary: oklch(0.95 0.015 255);
+  --secondary-foreground: oklch(0.22 0.07 264);
 
-  --muted: oklch(0.96 0.01 255);
-  --muted-foreground: oklch(0.5 0.03 260);
+  --muted: oklch(0.95 0.01 255);
+  --muted-foreground: oklch(0.48 0.04 260);
 
   --accent: oklch(0.94 0.04 85);
   --accent-foreground: oklch(0.32 0.16 264);
 
-  /* Gold */
+  /* Gold Accent */
   --gold: oklch(0.74 0.13 85);
-  --gold-foreground: oklch(0.2 0.06 264);
-  --gold-soft: oklch(0.93 0.06 85);
+  --gold-foreground: oklch(0.18 0.05 264);
+  --gold-soft: oklch(0.94 0.06 85);
 
   --success: oklch(0.62 0.14 155);
   --success-foreground: oklch(0.99 0.005 250);
@@ -91,9 +92,9 @@
   --destructive: oklch(0.6 0.22 27);
   --destructive-foreground: oklch(0.99 0.005 250);
 
-  --border: oklch(0.92 0.012 255);
-  --input: oklch(0.92 0.012 255);
-  --ring: oklch(0.46 0.18 264);
+  --border: oklch(0.9 0.015 255);
+  --input: oklch(0.9 0.015 255);
+  --ring: oklch(0.32 0.16 264);
 
   --chart-1: oklch(0.32 0.16 264);
   --chart-2: oklch(0.74 0.13 85);
@@ -101,13 +102,14 @@
   --chart-4: oklch(0.62 0.14 155);
   --chart-5: oklch(0.6 0.18 320);
 
-  --sidebar: oklch(0.22 0.1 264);
-  --sidebar-foreground: oklch(0.96 0.02 250);
+  /* Light Mode Sidebar & Header: Royal Blue */
+  --sidebar: oklch(0.28 0.15 264);
+  --sidebar-foreground: oklch(0.98 0.005 250);
   --sidebar-primary: oklch(0.74 0.13 85);
-  --sidebar-primary-foreground: oklch(0.2 0.06 264);
-  --sidebar-accent: oklch(0.3 0.13 264);
-  --sidebar-accent-foreground: oklch(0.99 0.01 250);
-  --sidebar-border: oklch(0.32 0.12 264);
+  --sidebar-primary-foreground: oklch(0.18 0.05 264);
+  --sidebar-accent: oklch(0.36 0.15 264);
+  --sidebar-accent-foreground: oklch(1 0 0);
+  --sidebar-border: oklch(0.38 0.12 264 / 0.4);
   --sidebar-ring: oklch(0.74 0.13 85);
 
   --gradient-royal: linear-gradient(135deg, oklch(0.32 0.16 264), oklch(0.46 0.18 264));
@@ -124,27 +126,69 @@
 }
 
 .dark {
-  --background: oklch(0.14 0.04 264);
-  --foreground: oklch(0.97 0.01 250);
-  --card: oklch(0.2 0.06 264);
-  --card-foreground: oklch(0.97 0.01 250);
-  --popover: oklch(0.2 0.06 264);
-  --popover-foreground: oklch(0.97 0.01 250);
-  --primary: oklch(0.66 0.18 264);
-  --primary-foreground: oklch(0.14 0.04 264);
-  --primary-glow: oklch(0.74 0.16 264);
-  --secondary: oklch(0.26 0.06 264);
-  --secondary-foreground: oklch(0.97 0.01 250);
-  --muted: oklch(0.24 0.05 264);
-  --muted-foreground: oklch(0.7 0.03 260);
-  --accent: oklch(0.3 0.08 85);
-  --accent-foreground: oklch(0.97 0.01 250);
+  /* Dark Mode Surfaces */
+  --background: oklch(0.13 0.04 264);
+  --foreground: oklch(0.96 0.01 250);
+
+  /* Lighter navy cards than background */
+  --card: oklch(0.19 0.05 264);
+  --card-foreground: oklch(0.96 0.01 250);
+  --popover: oklch(0.19 0.05 264);
+  --popover-foreground: oklch(0.96 0.01 250);
+
+  /* Royal Blue Primary — brighter so it's legible on dark surfaces */
+  --primary: oklch(0.55 0.18 264);
+  --primary-foreground: oklch(0.98 0.005 250);
+  --primary-glow: oklch(0.48 0.18 264);
+
+  --secondary: oklch(0.22 0.05 264);
+  --secondary-foreground: oklch(0.96 0.01 250);
+
+  --muted: oklch(0.2 0.04 264);
+  --muted-foreground: oklch(0.68 0.03 260);
+
+  --accent: oklch(0.24 0.06 85);
+  --accent-foreground: oklch(0.96 0.01 250);
+
+  /* Gold Accent */
   --gold: oklch(0.78 0.14 85);
-  --gold-foreground: oklch(0.14 0.04 264);
-  --gold-soft: oklch(0.3 0.08 85);
-  --border: oklch(1 0 0 / 0.1);
-  --input: oklch(1 0 0 / 0.15);
-  --ring: oklch(0.66 0.18 264);
+  --gold-foreground: oklch(0.12 0.04 264);
+  --gold-soft: oklch(0.24 0.06 85);
+
+  --destructive: oklch(0.65 0.22 27);
+  --destructive-foreground: oklch(0.99 0.005 250);
+
+  --success: oklch(0.68 0.14 155);
+  --success-foreground: oklch(0.99 0.005 250);
+
+  --border: oklch(0.26 0.04 264);
+  --input: oklch(0.26 0.04 264);
+  --ring: oklch(0.38 0.16 264);
+
+  /* Dark Mode Sidebar & Header: Very Dark Navy */
+  --sidebar: oklch(0.09 0.035 264);
+  --sidebar-foreground: oklch(0.96 0.01 250);
+  --sidebar-primary: oklch(0.78 0.14 85);
+  --sidebar-primary-foreground: oklch(0.12 0.04 264);
+  --sidebar-accent: oklch(0.16 0.05 264);
+  --sidebar-accent-foreground: oklch(0.98 0.005 250);
+  --sidebar-border: oklch(0.2 0.04 264);
+  --sidebar-ring: oklch(0.78 0.14 85);
+
+  /* Dark Mode Gradients — deeper navy tones so hero/CTA contrast with the dark page */
+  --gradient-royal: linear-gradient(135deg, oklch(0.18 0.08 264), oklch(0.26 0.12 264));
+  --gradient-hero: linear-gradient(
+    135deg,
+    oklch(0.10 0.05 264) 0%,
+    oklch(0.17 0.08 264) 50%,
+    oklch(0.22 0.10 264) 100%
+  );
+  --gradient-gold: linear-gradient(135deg, oklch(0.78 0.14 85), oklch(0.68 0.13 78));
+
+  /* Dark Mode Shadows — glow-style instead of blue-tinted light shadows */
+  --shadow-soft: 0 4px 20px -4px oklch(0 0 0 / 0.35);
+  --shadow-elegant: 0 20px 50px -20px oklch(0 0 0 / 0.55);
+  --shadow-gold: 0 10px 30px -10px oklch(0.74 0.13 85 / 0.25);
 }
 
 @layer base {
@@ -153,6 +197,10 @@
   }
   html {
     font-family: var(--font-sans);
+    color-scheme: light;
+  }
+  html.dark {
+    color-scheme: dark;
   }
   body {
     background-color: var(--color-background);

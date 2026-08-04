@@ -27,15 +27,18 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useSyncExternalStore } from "react";
 import { toast } from "sonner";
-import { invitees as seed, events, Invitee } from "@/lib/data";
+import { invitees as seed, Invitee } from "@/lib/data";
+import { getEvents, subscribeEvents } from "@/lib/stores/events-store";
 
 export const Route = createFileRoute("/dashboard/invitees")({ component: InviteesPage });
 
 function InviteesPage() {
+  const events = useSyncExternalStore(subscribeEvents, getEvents, getEvents);
   const [list, setList] = useState<Invitee[]>(seed);
   const [name, setName] = useState("");
-  const [event, setEvent] = useState(events[0].name);
+  const [event, setEvent] = useState(events[0]?.name || "Global Healing Streams");
   const [open, setOpen] = useState(false);
 
   const add = () => {
@@ -120,8 +123,8 @@ function InviteesPage() {
       />
 
       <SectionCard title={`Your invitees (${list.length})`}>
-        <div className="overflow-hidden rounded-xl border border-border">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto rounded-xl border border-border">
+          <table className="w-full min-w-[500px] text-sm">
             <thead className="bg-secondary/60 text-xs uppercase tracking-wider text-muted-foreground">
               <tr>
                 <th className="px-4 py-3 text-left">Invitee</th>

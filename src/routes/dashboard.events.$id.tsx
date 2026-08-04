@@ -1,15 +1,49 @@
+import { useState, useSyncExternalStore } from "react";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { ArrowLeft, Users, UserPlus, CalendarDays, MapPin, CheckCircle2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Users,
+  UserPlus,
+  CalendarDays,
+  MapPin,
+  CheckCircle2,
+  Check,
+  UserCheck,
+  Plus,
+} from "lucide-react";
 import { PageHeader, SectionCard, StatCard } from "@/components/dashboard/ui";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { events, members, invitees, attendanceForDate } from "@/lib/data";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { toast } from "sonner";
+import { invitees, attendanceForDate } from "@/lib/data";
+import {
+  getEventById,
+  registerForEvent,
+  unregisterFromEvent,
+  subscribeEvents,
+} from "@/lib/stores/events-store";
+import { getMembers } from "@/lib/stores/members-store";
+import { useRole } from "@/lib/role";
 
 export const Route = createFileRoute("/dashboard/events/$id")({
   loader: ({ params }) => {
-    const e = events.find((x) => x.id === params.id);
+    const e = getEventById(params.id);
     if (!e) throw notFound();
     return e;
   },
@@ -23,12 +57,35 @@ export const Route = createFileRoute("/dashboard/events/$id")({
 });
 
 function EventDetail() {
-  const e = Route.useLoaderData();
-  const attendedIds = new Set(attendanceForDate(e.date));
-  const attendees = members.filter((m) => attendedIds.has(m.id));
+  const initialEvent = Route.useLoaderData();
+  const e = useSyncExternalStore(
+    subscribeEvents,
+    () => getEventById(initialEvent.id) || initialEvent,
+    () => initialEvent,
+  );
+  const { userId, role } = useRole();
+  const canManage = role === "Admin" || role === "Pastor" || role === "Cell Leader";
+
+  const allMembers = getMembers();
+  const registeredIds = new Set(e.registeredMemberIds || []);
+  const isUserRegistered = registeredIds.has(userId);
+
+  const dateAttendedIds = new Set(attendanceForDate(e.date));
+  const attendees = allMembers.filter((m) => dateAttendedIds.has(m.id) || registeredIds.has(m.id));
+
   const eventInvitees = invitees.filter((i) => i.event === e.name);
   const pct = Math.min(100, Math.round((e.attendees / e.capacity) * 100));
   const d = new Date(e.date);
+
+  const handleToggleRegistration = () => {
+    if (isUserRegistered) {
+      unregisterFromEvent(e.id, userId);
+      toast.info(`Cancelled your registration for ${e.name}`);
+    } else {
+      registerForEvent(e.id, userId);
+      toast.success(`Successfully registered for ${e.name}!`);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -41,11 +98,45 @@ function EventDetail() {
 
       <PageHeader
         title={e.name}
-        subtitle={`${d.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric", year: "numeric" })} · ${e.branch}`}
+        subtitle={`${d.toLocaleDateString(undefined, {
+          weekday: "long",
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        })} · ${e.branch}`}
         action={
-          <Badge className="bg-gradient-gold text-gold-foreground border-transparent">
-            {e.type}
-          </Badge>
+          <div className="flex flex-wrap items-center gap-2">
+            {isUserRegistered ? (
+              <Button
+                variant="outline"
+                onClick={handleToggleRegistration}
+                className="border-success/40 bg-success/10 text-success hover:bg-success/20 hover:text-success"
+              >
+                <Check className="mr-1.5 h-4 w-4" />
+                Registered
+              </Button>
+            ) : (
+              <Button
+                onClick={handleToggleRegistration}
+                className="bg-gradient-royal text-primary-foreground shadow-soft hover:opacity-90"
+              >
+                <UserCheck className="mr-1.5 h-4 w-4" />
+                Register for Event
+              </Button>
+            )}
+
+            {canManage && (
+              <RegisterMemberDialog
+                eventId={e.id}
+                eventName={e.name}
+                registeredIds={registeredIds}
+              />
+            )}
+
+            <Badge className="bg-gradient-gold text-gold-foreground border-transparent px-3 py-1.5 text-xs">
+              {e.type}
+            </Badge>
+          </div>
         }
       />
 
@@ -53,7 +144,7 @@ function EventDetail() {
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="invitations">Invitations</TabsTrigger>
-          <TabsTrigger value="attendees">Attendees</TabsTrigger>
+          <TabsTrigger value="attendees">Attendees ({attendees.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="mt-4 space-y-6">
@@ -101,8 +192,8 @@ function EventDetail() {
             {eventInvitees.length === 0 ? (
               <p className="text-sm text-muted-foreground">No invitations sent for this event.</p>
             ) : (
-              <div className="overflow-hidden rounded-xl border border-border">
-                <table className="w-full text-sm">
+              <div className="overflow-x-auto rounded-xl border border-border">
+                <table className="w-full min-w-[500px] text-sm">
                   <thead className="bg-secondary/60 text-xs uppercase tracking-wider text-muted-foreground">
                     <tr>
                       <th className="px-4 py-3 text-left">Invitee</th>
@@ -130,42 +221,111 @@ function EventDetail() {
         </TabsContent>
 
         <TabsContent value="attendees" className="mt-4">
-          <SectionCard title={`Attendees (${attendees.length})`}>
-            <div className="overflow-hidden rounded-xl border border-border">
-              <table className="w-full text-sm">
+          <SectionCard
+            title={`Attendees (${attendees.length})`}
+            action={
+              isUserRegistered ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleToggleRegistration}
+                  className="border-success/40 bg-success/10 text-success hover:bg-success/20 hover:text-success"
+                >
+                  <Check className="mr-1.5 h-3.5 w-3.5" />
+                  Registered
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  onClick={handleToggleRegistration}
+                  className="bg-gradient-royal text-primary-foreground shadow-soft hover:opacity-90"
+                >
+                  <UserCheck className="mr-1.5 h-3.5 w-3.5" />
+                  Register Myself
+                </Button>
+              )
+            }
+          >
+            <div className="overflow-x-auto rounded-xl border border-border">
+              <table className="w-full min-w-[500px] text-sm">
                 <thead className="bg-secondary/60 text-xs uppercase tracking-wider text-muted-foreground">
                   <tr>
                     <th className="px-4 py-3 text-left">Member</th>
                     <th className="px-4 py-3 text-left">Church</th>
                     <th className="px-4 py-3 text-left">Position</th>
+                    <th className="px-4 py-3 text-left">Status</th>
+                    <th className="px-4 py-3 text-right">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border bg-card">
-                  {attendees.map((m) => (
-                    <tr key={m.id} className="hover:bg-secondary/40">
-                      <td className="px-4 py-3">
-                        <Link
-                          to="/dashboard/members/$id"
-                          params={{ id: m.id }}
-                          className="flex items-center gap-3 group hover:opacity-80 transition"
-                        >
-                          <Avatar className="h-8 w-8 ring-1 ring-gold/30">
-                            <AvatarImage src={m.avatar} />
-                            <AvatarFallback className="bg-primary/10 text-primary font-medium">
-                              {m.name[0]}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span className="font-semibold group-hover:text-primary group-hover:underline transition">
-                            {m.name}
-                          </span>
-                        </Link>
-                      </td>
-                      <td className="px-4 py-3 text-muted-foreground">{m.branch}</td>
-                      <td className="px-4 py-3">
-                        <Badge variant="outline">{m.stage}</Badge>
-                      </td>
-                    </tr>
-                  ))}
+                  {attendees.map((m) => {
+                    const isRegistered = registeredIds.has(m.id);
+                    const isSelf = m.id === userId;
+
+                    return (
+                      <tr key={m.id} className="hover:bg-secondary/40">
+                        <td className="px-4 py-3">
+                          <Link
+                            to="/dashboard/members/$id"
+                            params={{ id: m.id }}
+                            className="flex items-center gap-3 group hover:opacity-80 transition"
+                          >
+                            <Avatar className="h-8 w-8 ring-1 ring-gold/30">
+                              <AvatarImage src={m.avatar} />
+                              <AvatarFallback className="bg-primary/10 text-primary font-medium">
+                                {m.name[0]}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <span className="font-semibold group-hover:text-primary group-hover:underline transition">
+                                {m.name}
+                              </span>
+                              {isSelf && (
+                                <Badge variant="outline" className="ml-2 text-[10px] py-0">
+                                  You
+                                </Badge>
+                              )}
+                            </div>
+                          </Link>
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">{m.branch}</td>
+                        <td className="px-4 py-3">
+                          <Badge variant="outline">{m.stage}</Badge>
+                        </td>
+                        <td className="px-4 py-3">
+                          {isRegistered ? (
+                            <Badge className="bg-success/15 text-success border-success/30">
+                              Registered
+                            </Badge>
+                          ) : (
+                            <Badge variant="secondary">Attended</Badge>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          {isSelf || canManage ? (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-8 text-xs"
+                              onClick={() => {
+                                if (isRegistered) {
+                                  unregisterFromEvent(e.id, m.id);
+                                  toast.info(`Cancelled registration for ${m.name}`);
+                                } else {
+                                  registerForEvent(e.id, m.id);
+                                  toast.success(`Registered ${m.name} for event`);
+                                }
+                              }}
+                            >
+                              {isRegistered ? "Unregister" : "Register"}
+                            </Button>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -176,6 +336,75 @@ function EventDetail() {
   );
 }
 
+function RegisterMemberDialog({
+  eventId,
+  eventName,
+  registeredIds,
+}: {
+  eventId: string;
+  eventName: string;
+  registeredIds: Set<string>;
+}) {
+  const [open, setOpen] = useState(false);
+  const [selectedMemberId, setSelectedMemberId] = useState<string>("");
+  const allMembers = getMembers();
+  const unregisteredMembers = allMembers.filter((m) => !registeredIds.has(m.id));
+
+  const handleRegister = () => {
+    if (!selectedMemberId) return;
+    const member = allMembers.find((m) => m.id === selectedMemberId);
+    registerForEvent(eventId, selectedMemberId);
+    toast.success(`Registered ${member?.name || "member"} for ${eventName}`);
+    setSelectedMemberId("");
+    setOpen(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline">
+          <Plus className="mr-1 h-4 w-4" />
+          Register Member
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Register Member for Event</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-3">
+          <p className="text-xs text-muted-foreground">
+            Select a church member to add to the registration list for <strong>{eventName}</strong>.
+          </p>
+          <Select value={selectedMemberId} onValueChange={setSelectedMemberId}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select a member..." />
+            </SelectTrigger>
+            <SelectContent>
+              {unregisteredMembers.map((m) => (
+                <SelectItem key={m.id} value={m.id}>
+                  {m.name} ({m.branch})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex justify-end gap-2">
+          <Button variant="ghost" onClick={() => setOpen(false)}>
+            Cancel
+          </Button>
+          <Button
+            disabled={!selectedMemberId}
+            onClick={handleRegister}
+            className="bg-gradient-royal text-primary-foreground"
+          >
+            Confirm Registration
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function Info({
   icon: Icon,
   label,
@@ -183,16 +412,16 @@ function Info({
 }: {
   icon: typeof CalendarDays;
   label: string;
-  value: string;
+  value?: string | null;
 }) {
   return (
     <div className="flex items-center gap-3 rounded-xl bg-secondary/40 p-4">
-      <span className="grid h-10 w-10 place-items-center rounded-lg bg-gradient-royal text-primary-foreground">
+      <div className="grid h-10 w-10 place-items-center rounded-lg bg-gold-soft text-primary">
         <Icon className="h-5 w-5" />
-      </span>
+      </div>
       <div>
-        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</p>
-        <p className="font-display text-base font-bold">{value}</p>
+        <p className="text-xs text-muted-foreground">{label}</p>
+        <p className="font-semibold text-sm">{value || "N/A"}</p>
       </div>
     </div>
   );

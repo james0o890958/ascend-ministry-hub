@@ -22,7 +22,7 @@ type Metric = "attendance" | "giving" | "growth" | "engagement" | "events" | "ta
 
 const METRICS: { key: Metric; label: string }[] = [
   { key: "attendance", label: "Attendance" },
-  { key: "giving", label: "Giving" },
+  { key: "giving", label: "Giving & Partnership" },
   { key: "growth", label: "Growth" },
   { key: "engagement", label: "Engagement" },
   { key: "events", label: "Event participation" },
@@ -189,7 +189,7 @@ export function ReportComparison({ label, entities }: { label: string; entities:
                     const pct = Math.round((v / maxes[m]) * 100);
                     const display =
                       m === "giving"
-                        ? `$${v.toLocaleString()}`
+                        ? `₦${v.toLocaleString()}`
                         : m === "growth"
                           ? `${v}%`
                           : m === "attendance" || m === "engagement"

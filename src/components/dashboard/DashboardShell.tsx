@@ -24,6 +24,8 @@ import {
   Shield,
   Lock,
   Building2,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { Input } from "@/components/ui/input";
@@ -42,6 +44,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useSyncExternalStore } from "react";
+import { useTheme } from "@/lib/theme";
 import { getNotifications, subscribeNotifications } from "@/lib/notifications-store";
 import { getMembers, subscribeMembers } from "@/lib/members-store";
 import { getSouls } from "@/lib/souls";
@@ -60,7 +63,12 @@ type NavItem = {
 
 const nav: NavItem[] = [
   { to: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true },
-  { to: "/dashboard/church", label: "Church Ministry", icon: Church, roles: ["Admin", "Branch Admin", "Pastor"] },
+  {
+    to: "/dashboard/church",
+    label: "Church Ministry",
+    icon: Church,
+    roles: ["Admin", "Branch Admin", "Pastor"],
+  },
   {
     to: "/dashboard/cells",
     label: "Cell Ministry",
@@ -70,7 +78,7 @@ const nav: NavItem[] = [
   { to: "/dashboard/groups", label: "Souls", icon: Sparkles },
   { to: "/dashboard/events", label: "Events", icon: CalendarDays },
   { to: "/dashboard/tasks", label: "Tasks", icon: CheckSquare },
-  { to: "/dashboard/giving", label: "Giving", icon: HandCoins },
+  { to: "/dashboard/giving", label: "Giving & Partnership", icon: HandCoins },
   { to: "/dashboard/messages", label: "Messages", icon: MessageSquare },
   { to: "/dashboard/notifications", label: "Notifications", icon: BellRing },
   {
@@ -89,6 +97,7 @@ export function DashboardShell({ children }: { children?: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
+  const { theme, setTheme } = useTheme();
   const { role, setRole } = useRole();
   const { current, setCurrentChurchId, branchesList } = useCurrentChurch();
 
@@ -100,6 +109,16 @@ export function DashboardShell({ children }: { children?: ReactNode }) {
   const membersList = useSyncExternalStore(subscribeMembers, getMembers, getMembers);
 
   const isBranchSwitchAllowed = canSwitchBranch(role);
+
+  const isDark =
+    theme === "dark" ||
+    (theme === "system" &&
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches);
+
+  const toggleTheme = () => {
+    setTheme(isDark ? "light" : "dark");
+  };
 
   const isActive = (to: string, exact?: boolean) =>
     exact ? path === to : path === to || path.startsWith(to + "/");
@@ -266,11 +285,13 @@ export function DashboardShell({ children }: { children?: ReactNode }) {
                         onClick={() => setCurrentChurchId(b.id)}
                         className={cn(
                           "cursor-pointer text-xs flex items-center justify-between",
-                          b.id === current.id && "font-bold text-gold"
+                          b.id === current.id && "font-bold text-gold",
                         )}
                       >
                         <span>{b.name}</span>
-                        {b.country && <span className="text-[10px] text-muted-foreground">{b.country}</span>}
+                        {b.country && (
+                          <span className="text-[10px] text-muted-foreground">{b.country}</span>
+                        )}
                       </DropdownMenuItem>
                     ))}
                   </DropdownMenuContent>
@@ -329,6 +350,57 @@ export function DashboardShell({ children }: { children?: ReactNode }) {
             </div>
 
             <div className="ml-auto flex items-center gap-2">
+              {/* Mobile search trigger */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="relative text-white hover:bg-white/15 hover:text-white sm:hidden"
+                    aria-label="Search"
+                  >
+                    <Search className="h-5 w-5" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-72 p-3">
+                  <Input
+                    placeholder="Search souls, members, pages…"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="text-xs"
+                    autoFocus
+                  />
+                  {searchQuery.trim() && (
+                    <div className="mt-2 max-h-60 overflow-y-auto space-y-1">
+                      {searchResults.length === 0 ? (
+                        <p className="p-2 text-xs text-muted-foreground text-center">
+                          No results found
+                        </p>
+                      ) : (
+                        searchResults.map((res, i) => (
+                          <button
+                            key={i}
+                            className="w-full text-left p-2 hover:bg-secondary rounded-lg transition flex items-center justify-between text-xs"
+                            onClick={() => {
+                              navigate({ to: res.to as "/dashboard" });
+                              setSearchQuery("");
+                            }}
+                          >
+                            <div>
+                              <p className="font-semibold text-foreground">{res.title}</p>
+                              <p className="text-[11px] text-muted-foreground">{res.subtitle}</p>
+                            </div>
+                            <Badge variant="outline" className="text-[10px] uppercase">
+                              {res.type}
+                            </Badge>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </PopoverContent>
+              </Popover>
+
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -369,6 +441,22 @@ export function DashboardShell({ children }: { children?: ReactNode }) {
                   </div>
                 </PopoverContent>
               </Popover>
+
+              {/* Theme Toggle Button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleTheme}
+                title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                aria-label={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                className="text-white hover:bg-white/15 hover:text-white rounded-lg"
+              >
+                {isDark ? (
+                  <Sun className="h-5 w-5 text-gold" />
+                ) : (
+                  <Moon className="h-5 w-5 text-white/90" />
+                )}
+              </Button>
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

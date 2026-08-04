@@ -55,7 +55,11 @@ function MembersPage() {
           currentChurchId === "all" || m.branch === currentChurch.name || church !== "all";
         return (
           matchesBranch &&
-          (!s || m.name.toLowerCase().includes(s) || m.email.toLowerCase().includes(s)) &&
+          (!s ||
+            m.name.toLowerCase().includes(s) ||
+            m.email.toLowerCase().includes(s) ||
+            (m.soulTracerId && m.soulTracerId.toLowerCase().includes(s)) ||
+            m.id.toLowerCase().includes(s)) &&
           (position === "all" || m.stage === position) &&
           (church === "all" || m.branch === church) &&
           (cell === "all" || m.cell === cell)
@@ -84,7 +88,7 @@ function MembersPage() {
             <Input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Search by name or email"
+              placeholder="Search by name, email, or SoulTracer ID…"
               className="pl-9"
             />
           </div>
@@ -133,7 +137,7 @@ function MembersPage() {
         </div>
 
         <div className="mt-4 overflow-x-auto rounded-xl border border-border">
-          <table className="w-full text-sm">
+          <table className="w-full min-w-[700px] text-sm">
             <thead className="bg-secondary/60 text-xs uppercase tracking-wider text-muted-foreground">
               <tr>
                 <th className="px-4 py-3 text-left font-semibold">Member</th>
@@ -162,7 +166,12 @@ function MembersPage() {
                         <AvatarFallback>{m.name[0]}</AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="font-semibold">{m.name}</p>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <p className="font-semibold">{m.name}</p>
+                          <span className="text-[10px] font-mono font-semibold text-blue-600 dark:text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded border border-blue-500/30">
+                            {m.soulTracerId || `ST-M-${m.id}`}
+                          </span>
+                        </div>
                         <p className="text-xs text-muted-foreground">{m.email}</p>
                       </div>
                     </div>

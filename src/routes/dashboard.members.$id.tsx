@@ -15,6 +15,8 @@ import {
   Sparkles,
   CheckSquare,
   Sparkle,
+  Repeat,
+  UserCheck,
 } from "lucide-react";
 import { PageHeader, SectionCard, StatCard } from "@/components/dashboard/ui";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -79,7 +81,9 @@ function MemberDetail() {
 
   const [suggestion, setSuggestion] = useState<StageSuggestion | null>(null);
 
-  const branch = getBranchById(current.id) || getBranches().find((b) => b.name === member.branch);
+  const branch =
+    getBranches().find((b) => b.name === member.branch || b.id === member.branch) ||
+    getBranchById(current.id);
   const branchStages = branch?.stages || [
     "Invitee",
     "First Timer",
@@ -99,7 +103,12 @@ function MemberDetail() {
   const attended = journey.filter((j) => j.kind === "Event Attended").length;
 
   const handleMilestoneToggle = (msId: string, checked: boolean) => {
-    const sugg = toggleMemberMilestone(member.id, msId, checked, new Date().toISOString().slice(0, 10));
+    const sugg = toggleMemberMilestone(
+      member.id,
+      msId,
+      checked,
+      new Date().toISOString().slice(0, 10),
+    );
     setMember(getMemberById(member.id)!);
     if (sugg) {
       setSuggestion(sugg);
@@ -129,11 +138,10 @@ function MemberDetail() {
           <div className="flex items-center gap-3">
             <Sparkles className="h-5 w-5 text-gold shrink-0" />
             <div>
-              <p className="font-bold text-sm">
-                Milestone Complete: {suggestion.milestoneName}
-              </p>
+              <p className="font-bold text-sm">Milestone Complete: {suggestion.milestoneName}</p>
               <p className="text-xs text-muted-foreground">
-                Would you like to advance {member.name}'s stage to <strong>{suggestion.suggestedStage}</strong>?
+                Would you like to advance {member.name}'s stage to{" "}
+                <strong>{suggestion.suggestedStage}</strong>?
               </p>
             </div>
           </div>
@@ -141,7 +149,11 @@ function MemberDetail() {
             <Button size="sm" variant="ghost" onClick={() => setSuggestion(null)}>
               Dismiss
             </Button>
-            <Button size="sm" className="bg-gradient-royal text-primary-foreground" onClick={handleAcceptStageSuggestion}>
+            <Button
+              size="sm"
+              className="bg-gradient-royal text-primary-foreground"
+              onClick={handleAcceptStageSuggestion}
+            >
               Advance Stage
             </Button>
           </div>
@@ -155,8 +167,14 @@ function MemberDetail() {
           <div className="flex items-center gap-2">
             {canManageMember && (
               <>
-                <PromoteRoleDialog member={member} onUpdated={() => setMember(getMemberById(member.id)!)} />
-                <TransferBranchDialog member={member} onUpdated={() => setMember(getMemberById(member.id)!)} />
+                <PromoteRoleDialog
+                  member={member}
+                  onUpdated={() => setMember(getMemberById(member.id)!)}
+                />
+                <TransferBranchDialog
+                  member={member}
+                  onUpdated={() => setMember(getMemberById(member.id)!)}
+                />
               </>
             )}
           </div>
@@ -180,20 +198,48 @@ function MemberDetail() {
                   <AvatarFallback>{member.name[0]}</AvatarFallback>
                 </Avatar>
                 <h2 className="mt-4 font-display text-2xl font-bold">{member.name}</h2>
+                <div className="mt-1 font-mono text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-500/10 px-2.5 py-0.5 rounded-full border border-blue-500/30">
+                  {member.soulTracerId || `ST-M-2026-${member.id}`}
+                </div>
                 <div className="mt-2 flex flex-wrap items-center justify-center gap-1.5">
                   <Badge className="bg-gradient-gold text-gold-foreground">{member.stage}</Badge>
                   <Badge variant="outline" className="border-primary/40 text-primary">
                     Role: {member.role}
                   </Badge>
+                  {member.originType === "evangelism" || member.originSoulId ? (
+                    <Badge
+                      variant="outline"
+                      className="border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs"
+                    >
+                      <Sparkles className="mr-1 h-3 w-3" />
+                      Won via Evangelism
+                    </Badge>
+                  ) : member.originType === "transfer" ? (
+                    <Badge
+                      variant="outline"
+                      className="border-purple-500/40 bg-purple-500/10 text-purple-600 dark:text-purple-400 text-xs"
+                    >
+                      <Repeat className="mr-1 h-3 w-3" />
+                      Transferred from {member.originBranch || "Branch"}
+                    </Badge>
+                  ) : (
+                    <Badge
+                      variant="outline"
+                      className="border-muted-foreground/30 text-muted-foreground text-xs"
+                    >
+                      <UserCheck className="mr-1 h-3 w-3" />
+                      Direct Member
+                    </Badge>
+                  )}
                 </div>
                 {member.originSoulId && (
                   <Link
                     to="/dashboard/groups/$id"
                     params={{ id: member.originSoulId }}
-                    className="mt-3 text-xs text-gold underline hover:opacity-80 flex items-center gap-1"
+                    className="mt-3 text-xs font-medium text-amber-600 dark:text-amber-400 underline hover:opacity-80 flex items-center gap-1 bg-amber-500/10 px-3 py-1 rounded-md border border-amber-500/30"
                   >
-                    <Sparkles className="h-3 w-3" />
-                    Originated from Soul #{member.originSoulId}
+                    <Sparkles className="h-3.5 w-3.5" />
+                    View Original Soul Outreach History
                   </Link>
                 )}
               </div>
@@ -204,7 +250,9 @@ function MemberDetail() {
                 <Row icon={CheckCircle2}>
                   Mentor: <span className="font-semibold text-foreground">{member.mentor}</span>
                 </Row>
-                <Row icon={CalendarDays}>Joined {new Date(member.joinedAt).toLocaleDateString()}</Row>
+                <Row icon={CalendarDays}>
+                  Joined {new Date(member.joinedAt).toLocaleDateString()}
+                </Row>
               </div>
             </SectionCard>
 
@@ -260,8 +308,8 @@ function MemberDetail() {
                             isCurrent
                               ? "bg-gradient-royal text-primary-foreground"
                               : isPast
-                              ? "bg-primary/10 text-primary border-primary/20"
-                              : "text-muted-foreground opacity-60"
+                                ? "bg-primary/10 text-primary border-primary/20"
+                                : "text-muted-foreground opacity-60"
                           }
                         >
                           {stg}
@@ -279,12 +327,13 @@ function MemberDetail() {
         <TabsContent value="milestones" className="mt-4">
           <SectionCard title={`Discipleship Milestones — ${member.branch}`}>
             <p className="text-xs text-muted-foreground mb-4">
-              Check off completed milestones for {member.name}. Completing key milestones will auto-suggest stage advancement.
+              Check off completed milestones for {member.name}. Completing key milestones will
+              auto-suggest stage advancement.
             </p>
             <div className="grid gap-3 sm:grid-cols-2">
               {branchMilestones.map((ms) => {
                 const isCompleted = (member.milestones || []).some(
-                  (m) => m.milestoneId === ms.id && m.completed
+                  (m) => m.milestoneId === ms.id && m.completed,
                 );
                 const recordedMs = (member.milestones || []).find((m) => m.milestoneId === ms.id);
                 return (
@@ -299,7 +348,8 @@ function MemberDetail() {
                       </p>
                       {ms.suggestedStage && (
                         <p className="text-xs text-muted-foreground">
-                          Suggests Stage: <strong className="text-foreground">{ms.suggestedStage}</strong>
+                          Suggests Stage:{" "}
+                          <strong className="text-foreground">{ms.suggestedStage}</strong>
                         </p>
                       )}
                       {isCompleted && recordedMs?.date && (
@@ -326,8 +376,8 @@ function MemberDetail() {
 
         <TabsContent value="history" className="mt-4">
           <SectionCard title="Spiritual journey history">
-            <div className="overflow-hidden rounded-xl border border-border">
-              <table className="w-full text-sm">
+            <div className="overflow-x-auto rounded-xl border border-border">
+              <table className="w-full min-w-[500px] text-sm">
                 <thead className="bg-secondary/60 text-xs uppercase tracking-wider text-muted-foreground">
                   <tr>
                     <th className="px-4 py-3 text-left font-semibold">Date</th>
@@ -440,8 +490,12 @@ function PromoteRoleDialog({ member, onUpdated }: { member: Member; onUpdated: (
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-          <Button className="bg-gradient-royal text-primary-foreground" onClick={submit}>Save Changes</Button>
+          <Button variant="outline" onClick={() => setOpen(false)}>
+            Cancel
+          </Button>
+          <Button className="bg-gradient-royal text-primary-foreground" onClick={submit}>
+            Save Changes
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -476,7 +530,8 @@ function TransferBranchDialog({ member, onUpdated }: { member: Member; onUpdated
           <DialogTitle>Transfer {member.name} to another Branch</DialogTitle>
         </DialogHeader>
         <p className="text-xs text-muted-foreground">
-          Transferring changes branch and clears local cell assignment. Discipleship stage, milestones, and history are preserved intact.
+          Transferring changes branch and clears local cell assignment. Discipleship stage,
+          milestones, and history are preserved intact.
         </p>
         <div className="space-y-3 py-2">
           <div className="space-y-1.5">
@@ -496,8 +551,12 @@ function TransferBranchDialog({ member, onUpdated }: { member: Member; onUpdated
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-          <Button className="bg-gradient-royal text-primary-foreground" onClick={submit}>Confirm Transfer</Button>
+          <Button variant="outline" onClick={() => setOpen(false)}>
+            Cancel
+          </Button>
+          <Button className="bg-gradient-royal text-primary-foreground" onClick={submit}>
+            Confirm Transfer
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

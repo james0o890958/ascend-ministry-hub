@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { Role } from "@/types/domain";
 import { getSession, setSessionRole, subscribeSession } from "@/lib/stores/session-store";
+import { getMemberById, subscribeMembers } from "@/lib/stores/members-store";
 
 type Ctx = {
   role: Role;
@@ -13,16 +14,29 @@ const RoleContext = createContext<Ctx | null>(null);
 
 export function RoleProvider({ children }: { children: ReactNode }) {
   const [session, setSessionState] = useState(getSession());
+  const [member, setMemberState] = useState(() => getMemberById(session.memberId));
 
   useEffect(() => {
-    return subscribeSession(() => {
-      setSessionState(getSession());
+    const unsubSession = subscribeSession(() => {
+      const s = getSession();
+      setSessionState(s);
+      setMemberState(getMemberById(s.memberId));
     });
-  }, []);
+    const unsubMembers = subscribeMembers(() => {
+      const s = getSession();
+      setMemberState(getMemberById(s.memberId));
+    });
+    return () => {
+      unsubSession();
+      unsubMembers();
+    };
+  }, [session.memberId]);
 
   const handleSetRole = (newRole: Role) => {
     setSessionRole(newRole);
   };
+
+  const userName = member ? member.name : "Pst. D. Okafor";
 
   return (
     <RoleContext.Provider
@@ -30,7 +44,7 @@ export function RoleProvider({ children }: { children: ReactNode }) {
         role: session.role,
         setRole: handleSetRole,
         userId: session.memberId,
-        userName: "Pst. D. Okafor",
+        userName,
       }}
     >
       {children}

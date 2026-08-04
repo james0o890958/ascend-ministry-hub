@@ -1,6 +1,13 @@
 export type Role = "Admin" | "Branch Admin" | "Pastor" | "PCF Leader" | "Cell Leader" | "Member";
 
-export const ROLES: Role[] = ["Admin", "Branch Admin", "Pastor", "PCF Leader", "Cell Leader", "Member"];
+export const ROLES: Role[] = [
+  "Admin",
+  "Branch Admin",
+  "Pastor",
+  "PCF Leader",
+  "Cell Leader",
+  "Member",
+];
 
 export const DEFAULT_MEMBER_STAGES = [
   "Invitee",
@@ -66,6 +73,8 @@ export type SoulPrayer = {
   date: string;
   text: string;
   status: "Active" | "Answered";
+  answeredAt?: string;
+  testimony?: string;
 };
 
 export type SoulFollowUp = {
@@ -74,6 +83,9 @@ export type SoulFollowUp = {
   type: "Call" | "Visit" | "Meeting" | "Message";
   by: string;
   notes: string;
+  status: "scheduled" | "completed" | "cancelled";
+  completedAt?: string;
+  outcome?: string;
 };
 
 export type SoulNote = {
@@ -85,6 +97,7 @@ export type SoulNote = {
 
 export type Soul = {
   id: string;
+  soulTracerId?: string;
   name: string;
   phone: string;
   email?: string;
@@ -95,6 +108,7 @@ export type Soul = {
   invitedBy: string;
   mentor: string;
   date: string;
+  convertedAt?: string;
   notes?: string;
   convertedMemberId?: string | null;
   avatar?: string;
@@ -111,8 +125,11 @@ export type Soul = {
   };
 };
 
+export type MemberOrigin = "evangelism" | "direct" | "transfer";
+
 export type Member = {
   id: string;
+  soulTracerId?: string;
   name: string;
   email: string;
   phone: string;
@@ -120,13 +137,18 @@ export type Member = {
   role: Role;
   stage: string;
   milestones: MemberMilestone[];
+  badges?: SoulBadge[];
   cellId?: string | null;
   cell?: string;
   mentor: string;
   joinedAt: string;
+  convertedAt?: string;
+  transferredAt?: string;
   avatar: string;
   status: "active" | "inactive";
+  originType?: MemberOrigin;
   originSoulId?: string | null;
+  originBranch?: string | null;
   attendance?: number;
 };
 
@@ -170,6 +192,31 @@ export type GivingRecord = {
   memberId?: string | null;
   giverNameIfAnonymous?: string | null;
   rollupScope?: "branch-only" | "ministry-wide";
+  status?: "pending" | "verified" | "rejected";
+  paymentChannel?: "Bank Transfer" | "Cash" | "POS" | "Cheque";
+  receiptRef?: string | null;
+  receiptUrl?: string | null;
+  pledgeId?: string | null;
+  rejectionReason?: string | null;
+};
+
+export type PartnershipPledge = {
+  id: string;
+  memberId: string;
+  memberName: string;
+  branch: string;
+  title: string;
+  targetAmount: number;
+  fulfilledAmount: number;
+  status: "active" | "completed";
+  createdAt: string;
+};
+
+export type ChurchBankDetail = {
+  branch: string;
+  bankName: string;
+  accountNumber: string;
+  accountName: string;
 };
 
 export type GivingTypeConfig = {

@@ -1,7 +1,17 @@
 import { useState, useMemo, useSyncExternalStore } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageHeader, SectionCard, StatCard } from "@/components/dashboard/ui";
-import { HeartHandshake, Users, TrendingUp, CheckCircle2, CalendarPlus, Plus, Crown } from "lucide-react";
+import {
+  HeartHandshake,
+  Users,
+  TrendingUp,
+  CheckCircle2,
+  CalendarPlus,
+  Plus,
+  Crown,
+  UserPlus,
+  Check,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -26,50 +36,73 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { getCells, addCell, subscribeCells } from "@/lib/stores/cells-store";
-import { getMembers, subscribeMembers } from "@/lib/stores/members-store";
+import {
+  getMembers,
+  updateMemberRole,
+  assignMemberToCell,
+  subscribeMembers,
+} from "@/lib/stores/members-store";
+import { addNotification } from "@/lib/notifications-store";
 import {
   getCellMeetings,
   addCellMeeting,
   subscribeCellMeetings,
   type CellMeeting,
 } from "@/lib/cell-meetings-store";
-import { addNotification } from "@/lib/notifications-store";
 import { useCurrentChurch } from "@/lib/current-church";
 import { useRole } from "@/lib/role";
 import { canManageCells } from "@/lib/permissions";
 import { ReportComparison } from "@/components/dashboard/ReportComparison";
-import { CellGroup } from "@/types/domain";
+import { CellGroup, Member } from "@/types/domain";
 
 export const Route = createFileRoute("/dashboard/cells")({ component: CellsPage });
 
 function CellsPage() {
-  const { role } = useRole();
+  const { role, userId, userName } = useRole();
   const { current } = useCurrentChurch();
-  
+
   const allCells = useSyncExternalStore(subscribeCells, getCells, getCells);
   const meetings = useSyncExternalStore(subscribeCellMeetings, getCellMeetings, getCellMeetings);
   const membersList = useSyncExternalStore(subscribeMembers, getMembers, getMembers);
 
   const canCreate = canManageCells(role, current.name, current.name);
 
-  // Scoped to current branch unless Admin
+  // Scoped to current branch for leaders, and restricted to own cell for Cell Leader
   const branchCells = useMemo(() => {
-    return role === "Admin" ? allCells : allCells.filter((c) => c.branch === current.name);
-  }, [role, current, allCells]);
+    const bCells = role === "Admin" ? allCells : allCells.filter((c) => c.branch === current.name);
+    if (role === "Cell Leader") {
+      const myCells = bCells.filter((c) => c.leaderId === userId || c.leader === userName);
+      return myCells.length > 0 ? myCells : bCells.slice(0, 1);
+    }
+    return bCells;
+  }, [role, current, allCells, userId, userName]);
 
   const [activeCellId, setActiveCellId] = useState<string>(branchCells[0]?.id || "c1");
 
   const activeCell = useMemo(
     () => branchCells.find((c) => c.id === activeCellId) || branchCells[0] || allCells[0],
-    [activeCellId, branchCells, allCells]
+    [activeCellId, branchCells, allCells],
   );
 
   const cellMembers = useMemo(
-    () => membersList.filter((m) => m.branch === activeCell.branch && (m.cell === activeCell.name || m.cellId === activeCell.id)),
-    [membersList, activeCell]
+    () =>
+      activeCell
+        ? membersList.filter(
+            (m) =>
+              m.branch === activeCell.branch &&
+              (m.cell === activeCell.name || m.cellId === activeCell.id),
+          )
+        : [],
+    [membersList, activeCell],
   );
 
-  if (role !== "Admin" && role !== "Branch Admin" && role !== "Pastor" && role !== "PCF Leader" && role !== "Cell Leader") {
+  if (
+    role !== "Admin" &&
+    role !== "Branch Admin" &&
+    role !== "Pastor" &&
+    role !== "PCF Leader" &&
+    role !== "Cell Leader"
+  ) {
     return (
       <SectionCard title="Restricted">
         <p className="text-sm text-muted-foreground">
@@ -118,7 +151,12 @@ function CellsPage() {
           accent="gold"
         />
         <StatCard label="Branch" value={activeCell.branch} icon={HeartHandshake} accent="blue" />
-        <StatCard label="Cell Leader" value={activeCell.leader || "Unassigned"} icon={Crown} accent="success" />
+        <StatCard
+          label="Cell Leader"
+          value={activeCell.leader || "Unassigned"}
+          icon={Crown}
+          accent="success"
+        />
       </div>
 
       <Tabs defaultValue="members">
@@ -138,9 +176,18 @@ function CellsPage() {
         </TabsList>
 
         <TabsContent value="members" className="mt-4">
-          <SectionCard title={`${activeCell.name} members (${cellMembers.length})`}>
-            <div className="overflow-hidden rounded-xl border border-border">
-              <table className="w-full text-sm">
+          <SectionCard
+            title={`${activeCell.name} members (${cellMembers.length})`}
+            action={
+              <AssignMemberToCellDialog
+                activeCell={activeCell}
+                membersList={membersList}
+                onAssigned={() => {}}
+              />
+            }
+          >
+            <div className="overflow-x-auto rounded-xl border border-border">
+              <table className="w-full min-w-[500px] text-sm">
                 <thead className="bg-secondary/60 text-xs uppercase tracking-wider text-muted-foreground">
                   <tr>
                     <th className="px-4 py-3 text-left">Member</th>
@@ -154,7 +201,11 @@ function CellsPage() {
                   {cellMembers.map((m) => (
                     <tr key={m.id} className="hover:bg-secondary/40">
                       <td className="px-4 py-3 font-semibold">
-                        <Link to="/dashboard/members/$id" params={{ id: m.id }} className="hover:underline">
+                        <Link
+                          to="/dashboard/members/$id"
+                          params={{ id: m.id }}
+                          className="hover:underline"
+                        >
                           {m.name}
                         </Link>
                       </td>
@@ -162,7 +213,9 @@ function CellsPage() {
                         <Badge variant="outline">{m.role}</Badge>
                       </td>
                       <td className="px-4 py-3 text-muted-foreground">{m.stage}</td>
-                      <td className="px-4 py-3 font-semibold text-primary">{m.attendance || 85}%</td>
+                      <td className="px-4 py-3 font-semibold text-primary">
+                        {m.attendance || 85}%
+                      </td>
                       <td className="px-4 py-3 text-right">
                         <Button size="sm" variant="ghost" asChild>
                           <Link to="/dashboard/members/$id" params={{ id: m.id }}>
@@ -186,9 +239,18 @@ function CellsPage() {
         </TabsContent>
 
         <TabsContent value="attendance" className="mt-4">
-          <SectionCard title="Recent meetings attendance">
-            <div className="overflow-hidden rounded-xl border border-border">
-              <table className="w-full text-sm">
+          <SectionCard
+            title="Recent meetings attendance"
+            action={
+              <TakeAttendanceDialog
+                cell={activeCell}
+                cellMembers={cellMembers}
+                onCompleted={() => {}}
+              />
+            }
+          >
+            <div className="overflow-x-auto rounded-xl border border-border">
+              <table className="w-full min-w-[500px] text-sm">
                 <thead className="bg-secondary/60 text-xs uppercase tracking-wider text-muted-foreground">
                   <tr>
                     <th className="px-4 py-3 text-left">Date</th>
@@ -254,12 +316,22 @@ function CellsPage() {
   );
 }
 
-function CreateCellDialog({ branchName, membersList }: { branchName: string; membersList: any[] }) {
+function CreateCellDialog({
+  branchName,
+  membersList,
+}: {
+  branchName: string;
+  membersList: Member[];
+}) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [leaderId, setLeaderId] = useState("");
 
-  const candidateLeaders = membersList.filter((m) => m.branch === branchName);
+  const candidateLeaders = membersList.filter(
+    (m) =>
+      m.branch === branchName &&
+      (m.role === "Cell Leader" || m.role === "PCF Leader" || m.role === "Pastor"),
+  );
 
   const submit = () => {
     if (!name.trim()) {
@@ -285,6 +357,7 @@ function CreateCellDialog({ branchName, membersList }: { branchName: string; mem
     toast.success(`Cell Group '${name}' created for ${branchName}`);
     setOpen(false);
     setName("");
+    setLeaderId("");
   };
 
   return (
@@ -302,27 +375,42 @@ function CreateCellDialog({ branchName, membersList }: { branchName: string; mem
         <div className="space-y-3 py-2">
           <div className="space-y-1.5">
             <Label>Cell Name *</Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Cell C-3" />
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Cell C-3"
+            />
           </div>
           <div className="space-y-1.5">
             <Label>Assign Cell Leader</Label>
-            <Select value={leaderId} onValueChange={setLeaderId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select leader from branch..." />
-              </SelectTrigger>
-              <SelectContent className="max-h-56">
-                {candidateLeaders.map((m) => (
-                  <SelectItem key={m.id} value={m.id}>
-                    {m.name} ({m.role})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {candidateLeaders.length === 0 ? (
+              <p className="text-xs text-amber-500 bg-amber-500/10 p-2.5 rounded-lg">
+                No eligible leaders (Cell Leader, PCF Leader, Pastor) found in {branchName}. Please
+                promote a member via their profile first.
+              </p>
+            ) : (
+              <Select value={leaderId} onValueChange={setLeaderId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select leader from branch..." />
+                </SelectTrigger>
+                <SelectContent className="max-h-56">
+                  {candidateLeaders.map((m) => (
+                    <SelectItem key={m.id} value={m.id}>
+                      {m.name} ({m.role})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-          <Button className="bg-gradient-royal text-primary-foreground" onClick={submit}>Create Cell</Button>
+          <Button variant="outline" onClick={() => setOpen(false)}>
+            Cancel
+          </Button>
+          <Button className="bg-gradient-royal text-primary-foreground" onClick={submit}>
+            Create Cell
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -420,6 +508,197 @@ function NewMeetingDialog({
           </Button>
           <Button className="bg-gradient-royal text-primary-foreground" onClick={submit}>
             Schedule &amp; notify cell
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function AssignMemberToCellDialog({
+  activeCell,
+  membersList,
+  onAssigned,
+}: {
+  activeCell: CellGroup;
+  membersList: Member[];
+  onAssigned: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [selectedMemberId, setSelectedMemberId] = useState("");
+
+  const unassignedMembers = membersList.filter(
+    (m) => m.branch === activeCell.branch && m.cellId !== activeCell.id,
+  );
+
+  function submit() {
+    if (!selectedMemberId) {
+      toast.error("Please select a member");
+      return;
+    }
+    const member = membersList.find((m) => m.id === selectedMemberId);
+    assignMemberToCell(selectedMemberId, activeCell.id, activeCell.name);
+    toast.success(`Assigned ${member?.name || "Member"} to ${activeCell.name}`);
+    onAssigned();
+    setOpen(false);
+    setSelectedMemberId("");
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button
+          size="sm"
+          variant="outline"
+          className="border-primary/40 text-primary hover:bg-primary/10"
+        >
+          <UserPlus className="mr-1 h-4 w-4" />
+          Assign Member
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Assign Member to {activeCell.name}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3 py-2">
+          <div className="space-y-1.5">
+            <Label>Select Branch Member</Label>
+            {unassignedMembers.length === 0 ? (
+              <p className="text-xs text-muted-foreground bg-secondary/50 p-3 rounded-lg">
+                All members in {activeCell.branch} are already assigned to this cell.
+              </p>
+            ) : (
+              <Select value={selectedMemberId} onValueChange={setSelectedMemberId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose a member..." />
+                </SelectTrigger>
+                <SelectContent className="max-h-60">
+                  {unassignedMembers.map((m) => (
+                    <SelectItem key={m.id} value={m.id}>
+                      {m.name} {m.cell ? `(${m.cell})` : "(Unassigned)"}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setOpen(false)}>
+            Cancel
+          </Button>
+          <Button
+            disabled={!selectedMemberId}
+            className="bg-gradient-royal text-primary-foreground"
+            onClick={submit}
+          >
+            Assign to Cell
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function TakeAttendanceDialog({
+  cell,
+  cellMembers,
+  onCompleted,
+}: {
+  cell: CellGroup;
+  cellMembers: Member[];
+  onCompleted: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [presentIds, setPresentIds] = useState<Set<string>>(new Set(cellMembers.map((m) => m.id)));
+
+  function togglePresent(id: string) {
+    setPresentIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function submit() {
+    const presentCount = presentIds.size;
+    const totalCount = cellMembers.length || 1;
+    const rate = Math.round((presentCount / totalCount) * 100);
+
+    toast.success(`Attendance logged for ${cell.name}`, {
+      description: `${presentCount}/${totalCount} members present (${rate}%) on ${new Date(date).toLocaleDateString()}`,
+    });
+    addNotification({
+      title: `Cell Attendance Logged: ${cell.name}`,
+      desc: `${presentCount}/${totalCount} present (${rate}%) on ${new Date(date).toLocaleDateString()}`,
+      time: "Just now",
+    });
+    onCompleted();
+    setOpen(false);
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white">
+          <CheckCircle2 className="mr-1 h-4 w-4" />
+          Take Attendance
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Take Attendance — {cell.name}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3 py-2">
+          <div className="space-y-1.5">
+            <Label>Meeting Date</Label>
+            <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground">
+              <span>
+                Check Present Members ({presentIds.size}/{cellMembers.length})
+              </span>
+              <button
+                type="button"
+                onClick={() => setPresentIds(new Set(cellMembers.map((m) => m.id)))}
+                className="text-primary hover:underline"
+              >
+                Select All
+              </button>
+            </div>
+            <div className="max-h-60 overflow-y-auto divide-y divide-border rounded-lg border p-1">
+              {cellMembers.map((m) => {
+                const checked = presentIds.has(m.id);
+                return (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => togglePresent(m.id)}
+                    className="flex w-full items-center justify-between p-2.5 text-sm hover:bg-secondary/40 rounded-md transition"
+                  >
+                    <span className="font-medium">{m.name}</span>
+                    {checked ? (
+                      <span className="text-xs bg-emerald-500/10 text-emerald-600 font-semibold px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <Check className="h-3 w-3" /> Present
+                      </span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">Absent</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setOpen(false)}>
+            Cancel
+          </Button>
+          <Button className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={submit}>
+            Save Attendance ({presentIds.size}/{cellMembers.length})
           </Button>
         </DialogFooter>
       </DialogContent>

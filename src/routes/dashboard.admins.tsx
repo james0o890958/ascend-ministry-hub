@@ -19,12 +19,20 @@ import { toast } from "sonner";
 import { addNotification } from "@/lib/notifications-store";
 import { useRole } from "@/lib/role";
 import { getAdmins, subscribeAdmins, inviteAdmin, removeAdmin } from "@/lib/admins-store";
+import {
+  getMembers,
+  updateMemberRole,
+  addMember,
+  subscribeMembers,
+} from "@/lib/stores/members-store";
+import { useCurrentChurch } from "@/lib/current-church";
 
 export const Route = createFileRoute("/dashboard/admins")({ component: AdminsPage });
 
 function AdminsPage() {
   const { role, userName } = useRole();
   const admins = useSyncExternalStore(subscribeAdmins, getAdmins, getAdmins);
+  const members = useSyncExternalStore(subscribeMembers, getMembers, getMembers);
 
   if (role !== "Admin") {
     return (
@@ -38,6 +46,18 @@ function AdminsPage() {
 
   const active = admins.filter((a) => a.status === "Active").length;
   const pending = admins.filter((a) => a.status === "Pending Invite").length;
+
+  const handleRemoveAdmin = (adminId: string, adminEmail: string, adminName: string) => {
+    removeAdmin(adminId);
+    // Demote member if they exist in member store
+    const member = members.find(
+      (m) => m.email?.toLowerCase() === adminEmail.toLowerCase() || m.name === adminName,
+    );
+    if (member) {
+      updateMemberRole(member.id, "Member");
+    }
+    toast.success(`${adminName} removed as admin`);
+  };
 
   return (
     <div className="space-y-6">
@@ -66,55 +86,61 @@ function AdminsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border bg-card">
-              {admins.map((a) => (
-                <tr key={a.id} className="hover:bg-secondary/40">
-                  <td className="px-4 py-3">
-                    <Link
-                      to="/dashboard/members/$id"
-                      params={{ id: "m1" }}
-                      className="flex items-center gap-3 group hover:opacity-80 transition"
-                    >
-                      <Avatar className="h-8 w-8 ring-1 ring-gold/30">
-                        <AvatarFallback className="bg-primary/10 text-primary font-medium">
-                          {a.name[0]}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-semibold group-hover:text-primary group-hover:underline transition">
-                          {a.name}
-                        </p>
-                        <p className="text-xs text-muted-foreground">{a.email}</p>
-                      </div>
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">{a.scope}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{a.invitedBy}</td>
-                  <td className="px-4 py-3">
-                    {a.status === "Active" ? (
-                      <Badge className="bg-success/15 text-success border-success/30">Active</Badge>
-                    ) : (
-                      <Badge
-                        variant="outline"
-                        className="border-gold/40 text-gold-foreground bg-gold-soft"
+              {admins.map((a) => {
+                const member = members.find(
+                  (m) => m.email?.toLowerCase() === a.email.toLowerCase() || m.name === a.name,
+                );
+                const memberId = member?.id || "m1000";
+
+                return (
+                  <tr key={a.id} className="hover:bg-secondary/40">
+                    <td className="px-4 py-3">
+                      <Link
+                        to="/dashboard/members/$id"
+                        params={{ id: memberId }}
+                        className="flex items-center gap-3 group hover:opacity-80 transition"
                       >
-                        Pending
-                      </Badge>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => {
-                        removeAdmin(a.id);
-                        toast.success(`${a.name} removed`);
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </td>
-                </tr>
-              ))}
+                        <Avatar className="h-8 w-8 ring-1 ring-gold/30">
+                          <AvatarFallback className="bg-primary/10 text-primary font-medium">
+                            {a.name[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-semibold group-hover:text-primary group-hover:underline transition">
+                            {a.name}
+                          </p>
+                          <p className="text-xs text-muted-foreground">{a.email}</p>
+                        </div>
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">{a.scope}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{a.invitedBy}</td>
+                    <td className="px-4 py-3">
+                      {a.status === "Active" ? (
+                        <Badge className="bg-success/15 text-success border-success/30">
+                          Active
+                        </Badge>
+                      ) : (
+                        <Badge
+                          variant="outline"
+                          className="border-gold/40 text-gold-foreground bg-gold-soft"
+                        >
+                          Pending
+                        </Badge>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleRemoveAdmin(a.id, a.email, a.name)}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -128,6 +154,7 @@ function InviteAdminDialog({ invitedBy }: { invitedBy: string }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [scope, setScope] = useState("Global");
+  const { current } = useCurrentChurch();
 
   function submit() {
     if (!name || !email) {
@@ -136,13 +163,42 @@ function InviteAdminDialog({ invitedBy }: { invitedBy: string }) {
     }
     const tempPass = `ST-ADM-${Math.floor(1000 + Math.random() * 9000)}`;
     inviteAdmin({ name, email, scope, invitedBy });
+
+    // Synchronize with members-store: promote existing member or add new admin member
+    const members = getMembers();
+    const existing = members.find(
+      (m) =>
+        m.email?.toLowerCase() === email.toLowerCase() ||
+        m.name.toLowerCase() === name.toLowerCase(),
+    );
+    const targetRole = scope.toLowerCase() === "global" ? "Admin" : "Branch Admin";
+
+    if (existing) {
+      updateMemberRole(existing.id, targetRole);
+    } else {
+      addMember({
+        id: `m${Date.now()}`,
+        name,
+        email,
+        phone: "+234 800 000 0000",
+        role: targetRole,
+        stage: "Established",
+        branch: current.name,
+        joinedAt: new Date().toISOString().slice(0, 10),
+        status: "active",
+        mentor: "Unassigned",
+        avatar: "",
+        milestones: [],
+      });
+    }
+
     addNotification({
       title: `Admin Invitation Sent: ${name}`,
       desc: `Invited as ${scope} admin by ${invitedBy}. Temp Passkey: ${tempPass}`,
       time: "Just now",
     });
     toast.success(`Admin invite sent to ${email}`, {
-      description: `Temporary Passkey: ${tempPass}`,
+      description: `Temporary Passkey: ${tempPass} (Role: ${targetRole})`,
     });
     setOpen(false);
     setName("");

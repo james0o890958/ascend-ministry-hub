@@ -27,9 +27,26 @@ export function getSession(): SessionState {
   return cachedSession!;
 }
 
+import { getMembers } from "./members-store";
+import { toast } from "sonner";
+
 export function setSessionRole(role: Role) {
   const current = getSession();
-  cachedSession = { ...current, role };
+  const members = getMembers();
+  // 1. Try finding matching member in current branch
+  let matchingMember = members.find((m) => m.role === role && m.branch === current.branch);
+
+  // 2. Fall back to matching member in any branch if not in current branch
+  if (!matchingMember) {
+    matchingMember = members.find((m) => m.role === role);
+  }
+
+  const memberId = matchingMember ? matchingMember.id : "";
+  if (!matchingMember && typeof window !== "undefined") {
+    toast.info(`No profile registered for ${role} — showing default view`);
+  }
+
+  cachedSession = { ...current, role, memberId };
   if (typeof window !== "undefined") {
     localStorage.setItem(KEY, JSON.stringify(cachedSession));
   }

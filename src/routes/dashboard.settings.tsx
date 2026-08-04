@@ -6,10 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useTheme } from "@/lib/theme";
+import { Sun, Moon, Laptop, Check } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/dashboard/settings")({ component: SettingsPage });
 
 function SettingsPage() {
+  const { theme, setTheme } = useTheme();
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -20,6 +25,8 @@ function SettingsPage() {
       <Tabs defaultValue="profile">
         <TabsList className="bg-secondary">
           <TabsTrigger value="profile">Profile</TabsTrigger>
+
+          <TabsTrigger value="appearance">Appearance</TabsTrigger>
           <TabsTrigger value="ministry">Ministry</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
@@ -62,6 +69,76 @@ function SettingsPage() {
             <div className="mt-6 flex justify-end gap-2">
               <Button variant="outline">Cancel</Button>
               <Button className="bg-gradient-royal text-primary-foreground">Save changes</Button>
+            </div>
+          </SectionCard>
+        </TabsContent>
+
+        <TabsContent value="appearance" className="mt-4">
+          <SectionCard title="Theme & Visual Identity">
+            <p className="text-sm text-muted-foreground mb-4">
+              Select your preferred color theme. Soul Tracer maintains its signature Royal Blue and
+              Gold brand identity across all modes with smooth visual transitions.
+            </p>
+            <div className="grid gap-4 sm:grid-cols-3">
+              {[
+                {
+                  id: "light",
+                  title: "Light Mode",
+                  desc: "Royal Blue sidebar & header, off-white background, crisp white cards.",
+                  icon: Sun,
+                },
+                {
+                  id: "dark",
+                  title: "Dark Mode",
+                  desc: "Very dark navy sidebar & header, deep navy background, sleek dark cards.",
+                  icon: Moon,
+                },
+                {
+                  id: "system",
+                  title: "System Preference",
+                  desc: "Automatically syncs with your device system appearance.",
+                  icon: Laptop,
+                },
+              ].map((item) => {
+                const isSelected = theme === item.id;
+                const IconComponent = item.icon;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => setTheme(item.id as "light" | "dark" | "system")}
+                    className={cn(
+                      "relative flex flex-col justify-between rounded-xl border-2 p-5 text-left transition-all duration-280 hover:border-primary/60",
+                      isSelected
+                        ? "border-primary bg-primary/5 shadow-soft ring-2 ring-gold/40"
+                        : "border-border bg-card",
+                    )}
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <div
+                          className={cn(
+                            "p-2 rounded-lg",
+                            isSelected
+                              ? "bg-gold text-gold-foreground"
+                              : "bg-secondary text-muted-foreground",
+                          )}
+                        >
+                          <IconComponent className="h-5 w-5" />
+                        </div>
+                        {isSelected && (
+                          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                            <Check className="h-3.5 w-3.5" />
+                          </span>
+                        )}
+                      </div>
+                      <h4 className="font-bold text-foreground text-sm">{item.title}</h4>
+                      <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+                        {item.desc}
+                      </p>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </SectionCard>
         </TabsContent>

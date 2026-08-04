@@ -100,8 +100,8 @@ function Overview() {
       <PageHeader title="Overview" subtitle={sub} />
 
       <SectionCard title={`Key metrics · ${role} view`}>
-        <div className="overflow-hidden rounded-xl border border-border">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto rounded-xl border border-border">
+          <table className="w-full min-w-[500px] text-sm">
             <thead className="bg-secondary/60 text-xs uppercase tracking-wider text-muted-foreground">
               <tr>
                 <th className="px-4 py-3 text-left font-semibold">Metric</th>

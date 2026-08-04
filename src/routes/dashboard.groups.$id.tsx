@@ -25,6 +25,7 @@ import {
   Star,
   Copy,
   Key,
+  Check,
 } from "lucide-react";
 import { SectionCard } from "@/components/dashboard/ui";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -46,9 +47,12 @@ import {
   ALL_BADGES,
   getSoulById,
   addSoulFollowUp,
+  completeSoulFollowUp,
+  cancelSoulFollowUp,
   updateSoul,
   addSoulNote,
   addSoulPrayer,
+  markPrayerAnswered,
   addSoulMilestone,
   convertSoulToMember,
   type Soul,
@@ -110,6 +114,11 @@ function SoulProfile() {
   const [activeSection, setActiveSection] = useState("overview");
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
 
+  const completedFollowUps = (soul.followUps || []).filter(
+    (f) => f.status === "completed" || !f.status,
+  ).length;
+  const scheduledFollowUps = (soul.followUps || []).filter((f) => f.status === "scheduled").length;
+
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -135,10 +144,14 @@ function SoulProfile() {
   };
 
   function toggleBadge(b: SoulBadge) {
+    const updatedBadges = (soul.badges || []).includes(b)
+      ? (soul.badges || []).filter((x) => x !== b)
+      : [...(soul.badges || []), b];
     setSoul((s) => ({
       ...s,
-      badges: s.badges.includes(b) ? s.badges.filter((x) => x !== b) : [...s.badges, b],
+      badges: updatedBadges,
     }));
+    updateSoul(soul.id, { badges: updatedBadges });
   }
 
   return (
@@ -169,6 +182,12 @@ function SoulProfile() {
                   <h1 className="font-display text-2xl font-bold sm:text-3xl tracking-tight">
                     {soul.name}
                   </h1>
+                  <Badge
+                    variant="outline"
+                    className="font-mono bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30 text-xs px-2.5 py-0.5 font-semibold"
+                  >
+                    {soul.soulTracerId || `ST-S-2026-${soul.id}`}
+                  </Badge>
                   <Badge
                     variant="outline"
                     className={cn("px-2.5 py-0.5 font-medium shadow-xs", stageColor[soul.stage])}
@@ -224,7 +243,9 @@ function SoulProfile() {
               />
               <RecordMilestoneDialog
                 soul={soul}
-                onAdded={(m) => setSoul((s) => ({ ...s, milestones: [m, ...(s.milestones || [])] }))}
+                onAdded={(m) =>
+                  setSoul((s) => ({ ...s, milestones: [m, ...(s.milestones || [])] }))
+                }
               />
               {soul.stage !== "Converted" && (
                 <ConvertToUserDialog
@@ -240,7 +261,12 @@ function SoulProfile() {
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               <MiniStat label="Milestones" value={soul.milestones?.length || 0} icon={Flag} />
               <MiniStat label="Prayers" value={soul.prayers?.length || 0} icon={Heart} />
-              <MiniStat label="Follow-ups" value={soul.followUps?.length || 0} icon={Activity} />
+              <MiniStat
+                label="Follow-ups"
+                value={completedFollowUps}
+                subValue={scheduledFollowUps > 0 ? `${scheduledFollowUps} sched` : undefined}
+                icon={Activity}
+              />
               <MiniStat
                 label="Growth"
                 value={`${Math.round(((soul.growth?.discipleship || 0) + (soul.growth?.bibleStudy || 0) + (soul.growth?.churchInvolvement || 0) + (soul.growth?.followUpCompletion || 0)) / 4)}%`}
@@ -403,39 +429,67 @@ function SoulProfile() {
       >
         <SectionCard title="Prayer Requests">
           <div className="grid gap-3 sm:grid-cols-2">
-            {(soul.prayers || []).map((p) => (
-              <div
-                key={p.id}
-                className={cn(
-                  "rounded-xl border p-4",
-                  p.status === "Active"
-                    ? "border-primary/20 bg-primary/5"
-                    : "border-success/20 bg-success/5",
-                )}
-              >
-                <div className="mb-1 flex items-center justify-between">
-                  <Badge
-                    variant="outline"
-                    className={
-                      p.status === "Active"
-                        ? "border-primary/30 text-primary"
-                        : "border-success/30 text-success"
-                    }
-                  >
-                    {p.status === "Active" ? (
-                      <Clock className="mr-1 h-3 w-3" />
-                    ) : (
-                      <CheckCircle2 className="mr-1 h-3 w-3" />
+            {(soul.prayers || []).length === 0 ? (
+              <p className="col-span-2 py-4 text-center text-sm text-muted-foreground">
+                No prayer requests recorded yet.
+              </p>
+            ) : (
+              (soul.prayers || []).map((p) => (
+                <div
+                  key={p.id}
+                  className={cn(
+                    "rounded-xl border p-4 flex flex-col justify-between gap-2",
+                    p.status === "Active"
+                      ? "border-primary/20 bg-primary/5"
+                      : "border-success/20 bg-success/5",
+                  )}
+                >
+                  <div>
+                    <div className="mb-2 flex items-center justify-between">
+                      <Badge
+                        variant="outline"
+                        className={
+                          p.status === "Active"
+                            ? "border-primary/30 text-primary"
+                            : "border-success/30 text-success"
+                        }
+                      >
+                        {p.status === "Active" ? (
+                          <Clock className="mr-1 h-3 w-3" />
+                        ) : (
+                          <CheckCircle2 className="mr-1 h-3 w-3" />
+                        )}
+                        {p.status}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(p.date).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <p className="text-sm font-medium">{p.text}</p>
+                    {p.testimony && (
+                      <div className="mt-2 rounded-md bg-emerald-500/10 border border-emerald-500/20 p-2 text-xs text-foreground">
+                        <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                          Testimony:{" "}
+                        </span>
+                        {p.testimony}
+                      </div>
                     )}
-                    {p.status}
-                  </Badge>
-                  <span className="text-xs text-muted-foreground">
-                    {new Date(p.date).toLocaleDateString()}
-                  </span>
+                  </div>
+                  {p.status === "Active" && (
+                    <div className="mt-2 flex justify-end">
+                      <AnswerPrayerDialog
+                        soul={soul}
+                        prayer={p}
+                        onAnswered={() => {
+                          const updated = getSoulById(soul.id);
+                          if (updated) setSoul(updated);
+                        }}
+                      />
+                    </div>
+                  )}
                 </div>
-                <p className="text-sm">{p.text}</p>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </SectionCard>
       </section>
@@ -450,27 +504,106 @@ function SoulProfile() {
       >
         <SectionCard title="Follow-Up History">
           <ul className="divide-y divide-border">
-            {(soul.followUps || []).map((f) => (
-              <li key={f.id} className="flex items-start gap-3 py-3">
-                <span className="grid h-9 w-9 place-items-center rounded-lg bg-gradient-gold text-gold-foreground">
-                  {f.type === "Call" && <Phone className="h-4 w-4" />}
-                  {f.type === "Visit" && <MapPin className="h-4 w-4" />}
-                  {f.type === "Meeting" && <Users className="h-4 w-4" />}
-                  {f.type === "Message" && <MessageSquare className="h-4 w-4" />}
-                </span>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <p className="font-semibold text-sm">
-                      {f.type} — {f.by}
-                    </p>
-                    <span className="text-xs text-muted-foreground">
-                      {new Date(f.date).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <p className="text-sm text-muted-foreground">{f.notes}</p>
-                </div>
+            {(soul.followUps || []).length === 0 ? (
+              <li className="py-6 text-center text-sm text-muted-foreground">
+                No follow-up records logged yet.
               </li>
-            ))}
+            ) : (
+              (soul.followUps || []).map((f) => {
+                const isScheduled = f.status === "scheduled";
+                const isCancelled = f.status === "cancelled";
+                const isCompleted = f.status === "completed" || !f.status;
+
+                return (
+                  <li key={f.id} className="flex items-start gap-3 py-3">
+                    <span
+                      className={cn(
+                        "grid h-9 w-9 place-items-center rounded-lg text-foreground",
+                        isScheduled &&
+                          "bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300",
+                        isCompleted && "bg-gradient-gold text-gold-foreground",
+                        isCancelled && "bg-muted text-muted-foreground",
+                      )}
+                    >
+                      {f.type === "Call" && <Phone className="h-4 w-4" />}
+                      {f.type === "Visit" && <MapPin className="h-4 w-4" />}
+                      {f.type === "Meeting" && <Users className="h-4 w-4" />}
+                      {f.type === "Message" && <MessageSquare className="h-4 w-4" />}
+                    </span>
+                    <div className="flex-1">
+                      <div className="flex flex-wrap items-center justify-between gap-1">
+                        <div className="flex items-center gap-2">
+                          <p className="font-semibold text-sm">
+                            {f.type} — {f.by}
+                          </p>
+                          {isScheduled && (
+                            <Badge
+                              variant="outline"
+                              className="border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] px-1.5 py-0"
+                            >
+                              <Clock className="mr-1 h-3 w-3" />
+                              Scheduled
+                            </Badge>
+                          )}
+                          {isCompleted && (
+                            <Badge
+                              variant="outline"
+                              className="border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] px-1.5 py-0"
+                            >
+                              <CheckCircle2 className="mr-1 h-3 w-3" />
+                              Completed
+                            </Badge>
+                          )}
+                          {isCancelled && (
+                            <Badge
+                              variant="outline"
+                              className="border-muted-foreground/30 text-muted-foreground text-[10px] px-1.5 py-0"
+                            >
+                              Cancelled
+                            </Badge>
+                          )}
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(f.date).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-0.5">{f.notes}</p>
+                      {f.outcome && (
+                        <div className="mt-1.5 rounded-md bg-secondary/50 p-2 text-xs text-foreground">
+                          <span className="font-medium text-gold">Outcome: </span>
+                          {f.outcome}
+                        </div>
+                      )}
+                      {isScheduled && (
+                        <div className="mt-2.5 flex items-center gap-2">
+                          <CompleteFollowUpDialog
+                            soul={soul}
+                            followUp={f}
+                            onCompleted={() => {
+                              const updated = getSoulById(soul.id);
+                              if (updated) setSoul(updated);
+                            }}
+                          />
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 text-xs text-muted-foreground hover:text-destructive"
+                            onClick={() => {
+                              cancelSoulFollowUp(soul.id, f.id);
+                              const updated = getSoulById(soul.id);
+                              if (updated) setSoul(updated);
+                              toast.info("Follow-up cancelled");
+                            }}
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </li>
+                );
+              })
+            )}
           </ul>
         </SectionCard>
       </section>
@@ -508,7 +641,11 @@ function SoulProfile() {
       >
         <SectionCard title="Growth Tracker">
           <div className="grid gap-4 sm:grid-cols-2">
-            <GrowthBar label="Discipleship" value={soul.growth?.discipleship || 0} icon={BookOpen} />
+            <GrowthBar
+              label="Discipleship"
+              value={soul.growth?.discipleship || 0}
+              icon={BookOpen}
+            />
             <GrowthBar label="Bible Study" value={soul.growth?.bibleStudy || 0} icon={BookOpen} />
             <GrowthBar
               label="Church Involvement"
@@ -539,10 +676,12 @@ function Row({ icon: Icon, children }: { icon: typeof Mail; children: React.Reac
 function MiniStat({
   label,
   value,
+  subValue,
   icon: Icon,
 }: {
   label: string;
   value: string | number;
+  subValue?: string;
   icon: typeof Flag;
 }) {
   return (
@@ -551,7 +690,14 @@ function MiniStat({
         <p className="text-xs text-muted-foreground">{label}</p>
         <Icon className="h-4 w-4 text-gold" />
       </div>
-      <p className="mt-1 font-display text-xl font-bold">{value}</p>
+      <div className="mt-1 flex items-baseline gap-1.5 flex-wrap">
+        <p className="font-display text-xl font-bold">{value}</p>
+        {subValue && (
+          <span className="text-[10px] font-medium text-amber-600 bg-amber-500/10 border border-amber-500/30 px-1.5 py-0.5 rounded-full">
+            {subValue}
+          </span>
+        )}
+      </div>
     </div>
   );
 }
@@ -630,13 +776,87 @@ function BadgeManager({
   );
 }
 
+function CompleteFollowUpDialog({
+  soul,
+  followUp,
+  onCompleted,
+}: {
+  soul: Soul;
+  followUp: SoulFollowUp;
+  onCompleted: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [outcome, setOutcome] = useState("");
+
+  function submit() {
+    completeSoulFollowUp(soul.id, followUp.id, outcome.trim() || undefined);
+    toast.success(`Follow-up marked as completed`, {
+      description: `${followUp.type} with ${soul.name}`,
+    });
+    addNotification({
+      title: `Follow-up Completed: ${soul.name}`,
+      desc: `${followUp.type} by ${followUp.by} was completed.`,
+      time: "Just now",
+    });
+    onCompleted();
+    setOpen(false);
+    setOutcome("");
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button
+          size="sm"
+          className="bg-emerald-600 hover:bg-emerald-700 text-white h-7 px-2.5 text-xs"
+        >
+          <Check className="mr-1 h-3.5 w-3.5" />
+          Mark Complete
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Complete Follow-Up — {soul.name}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="rounded-lg bg-muted p-3 text-sm">
+            <p className="font-medium text-foreground">
+              {followUp.type} by {followUp.by}
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">{followUp.notes}</p>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Outcome Notes (Optional)</Label>
+            <Textarea
+              rows={3}
+              value={outcome}
+              onChange={(e) => setOutcome(e.target.value)}
+              placeholder="How did the interaction go? e.g. Soul accepted invitation, promised to attend cell group…"
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setOpen(false)}>
+            Cancel
+          </Button>
+          <Button className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={submit}>
+            Save Outcome &amp; Complete
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function FollowUpDialog({ soul, onAdded }: { soul: Soul; onAdded: (f: SoulFollowUp) => void }) {
   const [open, setOpen] = useState(false);
+  const [status, setStatus] = useState<"scheduled" | "completed">("scheduled");
   const [type, setType] = useState<SoulFollowUp["type"]>("Call");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [time, setTime] = useState("10:00");
   const [by, setBy] = useState(soul.mentor);
   const [notes, setNotes] = useState("");
+  const [outcome, setOutcome] = useState("");
 
   function submit() {
     if (!notes.trim()) {
@@ -649,22 +869,39 @@ function FollowUpDialog({ soul, onAdded }: { soul: Soul; onAdded: (f: SoulFollow
       type,
       by,
       notes: `${time} — ${notes}`,
+      status,
+      completedAt: status === "completed" ? date : undefined,
+      outcome: status === "completed" && outcome.trim() ? outcome.trim() : undefined,
     };
     addSoulFollowUp(soul.id, f);
     if (soul.stage === "Contacted" || soul.stage === "Visited") {
       updateSoul(soul.id, { stage: "Following Up" });
     }
-    addNotification({
-      title: `Follow-up Scheduled: ${soul.name}`,
-      desc: `${type} on ${new Date(date).toLocaleDateString()} at ${time} (Assigned to ${by})`,
-      time: "Just now",
-    });
+
+    if (status === "scheduled") {
+      addNotification({
+        title: `Follow-up Scheduled: ${soul.name}`,
+        desc: `${type} on ${new Date(date).toLocaleDateString()} at ${time} (Assigned to ${by})`,
+        time: "Just now",
+      });
+      toast.success(`Follow-up scheduled for ${soul.name}`, {
+        description: `${type} · ${new Date(date).toLocaleDateString()} · ${time} · ${by}`,
+      });
+    } else {
+      addNotification({
+        title: `Follow-up Logged: ${soul.name}`,
+        desc: `Completed ${type} with ${soul.name} (By ${by})`,
+        time: "Just now",
+      });
+      toast.success(`Completed follow-up logged for ${soul.name}`, {
+        description: `${type} · ${by}`,
+      });
+    }
+
     onAdded(f);
-    toast.success(`Follow-up scheduled for ${soul.name}`, {
-      description: `${type} · ${new Date(date).toLocaleDateString()} · ${time} · ${by}`,
-    });
     setOpen(false);
     setNotes("");
+    setOutcome("");
   }
 
   return (
@@ -672,49 +909,97 @@ function FollowUpDialog({ soul, onAdded }: { soul: Soul; onAdded: (f: SoulFollow
       <DialogTrigger asChild>
         <Button size="sm" variant="outline">
           <CalendarDays className="mr-1 h-4 w-4" />
-          Schedule Follow-Up
+          Add Follow-Up
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Schedule follow-up — {soul.name}</DialogTitle>
+          <DialogTitle>Record Follow-Up — {soul.name}</DialogTitle>
         </DialogHeader>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label>Type</Label>
-            <Select value={type} onValueChange={(v) => setType(v as SoulFollowUp["type"])}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {(["Call", "Visit", "Meeting", "Message"] as const).map((t) => (
-                  <SelectItem key={t} value={t}>
-                    {t}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-2 rounded-lg bg-muted p-1 text-center text-xs font-semibold">
+            <button
+              type="button"
+              onClick={() => setStatus("scheduled")}
+              className={cn(
+                "rounded-md py-1.5 transition-all flex items-center justify-center gap-1.5",
+                status === "scheduled"
+                  ? "bg-card text-foreground shadow-xs"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <Clock className="h-3.5 w-3.5" />
+              Schedule Task
+            </button>
+            <button
+              type="button"
+              onClick={() => setStatus("completed")}
+              className={cn(
+                "rounded-md py-1.5 transition-all flex items-center justify-center gap-1.5",
+                status === "completed"
+                  ? "bg-card text-foreground shadow-xs"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+              Log Completed Action
+            </button>
           </div>
-          <div className="space-y-1.5">
-            <Label>Assigned to</Label>
-            <Input value={by} onChange={(e) => setBy(e.target.value)} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Date</Label>
-            <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Time</Label>
-            <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
-          </div>
-          <div className="space-y-1.5 sm:col-span-2">
-            <Label>Details</Label>
-            <Textarea
-              rows={4}
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Purpose, prayer points, what to share…"
-            />
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label>Type</Label>
+              <Select value={type} onValueChange={(v) => setType(v as SoulFollowUp["type"])}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {(["Call", "Visit", "Meeting", "Message"] as const).map((t) => (
+                    <SelectItem key={t} value={t}>
+                      {t}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Assigned to</Label>
+              <Input value={by} onChange={(e) => setBy(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>{status === "scheduled" ? "Scheduled Date" : "Date Conducted"}</Label>
+              <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Time</Label>
+              <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
+            </div>
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label>
+                {status === "scheduled" ? "Follow-Up Objective / Plan" : "Follow-Up Notes"}
+              </Label>
+              <Textarea
+                rows={3}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder={
+                  status === "scheduled"
+                    ? "Purpose, prayer points, what to share…"
+                    : "Key points discussed during outreach…"
+                }
+              />
+            </div>
+            {status === "completed" && (
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label>Outcome Notes (Optional)</Label>
+                <Textarea
+                  rows={2}
+                  value={outcome}
+                  onChange={(e) => setOutcome(e.target.value)}
+                  placeholder="Outcome of the interaction (e.g. soul accepted invitation to cell group)"
+                />
+              </div>
+            )}
           </div>
         </div>
         <DialogFooter>
@@ -722,7 +1007,7 @@ function FollowUpDialog({ soul, onAdded }: { soul: Soul; onAdded: (f: SoulFollow
             Cancel
           </Button>
           <Button className="bg-gradient-royal text-primary-foreground" onClick={submit}>
-            Schedule &amp; notify
+            {status === "scheduled" ? "Schedule & notify" : "Log Completed Follow-up"}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -739,7 +1024,11 @@ function ConvertToUserDialog({
 }) {
   const [open, setOpen] = useState(false);
   const [credentialsOpen, setCredentialsOpen] = useState(false);
-  const [credentials, setCredentials] = useState<{ email: string; tempPasskey: string; memberId: string } | null>(null);
+  const [credentials, setCredentials] = useState<{
+    email: string;
+    tempPasskey: string;
+    memberId: string;
+  } | null>(null);
   const navigate = useNavigate();
   const { current } = useCurrentChurch();
   const { role } = useRole();
@@ -749,9 +1038,18 @@ function ConvertToUserDialog({
   const [phone, setPhone] = useState(soul.phone);
   const [branch, setBranch] = useState(soul.branch || current.name);
   const [mentor, setMentor] = useState(soul.mentor);
-  
+
   // Starting stage default is "Invitee" (branch's first stage), but leaders can set higher stage
-  const branchStages = current.stages || ["Invitee", "First Timer", "Regular Attendee", "Baptized Member", "Foundation School Student", "Foundation School Graduate", "Cell Member", "Workforce Member"];
+  const branchStages = current.stages || [
+    "Invitee",
+    "First Timer",
+    "Regular Attendee",
+    "Baptized Member",
+    "Foundation School Student",
+    "Foundation School Graduate",
+    "Cell Member",
+    "Workforce Member",
+  ];
   const [startingStage, setStartingStage] = useState(branchStages[0] || "Invitee");
 
   const canChooseStage = canSetHigherStartingStage(role);
@@ -792,8 +1090,8 @@ function ConvertToUserDialog({
 
       setOpen(false);
       setCredentialsOpen(true);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to convert soul");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to convert soul");
     }
   }
 
@@ -814,7 +1112,8 @@ function ConvertToUserDialog({
             <DialogTitle>Convert {soul.name} to Church Member</DialogTitle>
           </DialogHeader>
           <p className="text-xs text-muted-foreground">
-            Confirm member details. Account will be created and soul record archived to journey history.
+            Confirm member details. Account will be created and soul record archived to journey
+            history.
           </p>
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
@@ -823,7 +1122,12 @@ function ConvertToUserDialog({
             </div>
             <div className="space-y-1.5">
               <Label>Email (for account) *</Label>
-              <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email@domain.com" />
+              <Input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="email@domain.com"
+              />
             </div>
             <div className="space-y-1.5">
               <Label>Phone *</Label>
@@ -903,7 +1207,9 @@ function ConvertToUserDialog({
               variant="outline"
               size="sm"
               onClick={() => {
-                navigator.clipboard.writeText(`Email: ${credentials?.email}, Temp Passkey: ${credentials?.tempPasskey}`);
+                navigator.clipboard.writeText(
+                  `Email: ${credentials?.email}, Temp Passkey: ${credentials?.tempPasskey}`,
+                );
                 toast.success("Credentials copied to clipboard");
               }}
             >
@@ -999,13 +1305,11 @@ function EditSoulDialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {(["Contacted", "Visited", "Following Up", "Converted"] as const).map(
-                  (s) => (
-                    <SelectItem key={s} value={s}>
-                      {s}
-                    </SelectItem>
-                  ),
-                )}
+                {(["Contacted", "Visited", "Following Up", "Converted"] as const).map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {s}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -1144,6 +1448,74 @@ function AddPrayerDialog({ soul, onAdded }: { soul: Soul; onAdded: (p: SoulPraye
   );
 }
 
+function AnswerPrayerDialog({
+  soul,
+  prayer,
+  onAnswered,
+}: {
+  soul: Soul;
+  prayer: SoulPrayer;
+  onAnswered: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [testimony, setTestimony] = useState("");
+
+  function submit() {
+    markPrayerAnswered(soul.id, prayer.id, testimony.trim() || undefined);
+    toast.success(`Prayer marked as answered! 🙌`, {
+      description: `Testimony recorded for ${soul.name}`,
+    });
+    onAnswered();
+    setOpen(false);
+    setTestimony("");
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-6 text-[11px] border-emerald-500/40 text-emerald-600 hover:bg-emerald-500/10"
+        >
+          <Check className="mr-1 h-3 w-3" />
+          Mark Answered
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Praise Report / Testimony</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="rounded-lg bg-muted p-3 text-sm">
+            <p className="font-medium text-foreground">{prayer.text}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Requested on {new Date(prayer.date).toLocaleDateString()}
+            </p>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Testimony / Answer Details (Optional)</Label>
+            <Textarea
+              rows={3}
+              value={testimony}
+              onChange={(e) => setTestimony(e.target.value)}
+              placeholder="Share how God answered this prayer…"
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setOpen(false)}>
+            Cancel
+          </Button>
+          <Button className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={submit}>
+            Save Testimony
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function AssignLeaderDialog({
   soul,
   onAssigned,
@@ -1220,6 +1592,28 @@ function RecordMilestoneDialog({
     }
     const m: SoulMilestone = { date, title, detail, kind };
     addSoulMilestone(soul.id, m);
+
+    // Auto-award badges based on milestone kind/title
+    const currentBadges = soul.badges || [];
+    const newBadges = [...currentBadges];
+    if (
+      kind === "Baptism" ||
+      title.toLowerCase().includes("baptiz") ||
+      title.toLowerCase().includes("baptism")
+    ) {
+      if (!newBadges.includes("Baptized")) newBadges.push("Baptized");
+    }
+    if (
+      kind === "Salvation" ||
+      title.toLowerCase().includes("salvation") ||
+      title.toLowerCase().includes("born again")
+    ) {
+      if (!newBadges.includes("Born Again")) newBadges.push("Born Again");
+    }
+    if (newBadges.length !== currentBadges.length) {
+      updateSoul(soul.id, { badges: newBadges });
+    }
+
     onAdded(m);
     toast.success(`Milestone recorded: ${title}`);
     setOpen(false);

@@ -1,3 +1,4 @@
+import { useSyncExternalStore } from "react";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import {
   ArrowLeft,
@@ -12,11 +13,14 @@ import { PageHeader, SectionCard, StatCard } from "@/components/dashboard/ui";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { branches, cellGroups, members, events } from "@/lib/data";
+import { getBranches, getBranchById, subscribeBranches } from "@/lib/stores/branches-store";
+import { getCells, subscribeCells } from "@/lib/stores/cells-store";
+import { getMembers, subscribeMembers } from "@/lib/stores/members-store";
+import { getEvents, subscribeEvents } from "@/lib/stores/events-store";
 
 export const Route = createFileRoute("/dashboard/church/$id")({
   loader: ({ params }) => {
-    const b = branches.find((x) => x.id === params.id);
+    const b = getBranchById(params.id);
     if (!b) throw notFound();
     return b;
   },
@@ -30,10 +34,19 @@ export const Route = createFileRoute("/dashboard/church/$id")({
 });
 
 function ChurchDetail() {
-  const b = Route.useLoaderData();
+  const loadedBranch = Route.useLoaderData();
+  const b = useSyncExternalStore(
+    subscribeBranches,
+    () => getBranchById(loadedBranch.id) || loadedBranch,
+    () => loadedBranch,
+  );
+  const cellGroups = useSyncExternalStore(subscribeCells, getCells, getCells);
+  const members = useSyncExternalStore(subscribeMembers, getMembers, getMembers);
+  const events = useSyncExternalStore(subscribeEvents, getEvents, getEvents);
+
   const churchCells = cellGroups.filter((c) => c.branch === b.name);
   const churchMembers = members.filter((m) => m.branch === b.name);
-  const churchEvents = events.filter((e) => e.branch === b.name);
+  const churchEvents = events.filter((e) => e.branch === b.name || e.scope === "global");
 
   return (
     <div className="space-y-6">
@@ -50,12 +63,18 @@ function ChurchDetail() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           label="Members"
-          value={b.members.toLocaleString()}
+          value={(b.membersCount || churchMembers.length).toLocaleString()}
           icon={Users}
-          change={b.growth}
+          change={b.growth || 0}
           accent="primary"
         />
-        <StatCard label="Leaders" value={b.leaders} icon={Crown} change={2.1} accent="gold" />
+        <StatCard
+          label="Leaders"
+          value={b.leadersCount || 0}
+          icon={Crown}
+          change={2.1}
+          accent="gold"
+        />
         <StatCard
           label="Cells"
           value={churchCells.length}
@@ -83,11 +102,14 @@ function ChurchDetail() {
         <TabsContent value="overview" className="mt-4">
           <SectionCard title="Church profile">
             <div className="grid gap-4 sm:grid-cols-2">
-              <Info label="Country" value={b.country} />
-              <Info label="Senior pastor" value={b.pastor} />
-              <Info label="Members" value={b.members.toLocaleString()} />
-              <Info label="Leaders" value={String(b.leaders)} />
-              <Info label="Growth" value={`+${b.growth}%`} />
+              <Info label="Country" value={b.country || "Nigeria"} />
+              <Info label="Senior pastor" value={b.pastor || "Unassigned"} />
+              <Info
+                label="Members"
+                value={(b.membersCount || churchMembers.length).toLocaleString()}
+              />
+              <Info label="Leaders" value={String(b.leadersCount || 0)} />
+              <Info label="Growth" value={`+${b.growth || 0}%`} />
               <Info label="Cells" value={String(churchCells.length)} />
             </div>
           </SectionCard>
@@ -113,13 +135,15 @@ function ChurchDetail() {
                       <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
                         Members
                       </p>
-                      <p className="font-display text-lg font-bold">{c.members}</p>
+                      <p className="font-display text-lg font-bold">
+                        {Array.isArray(c.members) ? c.members.length : c.members || 0}
+                      </p>
                     </div>
                     <div>
                       <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
                         Attendance
                       </p>
-                      <p className="font-display text-lg font-bold">{c.attendance}%</p>
+                      <p className="font-display text-lg font-bold">{c.attendance || 0}%</p>
                     </div>
                   </div>
                 </div>
@@ -133,8 +157,8 @@ function ChurchDetail() {
 
         <TabsContent value="members" className="mt-4">
           <SectionCard title={`Members (${churchMembers.length})`}>
-            <div className="overflow-hidden rounded-xl border border-border">
-              <table className="w-full text-sm">
+            <div className="overflow-x-auto rounded-xl border border-border">
+              <table className="w-full min-w-[500px] text-sm">
                 <thead className="bg-secondary/60 text-xs uppercase tracking-wider text-muted-foreground">
                   <tr>
                     <th className="px-4 py-3 text-left">Member</th>

@@ -51,7 +51,11 @@ export function canCreateGlobalEvent(role: Role): boolean {
   return role === "Admin";
 }
 
-export function canCreateBranchEvent(role: Role, userBranch: string, targetBranch: string): boolean {
+export function canCreateBranchEvent(
+  role: Role,
+  userBranch: string,
+  targetBranch: string,
+): boolean {
   if (role === "Admin") return true;
   if (role === "Branch Admin" || role === "Pastor") {
     return userBranch === targetBranch;
@@ -59,7 +63,22 @@ export function canCreateBranchEvent(role: Role, userBranch: string, targetBranc
   return false;
 }
 
+// Admin/Pastor ledger entry (cash, POS, offline bank deposits recorded on behalf of others)
 export function canRecordGiving(role: Role, userBranch: string, targetBranch: string): boolean {
+  if (role === "Admin") return true;
+  if (role === "Branch Admin" || role === "Pastor") {
+    return userBranch === targetBranch;
+  }
+  return false;
+}
+
+// Self-reporting / receipt submission — available to every registered member and leader
+export function canSelfReportGiving(_role: Role): boolean {
+  return true;
+}
+
+// Approve or reject pending giving submissions
+export function canVerifyGiving(role: Role, userBranch: string, targetBranch: string): boolean {
   if (role === "Admin") return true;
   if (role === "Branch Admin" || role === "Pastor") {
     return userBranch === targetBranch;
@@ -74,7 +93,12 @@ export function canAddSoul(_role: Role): boolean {
 
 export function canConvertSoul(role: Role, userBranch: string, targetBranch: string): boolean {
   if (role === "Admin") return true;
-  if (role === "Branch Admin" || role === "Pastor" || role === "Cell Leader" || role === "PCF Leader") {
+  if (
+    role === "Branch Admin" ||
+    role === "Pastor" ||
+    role === "Cell Leader" ||
+    role === "PCF Leader"
+  ) {
     return userBranch === targetBranch;
   }
   return false;
@@ -82,7 +106,13 @@ export function canConvertSoul(role: Role, userBranch: string, targetBranch: str
 
 export function canSetHigherStartingStage(role: Role): boolean {
   // Cell Leader and above (including Admin, Branch Admin, Pastor) can set starting stage (PO Question 4 confirmed)
-  return role === "Admin" || role === "Branch Admin" || role === "Pastor" || role === "PCF Leader" || role === "Cell Leader";
+  return (
+    role === "Admin" ||
+    role === "Branch Admin" ||
+    role === "Pastor" ||
+    role === "PCF Leader" ||
+    role === "Cell Leader"
+  );
 }
 
 export function canConfigureGivingTypes(role: Role): boolean {
